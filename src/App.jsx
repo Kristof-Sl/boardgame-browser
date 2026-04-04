@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { fetchCollection, mergeCollections } from './bggApi'
+import { fetchCollection, mergeCollections, parseCollectionXml } from './bggApi'
 import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
@@ -101,6 +101,17 @@ export default function App() {
     })
   }, [])
 
+  const handleUploadXml = useCallback(async (username, xmlText) => {
+    try {
+      const games = parseCollectionXml(xmlText, username)
+      setCollections(prev => ({ ...prev, [username]: games }))
+      setAccounts(prev => [...prev, { username, loading: false, error: null, count: games.length, fromFile: true }])
+      return null
+    } catch (err) {
+      return err.message
+    }
+  }, [])
+
   const anyLoading = accounts.some(a => a.loading)
 
   return (
@@ -170,6 +181,7 @@ export default function App() {
               accounts={accounts}
               onAdd={handleAddAccount}
               onRemove={handleRemoveAccount}
+              onUploadXml={handleUploadXml}
               loading={anyLoading}
             />
             {allGames.length > 0 && (
