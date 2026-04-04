@@ -1,21 +1,17 @@
 // BoardGameGeek XML API v2
-// Uses corsproxy.io to bypass CORS restrictions from the browser.
-
-const CORS_PROXY = 'https://corsproxy.io/?url='
-const BGG_BASE = 'https://boardgamegeek.com/xmlapi2'
+// In production (Vercel), requests go through /api/bgg (serverless function).
+// Locally, Vite proxies /api/bgg directly to BGG.
 
 async function fetchXML(path, params = {}) {
-  const query = new URLSearchParams(params).toString()
-  const bggUrl = `${BGG_BASE}/${path}${query ? '?' + query : ''}`
-  const url = `${CORS_PROXY}${encodeURIComponent(bggUrl)}`
+  const query = new URLSearchParams({ path, ...params }).toString()
+  const url = `/api/bgg?${query}`
 
   const res = await fetch(url)
   const text = await res.text()
 
   if (!res.ok) {
-    throw new Error(`BGG request failed (HTTP ${res.status}). ${text.slice(0, 300)}`)
+    throw new Error(`BGG request failed (HTTP ${res.status}): ${text.slice(0, 400)}`)
   }
-
   if (!text || text.trim() === '') {
     throw new Error('BGG returned an empty response. Try again in a moment.')
   }
@@ -24,7 +20,7 @@ async function fetchXML(path, params = {}) {
   const doc = parser.parseFromString(text, 'text/xml')
 
   if (doc.querySelector('parsererror')) {
-    throw new Error(`Could not parse BGG response. Raw: ${text.slice(0, 200)}`)
+    throw new Error(`Could not parse BGG response: ${text.slice(0, 200)}`)
   }
 
   return doc
