@@ -1,33 +1,39 @@
 // BoardGameGeek XML API v2
-// Requests go through /api/bgg (a Vercel serverless function) to avoid CORS issues.
-// When running locally with `npm run dev`, Vite proxies /api/* to the same function
-// via vercel dev, OR you can run `vercel dev` instead of `npm run dev`.
+// Uses corsproxy.io to bypass CORS restrictions from the browser.
+
+const CORS_PROXY = 'https://corsproxy.io/?url='
+const BGG_BASE = 'https://boardgamegeek.com/xmlapi2'
 
 async function fetchXML(path, params = {}) {
-  const query = new URLSearchParams({ path, ...params }).toString()
-  const url = `/api/bgg?${query}`
+  const query = new URLSearchParams(params).toString()
+  const bggUrl = `${BGG_BASE}/${path}${query ? '?' + query : ''}`
+  const url = `${CORS_PROXY}${encodeURIComponent(bggUrl)}`
 
   const res = await fetch(url)
+  const text = await res.text()
+
   if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Request failed (${res.status}): ${text.slice(0, 200)}`)
+    throw new Error(`BGG request failed (HTTP ${res.status}). ${text.slice(0, 300)}`)
   }
 
-  const xml = await res.text()
-  if (!xml || xml.trim() === '') {
-    throw new Error('Empty response from BGG')
+  if (!text || text.trim() === '') {
+    throw new Error('BGG returned an empty response. Try again in a moment.')
   }
 
   const parser = new DOMParser()
-  const doc = parser.parseFromString(xml, 'text/xml')
+  const doc = parser.parseFromString(text, 'text/xml')
 
-  const parseError = doc.querySelector('parsererror')
-  if (parseError) throw new Error('Invalid XML from BGG')
+  if (doc.querySelector('parsererror')) {
+    throw new Error(`Could not parse BGG response. Raw: ${text.slice(0, 200)}`)
+  }
 
   return doc
 }
 
-// Fetch a user's collection with retry (BGG queues large requests)
+function wait(ms) {
+  return new Promise(r => setTimeout(r, ms))
+}
+
 export async function fetchCollection(username) {
   const params = {
     username,
@@ -53,7 +59,7 @@ export async function fetchCollection(username) {
       if (msg.toLowerCase().includes('invalid')) {
         throw new Error(`User "${username}" not found on BGG`)
       }
-      throw new Error(msg)
+      throw new Error(`BGG error: ${msg}`)
     }
 
     const messageEl = doc.querySelector('message')
@@ -74,11 +80,7 @@ export async function fetchCollection(username) {
     return Array.from(items).map(item => parseCollectionItem(item, username))
   }
 
-  throw new Error(`Could not load collection for "${username}". BGG may be slow — try again in a moment.`)
-}
-
-function wait(ms) {
-  return new Promise(r => setTimeout(r, ms))
+  throw new Error(`Could not load collection for "${username}" after several attempts. BGG may be slow — try again shortly.`)
 }
 
 function parseCollectionItem(item, username) {
