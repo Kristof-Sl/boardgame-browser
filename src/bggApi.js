@@ -54,36 +54,25 @@ export async function fetchCollection(username) {
     try {
       doc = await fetchXML('collection', params)
     } catch (err) {
-      if (attempt < 5) {
-        await wait(2000 + attempt * 1000)
-        continue
-      }
+      if (attempt < 5) { await wait(2000 + attempt * 1000); continue }
       throw err
     }
 
     const errorEl = doc.querySelector('error')
     if (errorEl) {
       const msg = errorEl.querySelector('message') ? errorEl.querySelector('message').textContent : 'Unknown BGG error'
-      if (msg.toLowerCase().includes('invalid')) {
-        throw new Error('User "' + username + '" not found on BGG')
-      }
+      if (msg.toLowerCase().includes('invalid')) throw new Error('User "' + username + '" not found on BGG')
       throw new Error('BGG error: ' + msg)
     }
 
     const messageEl = doc.querySelector('message')
     if (messageEl) {
       const msg = messageEl.textContent ? messageEl.textContent.toLowerCase() : ''
-      if (msg.includes('queue') || msg.includes('request')) {
-        await wait(3000 + attempt * 1500)
-        continue
-      }
+      if (msg.includes('queue') || msg.includes('request')) { await wait(3000 + attempt * 1500); continue }
     }
 
     const items = doc.querySelectorAll('item')
-    if (items.length === 0 && attempt < 5) {
-      await wait(2000)
-      continue
-    }
+    if (items.length === 0 && attempt < 5) { await wait(2000); continue }
 
     return Array.from(items).map(function(item) { return parseCollectionItem(item, username) })
   }
@@ -92,13 +81,20 @@ export async function fetchCollection(username) {
 }
 
 function parseCollectionItem(item, username) {
-  function getText(selector) {
+  // BGG XML uses both attribute-based values AND text content depending on the element.
+  // e.g. <minplayers value="2">2</minplayers> — we prefer the 'value' attribute when present.
+  function getVal(selector) {
     var el = item.querySelector(selector)
-    return el ? el.textContent.trim() : ''
+    if (!el) return ''
+    return el.getAttribute('value') || el.textContent.trim() || ''
   }
   function getAttr(selector, attr) {
     var el = item.querySelector(selector)
     return el ? (el.getAttribute(attr) || '') : ''
+  }
+  function getText(selector) {
+    var el = item.querySelector(selector)
+    return el ? el.textContent.trim() : ''
   }
 
   var id = item.getAttribute('objectid')
@@ -107,11 +103,12 @@ function parseCollectionItem(item, username) {
   var thumbnail = getText('thumbnail')
   var image = getText('image')
 
-  var minPlayers = parseInt(getText('stats minplayers')) || 0
-  var maxPlayers = parseInt(getText('stats maxplayers')) || 0
-  var minPlaytime = parseInt(getText('stats minplaytime')) || 0
-  var maxPlaytime = parseInt(getText('stats maxplaytime')) || 0
-  var minAge = parseInt(getText('stats minage')) || 0
+  // Stats fields use value= attributes
+  var minPlayers = parseInt(getVal('stats minplayers')) || 0
+  var maxPlayers = parseInt(getVal('stats maxplayers')) || 0
+  var minPlaytime = parseInt(getVal('stats minplaytime')) || 0
+  var maxPlaytime = parseInt(getVal('stats maxplaytime')) || 0
+  var minAge = parseInt(getVal('stats minage')) || 0
 
   var ratingValue = parseFloat(getAttr('stats ratings average', 'value')) || 0
   var numRatings = parseInt(getAttr('stats ratings usersrated', 'value')) || 0

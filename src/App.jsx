@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { fetchCollection, mergeCollections, parseCollectionXml } from './bggApi'
 import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
@@ -13,11 +13,41 @@ const DEFAULT_FILTERS = {
   sort: 'rating',
 }
 
+const STORAGE_KEY = 'bgg-browser-collections'
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return { accounts: [], collections: {} }
+    return JSON.parse(raw)
+  } catch {
+    return { accounts: [], collections: {} }
+  }
+}
+
+function saveToStorage(accounts, collections) {
+  try {
+    // Only save accounts that loaded successfully (not loading/errored)
+    const savedAccounts = accounts
+      .filter(a => !a.loading && !a.error)
+      .map(a => ({ username: a.username, count: a.count, fromFile: a.fromFile || false }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ accounts: savedAccounts, collections }))
+  } catch {
+    // localStorage might be full or unavailable — fail silently
+  }
+}
+
 export default function App() {
-  const [accounts, setAccounts] = useState([]) // [{username, count, loading, error}]
-  const [collections, setCollections] = useState({}) // {username: [games]}
+  const saved = useMemo(() => loadFromStorage(), [])
+  const [accounts, setAccounts] = useState(saved.accounts || [])
+  const [collections, setCollections] = useState(saved.collections || {})
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
+
+  // Persist to localStorage whenever accounts or collections change
+  useEffect(() => {
+    saveToStorage(accounts, collections)
+  }, [accounts, collections])
 
   const allGames = useMemo(() => mergeCollections(collections), [collections])
 
