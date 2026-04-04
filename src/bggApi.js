@@ -81,17 +81,11 @@ export async function fetchCollection(username) {
 }
 
 function parseCollectionItem(item, username) {
-  // BGG XML uses both attribute-based values AND text content depending on the element.
-  // e.g. <minplayers value="2">2</minplayers> — we prefer the 'value' attribute when present.
-  function getVal(selector) {
-    var el = item.querySelector(selector)
-    if (!el) return ''
-    return el.getAttribute('value') || el.textContent.trim() || ''
-  }
-  function getAttr(selector, attr) {
-    var el = item.querySelector(selector)
+
+  function getAttrFrom(el, attr) {
     return el ? (el.getAttribute(attr) || '') : ''
   }
+
   function getText(selector) {
     var el = item.querySelector(selector)
     return el ? el.textContent.trim() : ''
@@ -103,28 +97,37 @@ function parseCollectionItem(item, username) {
   var thumbnail = getText('thumbnail')
   var image = getText('image')
 
-  // Stats fields use value= attributes
-  var minPlayers = parseInt(getVal('stats minplayers')) || 0
-  var maxPlayers = parseInt(getVal('stats maxplayers')) || 0
-  var minPlaytime = parseInt(getVal('stats minplaytime')) || 0
-  var maxPlaytime = parseInt(getVal('stats maxplaytime')) || 0
-  var minAge = parseInt(getVal('stats minage')) || 0
+  var stats = item.querySelector('stats')
+  var rating = stats ? stats.querySelector('rating') : null
 
-  var ratingValue = parseFloat(getAttr('stats ratings average', 'value')) || 0
-  var numRatings = parseInt(getAttr('stats ratings usersrated', 'value')) || 0
+  // ✅ Correct: attributes on <stats>
+  var minPlayers = parseInt(getAttrFrom(stats, 'minplayers')) || 0
+  var maxPlayers = parseInt(getAttrFrom(stats, 'maxplayers')) || 0
+  var minPlaytime = parseInt(getAttrFrom(stats, 'minplaytime')) || 0
+  var maxPlaytime = parseInt(getAttrFrom(stats, 'maxplaytime')) || 0
+  var minAge = parseInt(getAttrFrom(stats, 'minage')) || 0
 
-  var rankEl = item.querySelector('stats ratings ranks rank[name="boardgame"]')
+  // ✅ Correct: inside <rating>
+  var ratingValue = parseFloat(getAttrFrom(rating?.querySelector('average'), 'value')) || 0
+  var numRatings = parseInt(getAttrFrom(rating?.querySelector('usersrated'), 'value')) || 0
+
+  // ✅ Rank
+  var rankEl = item.querySelector('stats rating ranks rank[name="boardgame"]')
   var bggRankRaw = rankEl ? rankEl.getAttribute('value') : null
   var bggRank = bggRankRaw && bggRankRaw !== 'Not Ranked' ? parseInt(bggRankRaw) : null
 
-  var userRatingRaw = parseFloat(getAttr('stats ratings userrated', 'value'))
-  var userRating = !isNaN(userRatingRaw) && userRatingRaw > 0 ? Math.round(userRatingRaw * 10) / 10 : null
+  // ✅ Your rating (value attribute on <rating>)
+  var userRatingRaw = parseFloat(getAttrFrom(rating, 'value'))
+  var userRating = !isNaN(userRatingRaw) && userRatingRaw > 0
+    ? Math.round(userRatingRaw * 10) / 10
+    : null
 
   var status = item.querySelector('status')
   var owned = status ? status.getAttribute('own') === '1' : false
   var wishlist = status ? status.getAttribute('wishlist') === '1' : false
   var wantToPlay = status ? status.getAttribute('wanttoplay') === '1' : false
   var prevOwned = status ? status.getAttribute('prevowned') === '1' : false
+
   var numPlays = parseInt(getText('numplays')) || 0
 
   function fixUrl(u) {
