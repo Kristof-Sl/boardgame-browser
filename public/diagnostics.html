@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BGG Proxy Diagnostics</title>
+<style>
+  body { font-family: monospace; background: #0f0e0c; color: #f0ede6; padding: 24px; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 18px; margin-bottom: 24px; color: #e8c84a; }
+  .step { background: #1a1915; border: 1px solid #2e2d29; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .step-title { font-size: 13px; font-weight: bold; margin-bottom: 8px; }
+  .status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px; }
+  .running { background: #333; color: #aaa; }
+  .ok { background: rgba(76,175,125,0.2); color: #4caf7d; }
+  .fail { background: rgba(224,90,90,0.2); color: #e05a5a; }
+  .output { margin-top: 10px; font-size: 11px; color: #9e9a90; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; background: #0f0e0c; padding: 10px; border-radius: 4px; border: 1px solid #2e2d29; line-height: 1.6; }
+  input { background: #1a1915; border: 1px solid #2e2d29; color: #f0ede6; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px; width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+  button { background: #e8c84a; color: #0f0e0c; border: none; padding: 8px 16px; border-radius: 6px; font-family: monospace; font-size: 13px; font-weight: bold; cursor: pointer; margin-right: 8px; }
+  button:disabled { background: #333; color: #666; cursor: default; }
+  label { font-size: 12px; color: #9e9a90; display: block; margin-bottom: 4px; }
+  a { color: #e8c84a; }
+  .note { font-size: 11px; color: #635f58; margin-top: 6px; }
+</style>
+</head>
+<body>
+<h1>🔧 BGG Proxy Diagnostics</h1>
+
+<div class="step">
+  <label>Cloudflare Worker URL (your VITE_BGG_PROXY_URL)</label>
+  <input id="proxyUrl" placeholder="https://your-worker.your-account.workers.dev" />
+  <label>BGG Username to test with</label>
+  <input id="username" placeholder="e.g. Wizkid" value="Wizkid" />
+  <button id="runBtn" onclick="runAll()">Run all tests</button>
+  <button onclick="location.href='/'">← Back to app</button>
+  <p class="note">Paste your Cloudflare Worker URL above (from workers.cloudflare.com) then click Run.</p>
+</div>
+
+<div id="steps"></div>
+
+<script>
+const steps = [
+  {
+    id: 'direct',
+    title: 'Step 1 — Direct BGG request from browser (expects CORS failure)',
+    run: async ({ username }) => {
+      const url = `https://boardgamegeek.com/xmlapi2/collection?username=${username}&stats=1`
+      try {
+        const res = await fetch(url)
+        return { ok: false, note: `Unexpectedly succeeded with HTTP ${res.status} — CORS should have blocked this`, url }
+      } catch (e) {
+        return { ok: true, note: `Correctly blocked by CORS: ${e.message}\nThis is expected — the proxy exists to work around this.`, url }
+      }
+    }
+  },
+  {
+    id: 'proxy_reachable',
+    title: 'Step 2 — Cloudflare Worker is reachable',
+    run: async ({ proxyUrl }) => {
+      if (!proxyUrl) return { ok: false, note: 'No proxy URL entered. Paste your Cloudflare Worker URL above.' }
+      const url = `${proxyUrl}?path=collection&username=test`
+      try {
+        const res = await fetch(url)
+        const text = await res.text()
+        return {
+          ok: res.status !== 0,
+          note: `HTTP ${res.status}\n\nResponse (first 500 chars):\n${text.slice(0, 500)}`,
+          url
+        }
+      } catch (e) {
+        return {
+          ok: false,
+          note: `Could not reach proxy at all.\nError: ${e.message}\n\nPossible causes:\n- Wrong URL\n- Worker not deployed\n- Worker threw an error on deploy`,
+          url
+        }
+      }
+    }
+  },
+  {
+    id: 'proxy_bgg',
+    title: 'Step 3 — Proxy fetches BGG successfully (HTTP 200 or 202)',
+    run: async ({ proxyUrl, username }) => {
+      if (!proxyUrl) return { ok: false, note: 'No proxy URL entered.' }
+      const url = `${proxyUrl}?path=collection&username=${username}&stats=1`
+      try {
+        const res = await fetch(url)
+        const text = await res.text()
+        const statusOk = res.status === 200 || res.status === 202
+        return {
+          ok: statusOk,
+          note: `HTTP ${res.status}\n\nFull response:\n${text}`,
+          url
+        }
+      } catch (e) {
+        return { ok: false, note: String(e), url }
+      }
+    }
+  },
+  {
+    id: 'xml_parse',
+    title: 'Step 4 — Response is valid XML with game items',
+    run: async ({ proxyUrl, username }) => {
+      if (!proxyUrl) return { ok: false, note: 'No proxy URL entered.' }
+      const url = `${proxyUrl}?path=collection&username=${username}&stats=1&excludesubtype=boardgameexpansion`
+      try {
+        const res = await fetch(url)
+        const text = await res.text()
+        if (!res.ok) return { ok: false, note: `HTTP ${res.status}\n${text}`, url }
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(text, 'text/xml')
+        const parseErr = doc.querySelector('parsererror')
+        if (parseErr) return { ok: false, note: `XML parse error:\n${text.slice(0, 300)}`, url }
+        const items = doc.querySelectorAll('item')
+        const message = doc.querySelector('message')
+        if (message) return { ok: false, note: `BGG returned a message (likely still queued):\n${message.textContent}\n\nWait a few seconds and try again.`, url }
+        const error = doc.querySelector('error')
+        if (error) return { ok: false, note: `BGG returned an error:\n${error.textContent}`, url }
+        return {
+          ok: items.length > 0,
+          note: items.length > 0
+            ? `Found ${items.length} games in collection.\n\nFirst game: ${items[0].querySelector('name')?.textContent}`
+            : `Parsed OK but found 0 items. The collection may be empty or still loading.`,
+          url
+        }
+      } catch (e) {
+        return { ok: false, note: String(e), url }
+      }
+    }
+  },
+  {
+    id: 'env_var',
+    title: 'Step 5 — App is reading VITE_BGG_PROXY_URL correctly',
+    run: async () => {
+      // Try to detect what URL the app's /api/bgg route resolves to
+      try {
+        const res = await fetch('/api/bgg?path=collection&username=test')
+        const text = await res.text()
+        return {
+          ok: res.status !== 404,
+          note: `HTTP ${res.status} from /api/bgg\n\n${
+            res.status === 404
+              ? 'Got 404 — /api/bgg route not found. The Vercel function may not be deployed or VITE_BGG_PROXY_URL is not set so the app is still trying the old /api/bgg fallback.\n\nMake sure VITE_BGG_PROXY_URL is set in Vercel → Settings → Environment Variables, then redeploy.'
+              : 'Response:\n' + text.slice(0, 400)
+          }`
+        }
+      } catch (e) {
+        return { ok: false, note: String(e) }
+      }
+    }
+  }
+]
+
+function el(id) { return document.getElementById(id) }
+
+function renderStep(step, status, output, url) {
+  const statusClass = status === 'running' ? 'running' : status === 'ok' ? 'ok' : 'fail'
+  const statusText = status === 'running' ? '⏳ running' : status === 'ok' ? '✓ passed' : '✗ failed'
+  return `
+    <div class="step">
+      <div class="step-title">${step.title}<span class="status ${statusClass}">${statusText}</span></div>
+      ${url ? `<div class="note">URL: <a href="${url}" target="_blank">${url}</a></div>` : ''}
+      ${output ? `<div class="output">${escHtml(output)}</div>` : ''}
+    </div>`
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+async function runAll() {
+  const proxyUrl = el('proxyUrl').value.trim().replace(/\/$/, '')
+  const username = el('username').value.trim() || 'Wizkid'
+  el('runBtn').disabled = true
+
+  const container = el('steps')
+  container.innerHTML = steps.map(s => renderStep(s, 'running', '', '')).join('')
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i]
+    try {
+      const result = await step.run({ proxyUrl, username })
+      const status = result.ok ? 'ok' : 'fail'
+      const stepEls = container.querySelectorAll('.step')
+      stepEls[i].outerHTML = renderStep(step, status, result.note || '', result.url || '')
+    } catch (e) {
+      const stepEls = container.querySelectorAll('.step')
+      stepEls[i].outerHTML = renderStep(step, 'fail', 'Unexpected error: ' + String(e), '')
+    }
+  }
+
+  el('runBtn').disabled = false
+}
+</script>
+</body>
+</html>
