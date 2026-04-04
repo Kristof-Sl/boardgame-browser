@@ -1,17 +1,30 @@
 // BoardGameGeek XML API v2
-// In production (Vercel), requests go through /api/bgg (serverless function).
-// Locally, Vite proxies /api/bgg directly to BGG.
+//
+// This app needs a proxy to reach BGG because:
+//   1. BGG doesn't allow direct browser requests (CORS)
+//   2. BGG blocks Vercel/AWS datacenter IPs with a 401
+//
+// Solution: a Cloudflare Worker proxy (see cloudflare-worker/worker.js).
+// After deploying it, set VITE_BGG_PROXY_URL in Vercel to your worker URL.
+// Locally, set it in a .env file: VITE_BGG_PROXY_URL=https://your-worker.workers.dev
+
+const PROXY_BASE = import.meta.env.VITE_BGG_PROXY_URL || '/api/bgg'
 
 async function fetchXML(path, params = {}) {
   const query = new URLSearchParams({ path, ...params }).toString()
-  const url = `/api/bgg?${query}`
+  const url = `${PROXY_BASE}?${query}`
 
-  const res = await fetch(url)
-  const text = await res.text()
-
-  if (!res.ok) {
-    throw new Error(`BGG request failed (HTTP ${res.status}): ${text.slice(0, 400)}`)
+  let text
+  try {
+    const res = await fetch(url)
+    text = await res.text()
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${text.slice(0, 500)}`)
+    }
+  } catch (err) {
+    throw new Error(`Could not reach BGG proxy.\n${err.message}`)
   }
+
   if (!text || text.trim() === '') {
     throw new Error('BGG returned an empty response. Try again in a moment.')
   }
@@ -20,7 +33,7 @@ async function fetchXML(path, params = {}) {
   const doc = parser.parseFromString(text, 'text/xml')
 
   if (doc.querySelector('parsererror')) {
-    throw new Error(`Could not parse BGG response: ${text.slice(0, 200)}`)
+    throw new Error(`Invalid XML from BGG: ${text.slice(0, 200)}`)
   }
 
   return doc
@@ -120,25 +133,14 @@ function parseCollectionItem(item, username) {
   }
 
   return {
-    id,
-    name,
+    id, name,
     yearPublished: parseInt(yearPublished) || null,
     thumbnail: fixUrl(thumbnail),
     image: fixUrl(image),
-    minPlayers,
-    maxPlayers,
-    minPlaytime,
-    maxPlaytime,
-    minAge,
+    minPlayers, maxPlayers, minPlaytime, maxPlaytime, minAge,
     rating: Math.round(ratingValue * 10) / 10,
-    numRatings,
-    bggRank,
-    userRating,
-    owned,
-    wishlist,
-    wantToPlay,
-    prevOwned,
-    numPlays,
+    numRatings, bggRank, userRating,
+    owned, wishlist, wantToPlay, prevOwned, numPlays,
     owners: [username],
     bggUrl: `https://boardgamegeek.com/boardgame/${id}`,
   }
@@ -146,14 +148,11 @@ function parseCollectionItem(item, username) {
 
 export function mergeCollections(collectionsMap) {
   const merged = new Map()
-
   for (const [username, games] of Object.entries(collectionsMap)) {
     for (const game of games) {
       if (merged.has(game.id)) {
         const existing = merged.get(game.id)
-        if (!existing.owners.includes(username)) {
-          existing.owners.push(username)
-        }
+        if (!existing.owners.includes(username)) existing.owners.push(username)
         existing.owned = existing.owned || game.owned
         existing.wishlist = existing.wishlist || game.wishlist
         existing.wantToPlay = existing.wantToPlay || game.wantToPlay
@@ -162,6 +161,5 @@ export function mergeCollections(collectionsMap) {
       }
     }
   }
-
   return Array.from(merged.values())
 }

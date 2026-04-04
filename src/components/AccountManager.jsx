@@ -45,57 +45,62 @@ export default function AccountManager({ accounts, onAdd, onRemove, loading }) {
         )}
         {accounts.map(acc => (
           <div key={acc.username} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             background: 'var(--bg3)',
             borderRadius: 8, padding: '8px 12px',
-            border: '1px solid var(--border)',
+            border: `1px solid ${acc.error ? 'var(--red)' : 'var(--border)'}`,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%',
-                background: 'var(--accent-bg)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 12, fontWeight: 500, color: 'var(--accent)',
-              }}>
-                {acc.username[0].toUpperCase()}
-              </div>
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{acc.username}</p>
-                {acc.count != null && (
-                  <p style={{ fontSize: 11, color: 'var(--text3)' }}>{acc.count} games</p>
-                )}
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {acc.loading && (
-                <Spinner />
-              )}
-              {acc.error && (
-                <span style={{ fontSize: 11, color: 'var(--red)' }}>Failed</span>
-              )}
-              <button
-                onClick={() => onRemove(acc.username)}
-                style={{
-                  width: 24, height: 24, borderRadius: '50%',
-                  background: 'transparent',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text3)',
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: 'var(--accent-bg)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', fontSize: 14, lineHeight: 1,
-                  transition: 'all 140ms',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'var(--red)'
-                  e.currentTarget.style.color = 'var(--red)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'var(--border)'
-                  e.currentTarget.style.color = 'var(--text3)'
-                }}
-              >
-                ×
-              </button>
+                  fontSize: 12, fontWeight: 500, color: 'var(--accent)',
+                }}>
+                  {acc.username[0].toUpperCase()}
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{acc.username}</p>
+                  {acc.count != null && (
+                    <p style={{ fontSize: 11, color: 'var(--text3)' }}>{acc.count} games</p>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {acc.loading && <Spinner />}
+                <button
+                  onClick={() => onRemove(acc.username)}
+                  style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: 'transparent',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', fontSize: 14, lineHeight: 1,
+                    transition: 'all 140ms',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = 'var(--red)'
+                    e.currentTarget.style.color = 'var(--red)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'var(--border)'
+                    e.currentTarget.style.color = 'var(--text3)'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
             </div>
+            {acc.error && (
+              <p style={{
+                fontSize: 11, color: 'var(--red)',
+                marginTop: 6, lineHeight: 1.5,
+                wordBreak: 'break-word', whiteSpace: 'pre-wrap',
+              }}>
+                {acc.error}
+              </p>
+            )}
           </div>
         ))}
       </div>
