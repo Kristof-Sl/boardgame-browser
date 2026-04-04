@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BGG XML Inspector</title>
+<style>
+  body { font-family: monospace; background: #0f0e0c; color: #f0ede6; padding: 24px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 18px; margin-bottom: 6px; color: #e8c84a; }
+  p.sub { font-size: 12px; color: #635f58; margin-bottom: 20px; }
+  .drop {
+    border: 2px dashed #2e2d29; border-radius: 10px; padding: 32px;
+    text-align: center; cursor: pointer; margin-bottom: 20px;
+    transition: border-color 140ms, background 140ms;
+  }
+  .drop:hover, .drop.over { border-color: #e8c84a; background: rgba(232,200,74,0.06); }
+  .drop p { font-size: 14px; color: #9e9a90; margin: 0; }
+  .drop input { display: none; }
+  .section { background: #1a1915; border: 1px solid #2e2d29; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .section h2 { font-size: 13px; color: #e8c84a; margin: 0 0 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { text-align: left; color: #635f58; font-weight: 500; padding: 4px 8px; border-bottom: 1px solid #2e2d29; white-space: nowrap; }
+  td { padding: 4px 8px; border-bottom: 1px solid #1e1d1a; vertical-align: top; word-break: break-word; }
+  td.num { color: #9e9a90; text-align: right; }
+  td.ok { color: #4caf7d; }
+  td.bad { color: #e05a5a; }
+  td.warn { color: #e8c84a; }
+  .raw { font-size: 10px; color: #9e9a90; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; background: #0a0a08; padding: 10px; border-radius: 4px; border: 1px solid #2e2d29; line-height: 1.6; margin-top: 8px; }
+  .tag { display: inline-block; background: rgba(232,200,74,0.12); color: #e8c84a; border-radius: 4px; padding: 1px 6px; font-size: 10px; }
+  a { color: #e8c84a; }
+  .btn { background: #e8c84a; color: #0f0e0c; border: none; padding: 6px 14px; border-radius: 6px; font-family: monospace; font-size: 12px; font-weight: bold; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>🔬 BGG XML Inspector</h1>
+<p class="sub">Upload a BGG collection XML file to see exactly what the parser extracts from it.</p>
+
+<div class="drop" id="drop" onclick="document.getElementById('fileInput').click()"
+  ondragover="event.preventDefault();this.classList.add('over')"
+  ondragleave="this.classList.remove('over')"
+  ondrop="event.preventDefault();this.classList.remove('over');handleFile(event.dataTransfer.files[0])">
+  <p>Drop XML file here or click to upload</p>
+  <input type="file" id="fileInput" accept=".xml,text/xml,application/xml" onchange="handleFile(this.files[0])">
+</div>
+
+<div id="output"></div>
+
+<script>
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+function handleFile(file) {
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => inspect(e.target.result)
+  reader.readAsText(file)
+}
+
+function inspect(xmlText) {
+  const out = document.getElementById('output')
+  out.innerHTML = ''
+
+  // 1. Raw XML preview
+  out.innerHTML += section('Raw XML (first 2000 chars)', `<div class="raw">${esc(xmlText.slice(0, 2000))}${xmlText.length > 2000 ? '\n…(' + xmlText.length + ' total chars)' : ''}</div>`)
+
+  // 2. Parse
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(xmlText, 'text/xml')
+
+  const parseErr = doc.querySelector('parsererror')
+  if (parseErr) {
+    out.innerHTML += section('❌ XML Parse Error', `<div class="raw" style="color:#e05a5a">${esc(parseErr.textContent)}</div>`)
+    return
+  }
+
+  // 3. Document structure
+  const root = doc.documentElement
+  const items = doc.querySelectorAll('item')
+  const message = doc.querySelector('message')
+  const error = doc.querySelector('error')
+
+  let structHtml = `<table><tr><th>Property</th><th>Value</th></tr>`
+  structHtml += row('Root element', `<span class="tag">&lt;${esc(root.tagName)}&gt;</span>`)
+  structHtml += row('Total items found', items.length > 0 ? `<span class="ok">${items.length}</span>` : `<span class="bad">0</span>`)
+  if (message) structHtml += row('&lt;message&gt; element', `<span class="warn">${esc(message.textContent.trim().slice(0, 200))}</span>`)
+  if (error) structHtml += row('&lt;error&gt; element', `<span class="bad">${esc(error.textContent.trim().slice(0, 200))}</span>`)
+  structHtml += `</table>`
+  out.innerHTML += section('Document structure', structHtml)
+
+  if (items.length === 0) {
+    out.innerHTML += section('⚠️ No items to inspect', '<p style="color:#e8c84a;font-size:12px">The XML has no &lt;item&gt; elements. Check the document structure above.</p>')
+    return
+  }
+
+  // 4. Inspect first 3 items in detail
+  const sample = Array.from(items).slice(0, 3)
+  sample.forEach((item, idx) => {
+    out.innerHTML += inspectItem(item, idx)
+  })
+
+  // 5. Summary stats across all items
+  out.innerHTML += summarize(Array.from(items))
+}
+
+function inspectItem(item, idx) {
+  function getVal(sel) {
+    const el = item.querySelector(sel)
+    if (!el) return { val: null, src: 'missing' }
+    const attr = el.getAttribute('value')
+    const text = el.textContent.trim()
+    if (attr !== null) return { val: attr, src: 'value= attr', raw: el.outerHTML.slice(0, 120) }
+    if (text) return { val: text, src: 'textContent', raw: el.outerHTML.slice(0, 120) }
+    return { val: '', src: 'empty', raw: el.outerHTML.slice(0, 120) }
+  }
+  function getAttr(sel, attr) {
+    const el = item.querySelector(sel)
+    if (!el) return { val: null, src: 'element missing' }
+    const v = el.getAttribute(attr)
+    return { val: v, src: `${attr}= on <${el.tagName}>`, raw: el.outerHTML.slice(0, 120) }
+  }
+
+  const fields = [
+    ['name', getVal('name')],
+    ['yearPublished', getVal('yearpublished')],
+    ['minPlayers (stats)', getVal('stats minplayers')],
+    ['maxPlayers (stats)', getVal('stats maxplayers')],
+    ['minPlaytime (stats)', getVal('stats minplaytime')],
+    ['maxPlaytime (stats)', getVal('stats maxplaytime')],
+    ['minAge (stats)', getVal('stats minage')],
+    ['rating average', getAttr('stats ratings average', 'value')],
+    ['usersrated', getAttr('stats ratings usersrated', 'value')],
+    ['bggRank', (() => {
+      const el = item.querySelector('stats ratings ranks rank[name="boardgame"]')
+      if (!el) return { val: null, src: 'element missing' }
+      return { val: el.getAttribute('value'), src: 'value= attr', raw: el.outerHTML.slice(0, 120) }
+    })()],
+    ['status own', (() => { const s = item.querySelector('status'); return { val: s ? s.getAttribute('own') : null, src: s ? 'own= on <status>' : 'status missing' } })()],
+    ['status wishlist', (() => { const s = item.querySelector('status'); return { val: s ? s.getAttribute('wishlist') : null, src: s ? 'wishlist= on <status>' : 'status missing' } })()],
+    ['status wanttoplay', (() => { const s = item.querySelector('status'); return { val: s ? s.getAttribute('wanttoplay') : null, src: s ? 'wanttoplay= on <status>' : 'status missing' } })()],
+    ['numPlays', getVal('numplays')],
+    ['thumbnail', getVal('thumbnail')],
+  ]
+
+  let html = `<table><tr><th>Field</th><th>Extracted value</th><th>Source</th><th>Raw XML snippet</th></tr>`
+  fields.forEach(([label, info]) => {
+    const valClass = info.val === null ? 'bad' : info.val === '' ? 'warn' : 'ok'
+    html += `<tr>
+      <td>${esc(label)}</td>
+      <td class="${valClass}">${esc(info.val === null ? 'null (missing)' : info.val === '' ? '(empty)' : info.val)}</td>
+      <td style="color:#635f58">${esc(info.src)}</td>
+      <td style="color:#635f58;font-size:10px">${esc(info.raw || '')}</td>
+    </tr>`
+  })
+  html += '</table>'
+
+  // Also show the raw XML of this item
+  html += `<details style="margin-top:8px"><summary style="font-size:11px;color:#635f58;cursor:pointer">Raw XML for this item</summary><div class="raw">${esc(item.outerHTML)}</div></details>`
+
+  return section(`Item ${idx + 1}: ${item.querySelector('name')?.textContent || '(unknown)'}`, html)
+}
+
+function summarize(items) {
+  let withPlayers = 0, withTime = 0, withRating = 0, withRank = 0, owned = 0, wishlist = 0, wantToPlay = 0
+
+  items.forEach(item => {
+    function getVal(sel) {
+      const el = item.querySelector(sel)
+      if (!el) return ''
+      return el.getAttribute('value') || el.textContent.trim() || ''
+    }
+    if (parseInt(getVal('stats maxplayers')) > 0) withPlayers++
+    if (parseInt(getVal('stats maxplaytime')) > 0) withTime++
+    const rating = parseFloat(item.querySelector('stats ratings average')?.getAttribute('value') || '0')
+    if (rating > 0) withRating++
+    const rankEl = item.querySelector('stats ratings ranks rank[name="boardgame"]')
+    if (rankEl && rankEl.getAttribute('value') !== 'Not Ranked') withRank++
+    const status = item.querySelector('status')
+    if (status?.getAttribute('own') === '1') owned++
+    if (status?.getAttribute('wishlist') === '1') wishlist++
+    if (status?.getAttribute('wanttoplay') === '1') wantToPlay++
+  })
+
+  const pct = n => `${n} / ${items.length} (${Math.round(n/items.length*100)}%)`
+  let html = `<table><tr><th>Field</th><th>Games with data</th><th>Status</th></tr>`
+  const rows = [
+    ['Player count', withPlayers, withPlayers > items.length * 0.5],
+    ['Playtime', withTime, withTime > items.length * 0.5],
+    ['BGG Rating', withRating, withRating > items.length * 0.5],
+    ['BGG Rank', withRank, withRank > items.length * 0.3],
+    ['Owned', owned, true],
+    ['Wishlist', wishlist, true],
+    ['Want to play', wantToPlay, true],
+  ]
+  rows.forEach(([label, n, ok]) => {
+    html += `<tr><td>${esc(label)}</td><td>${pct(n)}</td><td class="${ok ? 'ok' : 'warn'}">${ok ? '✓ looks good' : '⚠ low coverage'}</td></tr>`
+  })
+  html += '</table>'
+  return section(`Summary across all ${items.length} items`, html)
+}
+
+function section(title, content) {
+  return `<div class="section"><h2>${title}</h2>${content}</div>`
+}
+function row(label, value) {
+  return `<tr><td>${label}</td><td>${value}</td></tr>`
+}
+</script>
+</body>
+</html>
