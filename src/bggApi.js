@@ -1,51 +1,55 @@
 // BoardGameGeek XML API v2
 //
-// This app needs a proxy to reach BGG because:
-//   1. BGG doesn't allow direct browser requests (CORS)
-//   2. BGG blocks Vercel/AWS datacenter IPs with a 401
+// Needs a proxy because:
+//   1. BGG does not allow direct browser requests (CORS)
+//   2. BGG blocks Vercel/AWS datacenter IPs with 401
 //
-// Solution: a Cloudflare Worker proxy (see cloudflare-worker/worker.js).
-// After deploying it, set VITE_BGG_PROXY_URL in Vercel to your worker URL.
-// Locally, set it in a .env file: VITE_BGG_PROXY_URL=https://your-worker.workers.dev
+// Solution: Cloudflare Worker proxy (see cloudflare-worker/worker.js)
+// Set VITE_BGG_PROXY_URL in Vercel env vars and in local .env file.
 
 const PROXY_BASE = import.meta.env.VITE_BGG_PROXY_URL || '/api/bgg'
 
-async function fetchXML(path, params = {}) {
-  const query = new URLSearchParams({ path, ...params }).toString()
-  const url = `${PROXY_BASE}?${query}`
+async function fetchXML(path, params) {
+  const query = new URLSearchParams(Object.assign({ path }, params)).toString()
+  const url = PROXY_BASE + '?' + query
 
-  let text
+  let res, text
   try {
-    const res = await fetch(url)
+    res = await fetch(url)
     text = await res.text()
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${text.slice(0, 500)}`)
-    }
   } catch (err) {
-    throw new Error(`Could not reach BGG proxy.\n${err.message}`)
+    throw new Error('Network error reaching proxy at ' + url + '\n' + String(err))
+  }
+
+  if (!res.ok) {
+    throw new Error(
+      'Proxy returned HTTP ' + res.status + '\n' +
+      'Proxy URL: ' + url + '\n' +
+      'Full response:\n' + text
+    )
   }
 
   if (!text || text.trim() === '') {
-    throw new Error('BGG returned an empty response. Try again in a moment.')
+    throw new Error('BGG returned empty response. Try again.')
   }
 
   const parser = new DOMParser()
   const doc = parser.parseFromString(text, 'text/xml')
 
   if (doc.querySelector('parsererror')) {
-    throw new Error(`Invalid XML from BGG: ${text.slice(0, 200)}`)
+    throw new Error('Invalid XML from BGG:\n' + text.slice(0, 500))
   }
 
   return doc
 }
 
 function wait(ms) {
-  return new Promise(r => setTimeout(r, ms))
+  return new Promise(function(r) { setTimeout(r, ms) })
 }
 
 export async function fetchCollection(username) {
   const params = {
-    username,
+    username: username,
     stats: '1',
     excludesubtype: 'boardgameexpansion',
   }
@@ -64,16 +68,16 @@ export async function fetchCollection(username) {
 
     const errorEl = doc.querySelector('error')
     if (errorEl) {
-      const msg = errorEl.querySelector('message')?.textContent || 'Unknown BGG error'
+      const msg = errorEl.querySelector('message') ? errorEl.querySelector('message').textContent : 'Unknown BGG error'
       if (msg.toLowerCase().includes('invalid')) {
-        throw new Error(`User "${username}" not found on BGG`)
+        throw new Error('User "' + username + '" not found on BGG')
       }
-      throw new Error(`BGG error: ${msg}`)
+      throw new Error('BGG error: ' + msg)
     }
 
     const messageEl = doc.querySelector('message')
     if (messageEl) {
-      const msg = messageEl.textContent?.toLowerCase() || ''
+      const msg = messageEl.textContent ? messageEl.textContent.toLowerCase() : ''
       if (msg.includes('queue') || msg.includes('request')) {
         await wait(3000 + attempt * 1500)
         continue
@@ -86,78 +90,97 @@ export async function fetchCollection(username) {
       continue
     }
 
-    return Array.from(items).map(item => parseCollectionItem(item, username))
+    return Array.from(items).map(function(item) { return parseCollectionItem(item, username) })
   }
 
-  throw new Error(`Could not load collection for "${username}" after several attempts. BGG may be slow — try again shortly.`)
+  throw new Error('Could not load collection for "' + username + '" after several attempts. Try again shortly.')
 }
 
 function parseCollectionItem(item, username) {
-  const getText = (selector) => item.querySelector(selector)?.textContent?.trim() || ''
-  const getAttr = (selector, attr) => item.querySelector(selector)?.getAttribute(attr) || ''
+  function getText(selector) {
+    var el = item.querySelector(selector)
+    return el ? el.textContent.trim() : ''
+  }
+  function getAttr(selector, attr) {
+    var el = item.querySelector(selector)
+    return el ? (el.getAttribute(attr) || '') : ''
+  }
 
-  const id = item.getAttribute('objectid')
-  const name = getText('name')
-  const yearPublished = getText('yearpublished')
-  const thumbnail = getText('thumbnail')
-  const image = getText('image')
+  var id = item.getAttribute('objectid')
+  var name = getText('name')
+  var yearPublished = getText('yearpublished')
+  var thumbnail = getText('thumbnail')
+  var image = getText('image')
 
-  const minPlayers = parseInt(getText('stats minplayers')) || 0
-  const maxPlayers = parseInt(getText('stats maxplayers')) || 0
-  const minPlaytime = parseInt(getText('stats minplaytime')) || 0
-  const maxPlaytime = parseInt(getText('stats maxplaytime')) || 0
-  const minAge = parseInt(getText('stats minage')) || 0
+  var minPlayers = parseInt(getText('stats minplayers')) || 0
+  var maxPlayers = parseInt(getText('stats maxplayers')) || 0
+  var minPlaytime = parseInt(getText('stats minplaytime')) || 0
+  var maxPlaytime = parseInt(getText('stats maxplaytime')) || 0
+  var minAge = parseInt(getText('stats minage')) || 0
 
-  const ratingValue = parseFloat(getAttr('stats ratings average', 'value')) || 0
-  const numRatings = parseInt(getAttr('stats ratings usersrated', 'value')) || 0
+  var ratingValue = parseFloat(getAttr('stats ratings average', 'value')) || 0
+  var numRatings = parseInt(getAttr('stats ratings usersrated', 'value')) || 0
 
-  const rankEl = item.querySelector('stats ratings ranks rank[name="boardgame"]')
-  const bggRankRaw = rankEl?.getAttribute('value')
-  const bggRank = bggRankRaw && bggRankRaw !== 'Not Ranked' ? parseInt(bggRankRaw) : null
+  var rankEl = item.querySelector('stats ratings ranks rank[name="boardgame"]')
+  var bggRankRaw = rankEl ? rankEl.getAttribute('value') : null
+  var bggRank = bggRankRaw && bggRankRaw !== 'Not Ranked' ? parseInt(bggRankRaw) : null
 
-  const userRatingRaw = parseFloat(getAttr('stats ratings userrated', 'value'))
-  const userRating = !isNaN(userRatingRaw) && userRatingRaw > 0 ? Math.round(userRatingRaw * 10) / 10 : null
+  var userRatingRaw = parseFloat(getAttr('stats ratings userrated', 'value'))
+  var userRating = !isNaN(userRatingRaw) && userRatingRaw > 0 ? Math.round(userRatingRaw * 10) / 10 : null
 
-  const status = item.querySelector('status')
-  const owned = status?.getAttribute('own') === '1'
-  const wishlist = status?.getAttribute('wishlist') === '1'
-  const wantToPlay = status?.getAttribute('wanttoplay') === '1'
-  const prevOwned = status?.getAttribute('prevowned') === '1'
-  const numPlays = parseInt(getText('numplays')) || 0
+  var status = item.querySelector('status')
+  var owned = status ? status.getAttribute('own') === '1' : false
+  var wishlist = status ? status.getAttribute('wishlist') === '1' : false
+  var wantToPlay = status ? status.getAttribute('wanttoplay') === '1' : false
+  var prevOwned = status ? status.getAttribute('prevowned') === '1' : false
+  var numPlays = parseInt(getText('numplays')) || 0
 
-  const fixUrl = (u) => {
+  function fixUrl(u) {
     if (!u) return null
-    if (u.startsWith('//')) return `https:${u}`
+    if (u.startsWith('//')) return 'https:' + u
     if (u.startsWith('http')) return u
     return null
   }
 
   return {
-    id, name,
+    id: id,
+    name: name,
     yearPublished: parseInt(yearPublished) || null,
     thumbnail: fixUrl(thumbnail),
     image: fixUrl(image),
-    minPlayers, maxPlayers, minPlaytime, maxPlaytime, minAge,
+    minPlayers: minPlayers,
+    maxPlayers: maxPlayers,
+    minPlaytime: minPlaytime,
+    maxPlaytime: maxPlaytime,
+    minAge: minAge,
     rating: Math.round(ratingValue * 10) / 10,
-    numRatings, bggRank, userRating,
-    owned, wishlist, wantToPlay, prevOwned, numPlays,
+    numRatings: numRatings,
+    bggRank: bggRank,
+    userRating: userRating,
+    owned: owned,
+    wishlist: wishlist,
+    wantToPlay: wantToPlay,
+    prevOwned: prevOwned,
+    numPlays: numPlays,
     owners: [username],
-    bggUrl: `https://boardgamegeek.com/boardgame/${id}`,
+    bggUrl: 'https://boardgamegeek.com/boardgame/' + id,
   }
 }
 
 export function mergeCollections(collectionsMap) {
-  const merged = new Map()
-  for (const [username, games] of Object.entries(collectionsMap)) {
-    for (const game of games) {
+  var merged = new Map()
+  for (var username in collectionsMap) {
+    var games = collectionsMap[username]
+    for (var i = 0; i < games.length; i++) {
+      var game = games[i]
       if (merged.has(game.id)) {
-        const existing = merged.get(game.id)
+        var existing = merged.get(game.id)
         if (!existing.owners.includes(username)) existing.owners.push(username)
         existing.owned = existing.owned || game.owned
         existing.wishlist = existing.wishlist || game.wishlist
         existing.wantToPlay = existing.wantToPlay || game.wantToPlay
       } else {
-        merged.set(game.id, { ...game })
+        merged.set(game.id, Object.assign({}, game))
       }
     }
   }

@@ -14,7 +14,7 @@ export default function AccountManager({ accounts, onAdd, onRemove, loading }) {
     setError('')
     setInput('')
     const err = await onAdd(username)
-    if (err) setError(err)
+    if (err) setError(String(err))
   }
 
   const handleKey = (e) => {
@@ -36,7 +36,6 @@ export default function AccountManager({ accounts, onAdd, onRemove, loading }) {
         BGG Accounts
       </p>
 
-      {/* Existing accounts */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
         {accounts.length === 0 && (
           <p style={{ fontSize: 13, color: 'var(--text3)', fontStyle: 'italic' }}>
@@ -78,6 +77,7 @@ export default function AccountManager({ accounts, onAdd, onRemove, loading }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', fontSize: 14, lineHeight: 1,
                     transition: 'all 140ms',
+                    flexShrink: 0,
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.borderColor = 'var(--red)'
@@ -93,19 +93,30 @@ export default function AccountManager({ accounts, onAdd, onRemove, loading }) {
               </div>
             </div>
             {acc.error && (
-              <p style={{
-                fontSize: 11, color: 'var(--red)',
-                marginTop: 6, lineHeight: 1.5,
-                wordBreak: 'break-word', whiteSpace: 'pre-wrap',
+              <div style={{
+                marginTop: 8,
+                background: 'var(--red-bg)',
+                border: '1px solid var(--red)',
+                borderRadius: 6,
+                padding: '8px 10px',
+                maxHeight: 200,
+                overflowY: 'auto',
               }}>
-                {acc.error}
-              </p>
+                <p style={{
+                  fontSize: 11, color: 'var(--red)',
+                  lineHeight: 1.6,
+                  wordBreak: 'break-all',
+                  whiteSpace: 'pre-wrap',
+                  fontFamily: 'monospace',
+                }}>
+                  {acc.error}
+                </p>
+              </div>
             )}
           </div>
         ))}
       </div>
 
-      {/* Add new */}
       <div style={{ display: 'flex', gap: 8 }}>
         <input
           type="text"
@@ -143,7 +154,25 @@ export default function AccountManager({ accounts, onAdd, onRemove, loading }) {
         </button>
       </div>
       {error && (
-        <p style={{ fontSize: 12, color: 'var(--red)', marginTop: 6 }}>{error}</p>
+        <div style={{
+          marginTop: 8,
+          background: 'var(--red-bg)',
+          border: '1px solid var(--red)',
+          borderRadius: 6,
+          padding: '8px 10px',
+          maxHeight: 200,
+          overflowY: 'auto',
+        }}>
+          <p style={{
+            fontSize: 11, color: 'var(--red)',
+            lineHeight: 1.6,
+            wordBreak: 'break-all',
+            whiteSpace: 'pre-wrap',
+            fontFamily: 'monospace',
+          }}>
+            {error}
+          </p>
+        </div>
       )}
     </div>
   )
@@ -157,6 +186,7 @@ function Spinner() {
       borderTopColor: 'var(--accent)',
       borderRadius: '50%',
       animation: 'spin 0.7s linear infinite',
+      flexShrink: 0,
     }} />
   )
 }
