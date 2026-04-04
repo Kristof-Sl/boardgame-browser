@@ -1,13 +1,8 @@
 // BoardGameGeek XML API v2
-//
-// Needs a proxy because:
-//   1. BGG does not allow direct browser requests (CORS)
-//   2. BGG blocks Vercel/AWS datacenter IPs with 401
-//
-// Solution: Cloudflare Worker proxy (see cloudflare-worker/worker.js)
-// Set VITE_BGG_PROXY_URL in Vercel env vars and in local .env file.
+// Requests go through /api/bgg (Vercel serverless function in api/bgg.js)
+// which adds the BGG_TOKEN authorization header server-side.
 
-const PROXY_BASE = import.meta.env.VITE_BGG_PROXY_URL || '/api/bgg'
+const PROXY_BASE = '/api/bgg'
 
 async function fetchXML(path, params) {
   const query = new URLSearchParams(Object.assign({ path }, params)).toString()
@@ -165,6 +160,34 @@ function parseCollectionItem(item, username) {
     owners: [username],
     bggUrl: 'https://boardgamegeek.com/boardgame/' + id,
   }
+}
+
+// Parse a BGG collection XML string directly (for manual file uploads)
+export function parseCollectionXml(xmlText, username) {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(xmlText, 'text/xml')
+
+  if (doc.querySelector('parsererror')) {
+    throw new Error('Invalid XML file. Make sure you saved the raw XML from the BGG API URL.')
+  }
+
+  const errorEl = doc.querySelector('error')
+  if (errorEl) {
+    const msg = errorEl.querySelector('message') ? errorEl.querySelector('message').textContent : 'Unknown error'
+    throw new Error('BGG error in file: ' + msg)
+  }
+
+  const messageEl = doc.querySelector('message')
+  if (messageEl) {
+    throw new Error('This XML file contains a queued/pending message rather than collection data. Open the URL again in a minute and re-save it.\n\nMessage: ' + messageEl.textContent)
+  }
+
+  const items = doc.querySelectorAll('item')
+  if (items.length === 0) {
+    throw new Error('No games found in this XML file. Make sure you are using the correct URL and that the collection is not empty.')
+  }
+
+  return Array.from(items).map(function(item) { return parseCollectionItem(item, username) })
 }
 
 export function mergeCollections(collectionsMap) {
