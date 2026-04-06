@@ -103,6 +103,17 @@ function inspect(xmlText) {
 }
 
 function inspectItem(item, idx) {
+  function getStatAttr(attr) {
+  const stats = item.querySelector('stats')
+  if (!stats) return { val: null, src: 'stats missing' }
+  const v = stats.getAttribute(attr)
+  return {
+    val: v,
+    src: `${attr}= on <stats>`,
+    raw: stats.outerHTML.slice(0, 120)
+  }
+}
+  
   function getVal(sel) {
     const el = item.querySelector(sel)
     if (!el) return { val: null, src: 'missing' }
@@ -122,15 +133,15 @@ function inspectItem(item, idx) {
   const fields = [
     ['name', getVal('name')],
     ['yearPublished', getVal('yearpublished')],
-    ['minPlayers (stats)', getVal('stats minplayers')],
-    ['maxPlayers (stats)', getVal('stats maxplayers')],
-    ['minPlaytime (stats)', getVal('stats minplaytime')],
-    ['maxPlaytime (stats)', getVal('stats maxplaytime')],
-    ['minAge (stats)', getVal('stats minage')],
-    ['rating average', getAttr('stats ratings average', 'value')],
-    ['usersrated', getAttr('stats ratings usersrated', 'value')],
+    ['minPlayers (stats)', getStatAttr('minplayers')],
+    ['maxPlayers (stats)', getStatAttr('maxplayers')],
+    ['minPlaytime (stats)', getStatAttr('minplaytime')],
+    ['maxPlaytime (stats)', getStatAttr('maxplaytime')],
+    ['minAge (stats)', getStatAttr('minage')],
+    ['rating average', getAttr('stats rating average', 'value')],
+    ['usersrated', getAttr('stats rating usersrated', 'value')],
     ['bggRank', (() => {
-      const el = item.querySelector('stats ratings ranks rank[name="boardgame"]')
+      const el = item.querySelector('stats rating ranks rank[name="boardgame"]')
       if (!el) return { val: null, src: 'element missing' }
       return { val: el.getAttribute('value'), src: 'value= attr', raw: el.outerHTML.slice(0, 120) }
     })()],
@@ -168,11 +179,13 @@ function summarize(items) {
       if (!el) return ''
       return el.getAttribute('value') || el.textContent.trim() || ''
     }
-    if (parseInt(getVal('stats maxplayers')) > 0) withPlayers++
-    if (parseInt(getVal('stats maxplaytime')) > 0) withTime++
-    const rating = parseFloat(item.querySelector('stats ratings average')?.getAttribute('value') || '0')
+
+    const stats = item.querySelector('stats')
+if (parseInt(stats?.getAttribute('maxplayers') || '0') > 0) withPlayers++
+if (parseInt(stats?.getAttribute('maxplaytime') || '0') > 0) withTime++
+const rating = parseFloat(item.querySelector('stats rating average')?.getAttribute('value') || '0')
     if (rating > 0) withRating++
-    const rankEl = item.querySelector('stats ratings ranks rank[name="boardgame"]')
+const rankEl = item.querySelector('stats rating ranks rank[name="boardgame"]')
     if (rankEl && rankEl.getAttribute('value') !== 'Not Ranked') withRank++
     const status = item.querySelector('status')
     if (status?.getAttribute('own') === '1') owned++
