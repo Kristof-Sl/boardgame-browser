@@ -3,7 +3,7 @@ import { db } from './supabase'
 import { generateSchedule, scheduleStats } from './scheduler'
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
-
+//test
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 
 function Card({ children, style }) {
