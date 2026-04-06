@@ -43,7 +43,7 @@ function Btn({ children, onClick, accent, danger, disabled, small, style }) {
       border: `1px solid ${danger ? 'var(--red)' : accent ? 'var(--accent)' : 'var(--border)'}`,
       background: danger ? 'rgba(224,90,90,0.12)' : accent ? 'var(--accent-bg)' : 'transparent',
       color: danger ? 'var(--red)' : accent ? 'var(--accent)' : 'var(--text2)',
-      cursor: disabled ? 'default', opacity: disabled ? 0.5 : 1,
+      cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.5 : 1,
       transition: 'all 140ms', whiteSpace: 'nowrap', ...style,
     }}>{children}</button>
   )
