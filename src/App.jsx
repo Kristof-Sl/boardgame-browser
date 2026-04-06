@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { fetchCollection, mergeCollections, parseCollectionXml } from './bggApi'
-import { exportState, parseStateFile, loadDefaultCollection } from './stateManager'
 import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
+import EventPlanner from './events/EventPlanner'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -19,58 +19,37 @@ const STORAGE_KEY = 'bgg-browser-collections'
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
+    if (!raw) return { accounts: [], collections: {} }
     return JSON.parse(raw)
   } catch {
-    return null
+    return { accounts: [], collections: {} }
   }
 }
 
 function saveToStorage(accounts, collections) {
   try {
+    // Only save accounts that loaded successfully (not loading/errored)
     const savedAccounts = accounts
       .filter(a => !a.loading && !a.error)
       .map(a => ({ username: a.username, count: a.count, fromFile: a.fromFile || false }))
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ accounts: savedAccounts, collections }))
-  } catch {}
+  } catch {
+    // localStorage might be full or unavailable — fail silently
+  }
 }
 
 export default function App() {
-  const [accounts, setAccounts] = useState([])
-  const [collections, setCollections] = useState({})
+  const saved = useMemo(() => loadFromStorage(), [])
+  const [accounts, setAccounts] = useState(saved.accounts || [])
+  const [collections, setCollections] = useState(saved.collections || {})
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
-  const [defaultLoaded, setDefaultLoaded] = useState(false)
-  const [toast, setToast] = useState(null) // { message, type: 'ok'|'err' }
-  const importRef = useRef()
+  const [tab, setTab] = useState('collection') // 'collection' | 'events'
 
-  // On mount: try localStorage first, then default-collection.json
+  // Persist to localStorage whenever accounts or collections change
   useEffect(() => {
-    const stored = loadFromStorage()
-    if (stored && stored.accounts?.length > 0) {
-      setAccounts(stored.accounts)
-      setCollections(stored.collections || {})
-      setDefaultLoaded(true)
-    } else {
-      loadDefaultCollection().then(state => {
-        if (state) {
-          setAccounts(state.accounts)
-          setCollections(state.collections)
-          showToast('Default collection loaded', 'ok')
-        }
-        setDefaultLoaded(true)
-      })
-    }
-  }, [])
-
-  useEffect(() => {
-    if (defaultLoaded) saveToStorage(accounts, collections)
-  }, [accounts, collections, defaultLoaded])
-
-  const showToast = (message, type = 'ok') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
-  }
+    saveToStorage(accounts, collections)
+  }, [accounts, collections])
 
   const allGames = useMemo(() => mergeCollections(collections), [collections])
 
@@ -104,6 +83,7 @@ export default function App() {
       games = games.filter(g => g.maxPlaytime > 0 && g.maxPlaytime <= filters.maxTime)
     }
 
+    // Sort
     games.sort((a, b) => {
       switch (filters.sort) {
         case 'name': return a.name.localeCompare(b.name)
@@ -128,6 +108,7 @@ export default function App() {
 
   const handleAddAccount = useCallback(async (username) => {
     setAccounts(prev => [...prev, { username, loading: true, error: null, count: null }])
+
     try {
       const games = await fetchCollection(username)
       setCollections(prev => ({ ...prev, [username]: games }))
@@ -163,36 +144,6 @@ export default function App() {
     }
   }, [])
 
-  // Export current state as a downloadable JSON
-  const handleExport = useCallback(() => {
-    if (allGames.length === 0) return
-    exportState(accounts, collections, 'boardgame-collection.json')
-    showToast('Collection exported', 'ok')
-  }, [accounts, collections, allGames])
-
-  // Export as default-collection.json (to be committed to the repo)
-  const handleExportDefault = useCallback(() => {
-    if (allGames.length === 0) return
-    exportState(accounts, collections, 'default-collection.json')
-    showToast('Saved as default-collection.json — commit this file to public/ in your repo', 'ok')
-  }, [accounts, collections, allGames])
-
-  // Import a state JSON file
-  const handleImportFile = useCallback(async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    try {
-      const text = await file.text()
-      const state = parseStateFile(text)
-      setAccounts(state.accounts)
-      setCollections(state.collections)
-      showToast(`Loaded ${Object.keys(state.collections).length} collection(s)`, 'ok')
-    } catch (err) {
-      showToast(err.message, 'err')
-    }
-    e.target.value = ''
-  }, [])
-
   const anyLoading = accounts.some(a => a.loading)
 
   return (
@@ -217,41 +168,33 @@ export default function App() {
           }}>
             Board Game Browser
           </h1>
+          {/* Tab switcher */}
+          <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
+            {[['collection', 'Collection'], ['events', '🗓️ Events']].map(([t, label]) => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding: '4px 12px', borderRadius: 6, fontSize: 13,
+                border: `1px solid ${tab === t ? 'var(--accent)' : 'var(--border)'}`,
+                background: tab === t ? 'var(--accent-bg)' : 'transparent',
+                color: tab === t ? 'var(--accent)' : 'var(--text3)',
+                cursor: 'pointer', transition: 'all 140ms',
+              }}>{label}</button>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {allGames.length > 0 && (
-            <span style={{ fontSize: 13, color: 'var(--text3)', marginRight: 4 }}>
+            <span style={{ fontSize: 13, color: 'var(--text3)' }}>
               {filteredGames.length} / {allGames.length} games
             </span>
           )}
-
-          {/* Import button */}
-          <HeaderBtn onClick={() => importRef.current?.click()} title="Import a collection JSON file">
-            ↑ Import
-          </HeaderBtn>
-          <input ref={importRef} type="file" accept=".json,application/json"
-            onChange={handleImportFile} style={{ display: 'none' }} />
-
-          {/* Export button */}
-          {allGames.length > 0 && (
-            <HeaderBtn onClick={handleExport} title="Export current collection as JSON">
-              ↓ Export
-            </HeaderBtn>
-          )}
-
-          {/* Save as default button */}
-          {allGames.length > 0 && (
-            <HeaderBtn onClick={handleExportDefault} title="Download as default-collection.json — commit to public/ to auto-load for all visitors" accent>
-              ★ Save as default
-            </HeaderBtn>
-          )}
-
           <button
             onClick={() => setSidebarOpen(o => !o)}
             style={{
-              padding: '5px 12px', borderRadius: 8,
+              padding: '5px 12px',
+              borderRadius: 8,
               border: '1px solid var(--border)',
-              color: 'var(--text2)', fontSize: 13,
+              color: 'var(--text2)',
+              fontSize: 13,
               background: sidebarOpen ? 'var(--bg3)' : 'transparent',
             }}
           >
@@ -261,7 +204,17 @@ export default function App() {
       </header>
 
       {/* Main layout */}
-      <div style={{ display: 'flex', flex: 1, maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+      <div style={{ display: 'flex', flex: 1, maxWidth: 1400, margin: '0 auto', width: '100%', padding: '0' }}>
+
+        {/* Events tab */}
+        {tab === 'events' && (
+          <div style={{ flex: 1, overflowX: 'hidden' }}>
+            <EventPlanner collection={allGames} />
+          </div>
+        )}
+
+        {/* Collection tab */}
+        {tab === 'collection' && (<>
 
         {/* Sidebar */}
         {sidebarOpen && (
@@ -293,18 +246,24 @@ export default function App() {
 
         {/* Game grid */}
         <main style={{ flex: 1, padding: '24px', overflowX: 'hidden' }}>
-          {allGames.length === 0 && accounts.length === 0 && defaultLoaded && (
-            <EmptyState onImport={() => importRef.current?.click()} />
+          {allGames.length === 0 && accounts.length === 0 && (
+            <EmptyState />
           )}
 
-          {anyLoading && allGames.length === 0 && <LoadingState />}
+          {anyLoading && allGames.length === 0 && (
+            <LoadingState />
+          )}
 
           {allGames.length > 0 && filteredGames.length === 0 && (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text3)' }}>
               <p style={{ fontSize: 24, marginBottom: 8 }}>No games match your filters</p>
               <button
                 onClick={() => setFilters(DEFAULT_FILTERS)}
-                style={{ fontSize: 13, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                style={{
+                  fontSize: 13, color: 'var(--accent)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
               >
                 Clear filters
               </button>
@@ -323,53 +282,18 @@ export default function App() {
             </div>
           )}
         </main>
+        </>)}
       </div>
-
-      {/* Toast notification */}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: 24, left: '50%',
-          transform: 'translateX(-50%)',
-          background: toast.type === 'ok' ? 'var(--green)' : 'var(--red)',
-          color: '#0f0e0c', borderRadius: 8,
-          padding: '10px 20px', fontSize: 13, fontWeight: 500,
-          zIndex: 1000, pointerEvents: 'none',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-          animation: 'fadeInUp 200ms ease',
-        }}>
-          {toast.message}
-        </div>
-      )}
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
       `}</style>
     </div>
   )
 }
 
-function HeaderBtn({ children, onClick, title, accent }) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{
-        padding: '5px 12px', borderRadius: 8, fontSize: 13,
-        border: `1px solid ${accent ? 'var(--accent)' : 'var(--border)'}`,
-        background: accent ? 'var(--accent-bg)' : 'transparent',
-        color: accent ? 'var(--accent)' : 'var(--text2)',
-        cursor: 'pointer', whiteSpace: 'nowrap',
-        transition: 'all 140ms',
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
-function EmptyState({ onImport }) {
+function EmptyState() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
@@ -377,34 +301,36 @@ function EmptyState({ onImport }) {
       padding: '80px 20px', gap: 16, textAlign: 'center',
     }}>
       <div style={{ fontSize: 56 }}>🎲</div>
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 500, color: 'var(--text)' }}>
-        No collection loaded
+      <h2 style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 28, fontWeight: 500,
+        color: 'var(--text)',
+      }}>
+        Add a BGG account to get started
       </h2>
-      <p style={{ fontSize: 15, color: 'var(--text2)', maxWidth: 420, lineHeight: 1.7 }}>
-        Add a BGG account or upload an XML file in the sidebar, or import a previously exported collection.
+      <p style={{ fontSize: 15, color: 'var(--text2)', maxWidth: 400, lineHeight: 1.7 }}>
+        Enter a BoardGameGeek username in the sidebar to import their collection.
+        You can add multiple accounts to browse combined collections.
       </p>
-      <button
-        onClick={onImport}
-        style={{
-          marginTop: 8, padding: '10px 24px', borderRadius: 8, fontSize: 14, fontWeight: 500,
-          border: '1px solid var(--accent)', background: 'var(--accent-bg)',
-          color: 'var(--accent)', cursor: 'pointer',
-        }}
-      >
-        ↑ Import collection
-      </button>
     </div>
   )
 }
 
 function LoadingState() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+      gap: 16,
+    }}>
       {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} style={{
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)', overflow: 'hidden',
-          animation: 'pulse 1.4s ease infinite', animationDelay: `${i * 80}ms`,
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+          animation: 'pulse 1.4s ease infinite',
+          animationDelay: `${i * 80}ms`,
         }}>
           <div style={{ paddingTop: '56%', background: 'var(--bg3)' }} />
           <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
