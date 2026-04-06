@@ -4,6 +4,7 @@ import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
 import EventPlanner from './events/EventPlanner'
+import AdminPage from './events/AdminPage'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -170,7 +171,7 @@ export default function App() {
           </h1>
           {/* Tab switcher */}
           <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
-            {[['collection', 'Collection'], ['events', '🗓️ Events']].map(([t, label]) => (
+            {[['collection', 'Collection'], ['events', '🗓️ Events'], ['admin', '🔧 Admin']].map(([t, label]) => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '4px 12px', borderRadius: 6, fontSize: 13,
                 border: `1px solid ${tab === t ? 'var(--accent)' : 'var(--border)'}`,
@@ -210,6 +211,13 @@ export default function App() {
         {tab === 'events' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
             <EventPlanner collection={allGames} />
+          </div>
+        )}
+
+        {/* Admin tab */}
+        {tab === 'admin' && (
+          <div style={{ flex: 1, overflowX: 'hidden' }}>
+            <AdminPage localCollection={allGames} />
           </div>
         )}
 

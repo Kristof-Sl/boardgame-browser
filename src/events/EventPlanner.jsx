@@ -514,9 +514,9 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload,
           <p style={{ fontSize: 11, color: 'var(--text3)' }}>Participants voted</p>
           <p style={{ fontSize: 20, fontWeight: 500 }}>{new Set(votes.map(v => v.participant_id)).size} / {totalVoters}</p>
         </Card>
-        <Btn onClick={handleCloseVoting} danger disabled={closing} style={{ height: 56 }}>
-          {closing ? 'Closing…' : 'Close voting →'}
-        </Btn>
+        <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--text3)' }}>
+          Voting open — the admin will close voting when ready
+        </div>
       </div>
 
       {/* Filters */}
@@ -813,14 +813,12 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
           </div>
         </div>
 
-        <Btn onClick={handleGenerate} accent disabled={generating} style={{ padding: '10px 20px', fontSize: 14 }}>
-          {generating ? 'Generating schedule…' : '✨ Generate schedule'}
-        </Btn>
-        {!allReady && (
-          <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>
-            ⚠ Not all participants have set preferences and availability yet — you can still generate.
-          </p>
-        )}
+        <div style={{
+          background: 'var(--bg3)', border: '1px solid var(--border)',
+          borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--text3)',
+        }}>
+          Once all participants have set their preferences and availability, the admin will generate the schedule.
+        </div>
       </Card>
     </div>
   )
