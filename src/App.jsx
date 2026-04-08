@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml } from './bggApi'
+import { exportState, parseStateFile, loadDefaultCollection } from './stateManager'
 import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
 import EventPlanner from './events/EventPlanner'
 import AdminPage from './events/AdminPage'
-
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -21,37 +21,58 @@ const STORAGE_KEY = 'bgg-browser-collections'
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { accounts: [], collections: {} }
+    if (!raw) return null
     return JSON.parse(raw)
   } catch {
-    return { accounts: [], collections: {} }
+    return null
   }
 }
 
 function saveToStorage(accounts, collections) {
   try {
-    // Only save accounts that loaded successfully (not loading/errored)
     const savedAccounts = accounts
       .filter(a => !a.loading && !a.error)
       .map(a => ({ username: a.username, count: a.count, fromFile: a.fromFile || false }))
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ accounts: savedAccounts, collections }))
-  } catch {
-    // localStorage might be full or unavailable — fail silently
-  }
+  } catch {}
 }
 
 export default function App() {
   const saved = useMemo(() => loadFromStorage(), [])
-  const [accounts, setAccounts] = useState(saved.accounts || [])
-  const [collections, setCollections] = useState(saved.collections || {})
+  const [accounts, setAccounts] = useState(saved?.accounts || [])
+  const [collections, setCollections] = useState(saved?.collections || {})
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
-  const [tab, setTab] = useState('collection') // 'collection' | 'events'
+  const [tab, setTab] = useState('collection')
+  const [defaultLoaded, setDefaultLoaded] = useState(false)
+  const [toast, setToast] = useState(null)
+  const importRef = useRef()
 
-  // Persist to localStorage whenever accounts or collections change
+  // On mount: if nothing in localStorage, try default-collection.json
   useEffect(() => {
-    saveToStorage(accounts, collections)
-  }, [accounts, collections])
+    const stored = loadFromStorage()
+    if (stored?.accounts?.length > 0) {
+      setDefaultLoaded(true)
+    } else {
+      loadDefaultCollection().then(state => {
+        if (state) {
+          setAccounts(state.accounts)
+          setCollections(state.collections)
+          showToast('Default collection loaded', 'ok')
+        }
+        setDefaultLoaded(true)
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (defaultLoaded) saveToStorage(accounts, collections)
+  }, [accounts, collections, defaultLoaded])
+
+  const showToast = (message, type = 'ok') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   const allGames = useMemo(() => mergeCollections(collections), [collections])
 
@@ -85,7 +106,6 @@ export default function App() {
       games = games.filter(g => g.maxPlaytime > 0 && g.maxPlaytime <= filters.maxTime)
     }
 
-    // Sort
     games.sort((a, b) => {
       switch (filters.sort) {
         case 'name': return a.name.localeCompare(b.name)
@@ -110,7 +130,6 @@ export default function App() {
 
   const handleAddAccount = useCallback(async (username) => {
     setAccounts(prev => [...prev, { username, loading: true, error: null, count: null }])
-
     try {
       const games = await fetchCollection(username)
       setCollections(prev => ({ ...prev, [username]: games }))
@@ -146,33 +165,58 @@ export default function App() {
     }
   }, [])
 
-const handleUploadCombinedXml = useCallback(async (xmlText) => {
+  const handleUploadCombinedXml = useCallback(async (xmlText) => {
     try {
-      const gamesByOwner = parseCombinedXml(xmlText);
-      const newOwners = Object.keys(gamesByOwner);
-
-      // Merge all the new collections into state
-      setCollections(prev => ({ ...prev, ...gamesByOwner }));
-
-      // Add all the detected owners into the sidebar accounts list
+      const gamesByOwner = parseCombinedXml(xmlText)
+      const newOwners = Object.keys(gamesByOwner)
+      setCollections(prev => ({ ...prev, ...gamesByOwner }))
       setAccounts(prev => {
-        const next = [...prev];
+        const next = [...prev]
         newOwners.forEach(owner => {
-          const existingIndex = next.findIndex(a => a.username === owner);
-          if (existingIndex === -1) {
-            next.push({ username: owner, loading: false, error: null, count: gamesByOwner[owner].length, fromFile: true });
+          const idx = next.findIndex(a => a.username === owner)
+          if (idx === -1) {
+            next.push({ username: owner, loading: false, error: null, count: gamesByOwner[owner].length, fromFile: true })
           } else {
-            // Update game count if account already existed
-            next[existingIndex].count = gamesByOwner[owner].length;
+            next[idx].count = gamesByOwner[owner].length
           }
-        });
-        return next;
-      });
-      return null;
+        })
+        return next
+      })
+      return null
     } catch (err) {
-      return err.message;
+      return err.message
     }
-  }, []);
+  }, [])
+
+  // Export current state as downloadable JSON
+  const handleExport = useCallback(() => {
+    if (allGames.length === 0) return
+    exportState(accounts, collections, 'boardgame-collection.json')
+    showToast('Collection exported', 'ok')
+  }, [accounts, collections, allGames])
+
+  // Export as default-collection.json (commit to public/ in repo)
+  const handleExportDefault = useCallback(() => {
+    if (allGames.length === 0) return
+    exportState(accounts, collections, 'default-collection.json')
+    showToast('Saved — commit default-collection.json to public/ in your repo', 'ok')
+  }, [accounts, collections, allGames])
+
+  // Import a state JSON file
+  const handleImportFile = useCallback(async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const state = parseStateFile(text)
+      setAccounts(state.accounts)
+      setCollections(state.collections)
+      showToast(`Loaded ${Object.keys(state.collections).length} collection(s)`, 'ok')
+    } catch (err) {
+      showToast(err.message, 'err')
+    }
+    e.target.value = ''
+  }, [])
 
   const anyLoading = accounts.some(a => a.loading)
 
@@ -181,7 +225,7 @@ const handleUploadCombinedXml = useCallback(async (xmlText) => {
       {/* Header */}
       <header style={{
         borderBottom: '1px solid var(--border)',
-        padding: '0 24px',
+        padding: '0 16px 0 24px',
         height: 56,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 10,
@@ -211,20 +255,42 @@ const handleUploadCombinedXml = useCallback(async (xmlText) => {
             ))}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {allGames.length > 0 && (
-            <span style={{ fontSize: 13, color: 'var(--text3)' }}>
+            <span style={{ fontSize: 13, color: 'var(--text3)', marginRight: 4 }}>
               {filteredGames.length} / {allGames.length} games
             </span>
           )}
+
+          {/* Import */}
+          <HeaderBtn onClick={() => importRef.current?.click()} title="Import a previously exported collection JSON">
+            ↑ Import
+          </HeaderBtn>
+          <input ref={importRef} type="file" accept=".json,application/json"
+            onChange={handleImportFile} style={{ display: 'none' }} />
+
+          {/* Export */}
+          {allGames.length > 0 && (
+            <HeaderBtn onClick={handleExport} title="Export current collection as a JSON file">
+              ↓ Export
+            </HeaderBtn>
+          )}
+
+          {/* Save as default */}
+          {allGames.length > 0 && (
+            <HeaderBtn onClick={handleExportDefault} accent
+              title="Download as default-collection.json — commit this file to public/ so every visitor loads it automatically">
+              ★ Save as default
+            </HeaderBtn>
+          )}
+
           <button
             onClick={() => setSidebarOpen(o => !o)}
             style={{
-              padding: '5px 12px',
-              borderRadius: 8,
+              padding: '5px 12px', borderRadius: 8,
               border: '1px solid var(--border)',
-              color: 'var(--text2)',
-              fontSize: 13,
+              color: 'var(--text2)', fontSize: 13,
               background: sidebarOpen ? 'var(--bg3)' : 'transparent',
             }}
           >
@@ -269,7 +335,7 @@ const handleUploadCombinedXml = useCallback(async (xmlText) => {
               onAdd={handleAddAccount}
               onRemove={handleRemoveAccount}
               onUploadXml={handleUploadXml}
-			  onUploadCombinedXml={handleUploadCombinedXml}
+              onUploadCombinedXml={handleUploadCombinedXml}
               loading={anyLoading}
             />
             {allGames.length > 0 && (
@@ -285,7 +351,7 @@ const handleUploadCombinedXml = useCallback(async (xmlText) => {
         {/* Game grid */}
         <main style={{ flex: 1, padding: '24px', overflowX: 'hidden' }}>
           {allGames.length === 0 && accounts.length === 0 && (
-            <EmptyState />
+            <EmptyState onImport={() => importRef.current?.click()} />
           )}
 
           {anyLoading && allGames.length === 0 && (
@@ -323,15 +389,44 @@ const handleUploadCombinedXml = useCallback(async (xmlText) => {
         </>)}
       </div>
 
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%',
+          transform: 'translateX(-50%)',
+          background: toast.type === 'ok' ? 'var(--green)' : 'var(--red)',
+          color: '#0f0e0c', borderRadius: 8,
+          padding: '10px 20px', fontSize: 13, fontWeight: 500,
+          zIndex: 1000, pointerEvents: 'none',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+          animation: 'fadeInUp 200ms ease',
+        }}>
+          {toast.message}
+        </div>
+      )}
+
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
       `}</style>
     </div>
   )
 }
 
-function EmptyState() {
+function HeaderBtn({ children, onClick, title, accent }) {
+  return (
+    <button onClick={onClick} title={title} style={{
+      padding: '5px 12px', borderRadius: 8, fontSize: 13,
+      border: `1px solid ${accent ? 'var(--accent)' : 'var(--border)'}`,
+      background: accent ? 'var(--accent-bg)' : 'transparent',
+      color: accent ? 'var(--accent)' : 'var(--text2)',
+      cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 140ms',
+    }}>{children}</button>
+  )
+}
+
+function EmptyState({ onImport }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
@@ -344,12 +439,21 @@ function EmptyState() {
         fontSize: 28, fontWeight: 500,
         color: 'var(--text)',
       }}>
-        Add a BGG account to get started
+        No collection loaded
       </h2>
-      <p style={{ fontSize: 15, color: 'var(--text2)', maxWidth: 400, lineHeight: 1.7 }}>
-        Enter a BoardGameGeek username in the sidebar to import their collection.
-        You can add multiple accounts to browse combined collections.
+      <p style={{ fontSize: 15, color: 'var(--text2)', maxWidth: 420, lineHeight: 1.7 }}>
+        Add a BGG account or upload an XML file in the sidebar, or import a previously exported collection.
       </p>
+      <button
+        onClick={onImport}
+        style={{
+          marginTop: 8, padding: '10px 24px', borderRadius: 8, fontSize: 14, fontWeight: 500,
+          border: '1px solid var(--accent)', background: 'var(--accent-bg)',
+          color: 'var(--accent)', cursor: 'pointer',
+        }}
+      >
+        ↑ Import collection
+      </button>
     </div>
   )
 }
