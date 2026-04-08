@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
-import { fetchCollection, mergeCollections, parseCollectionXml } from './bggApi'
+import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml } from './bggApi'
 import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
 import EventPlanner from './events/EventPlanner'
 import AdminPage from './events/AdminPage'
+
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -145,6 +146,34 @@ export default function App() {
     }
   }, [])
 
+const handleUploadCombinedXml = useCallback(async (xmlText) => {
+    try {
+      const gamesByOwner = parseCombinedXml(xmlText);
+      const newOwners = Object.keys(gamesByOwner);
+
+      // Merge all the new collections into state
+      setCollections(prev => ({ ...prev, ...gamesByOwner }));
+
+      // Add all the detected owners into the sidebar accounts list
+      setAccounts(prev => {
+        const next = [...prev];
+        newOwners.forEach(owner => {
+          const existingIndex = next.findIndex(a => a.username === owner);
+          if (existingIndex === -1) {
+            next.push({ username: owner, loading: false, error: null, count: gamesByOwner[owner].length, fromFile: true });
+          } else {
+            // Update game count if account already existed
+            next[existingIndex].count = gamesByOwner[owner].length;
+          }
+        });
+        return next;
+      });
+      return null;
+    } catch (err) {
+      return err.message;
+    }
+  }, []);
+
   const anyLoading = accounts.some(a => a.loading)
 
   return (
@@ -240,6 +269,7 @@ export default function App() {
               onAdd={handleAddAccount}
               onRemove={handleRemoveAccount}
               onUploadXml={handleUploadXml}
+			  onUploadCombinedXml={handleUploadCombinedXml}
               loading={anyLoading}
             />
             {allGames.length > 0 && (
