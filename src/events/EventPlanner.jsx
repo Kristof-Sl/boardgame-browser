@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { db, isConfigured } from './supabase'
-import { generateSchedule, scheduleStats, getSlots } from './scheduler'
+import { getSlots } from './scheduler'
 
 // ─── Shared UI helpers ────────────────────────────────────────────────────────
 
@@ -599,10 +599,9 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload,
 
 // ─── Phase 2: Preferences & Availability ─────────────────────────────────────
 
-function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, refreshEvent }) {
+function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }) {
   const [savingPref, setSavingPref] = useState(null)
   const [savingAvail, setSavingAvail] = useState(false)
-  const [generating, setGenerating] = useState(false)
 
   // My preferences: gameId -> preference
   const myPrefs = {}
@@ -639,39 +638,6 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
     finally { setSavingAvail(false) }
   }
 
-  // Check if all participants have submitted preferences and availability
-  const participantsWithPrefs = new Set(prefs.map(p => p.participant_id))
-  const participantsWithAvail = participants.filter(p => p.arrive_date && p.depart_date)
-  const allReady = participantsWithPrefs.size === participants.length && participantsWithAvail.length === participants.length
-
-  const [schedParams, setSchedParams] = useState({
-    hoursPerPart: 3, durationMultiplier: 1.5,
-    prioritizePreferences: 1, prioritizeSocial: 1,
-    minPlayersPerGame: 2, maxParallelGames: 2,
-  })
-
-  const handleGenerate = async () => {
-    setGenerating(true)
-    try {
-      // Build preferences map: participantId -> gameId -> preference
-      const prefMap = {}
-      for (const p of prefs) {
-        if (!prefMap[p.participant_id]) prefMap[p.participant_id] = {}
-        prefMap[p.participant_id][p.game_id] = p.preference
-      }
-
-      const schedule = generateSchedule(event, participants, eventGames, prefMap, schedParams)
-      const stats = scheduleStats(schedule, participants, prefMap)
-
-      await db.update('events', {
-        status: 'scheduled',
-        schedule: schedule,
-        schedule_params: { ...schedParams, generatedAt: new Date().toISOString(), stats },
-      }, `id=eq.${event.id}`)
-      await refreshEvent()
-    } catch (e) { alert(e.message) }
-    finally { setGenerating(false) }
-  }
 
   const partOptions = PARTS.map(p => ({ value: p, label: p.charAt(0).toUpperCase() + p.slice(1) }))
 
@@ -761,65 +727,12 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
         </div>
       </Card>
 
-      {/* Schedule parameters + generate (organizer action) */}
-      <Card>
-        <p style={{ fontSize: 12, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>
-          Schedule parameters (organizer)
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 16 }}>
-          <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)' }}>Hours per time block (morning/afternoon/evening)</label>
-            <input type="number" min={1} max={8} step={0.5} value={schedParams.hoursPerPart}
-              onChange={e => setSchedParams(p => ({ ...p, hoursPerPart: parseFloat(e.target.value) }))}
-              style={{ width: '100%', marginTop: 4, background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 12px', color: 'var(--text)', fontSize: 13, outline: 'none' }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)' }}>Duration multiplier (e.g. 1.5 = 150% of BGG duration)</label>
-            <input type="number" min={1} max={4} step={0.1} value={schedParams.durationMultiplier}
-              onChange={e => setSchedParams(p => ({ ...p, durationMultiplier: parseFloat(e.target.value) }))}
-              style={{ width: '100%', marginTop: 4, background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 12px', color: 'var(--text)', fontSize: 13, outline: 'none' }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)' }}>Max parallel games per time block</label>
-            <input type="number" min={1} max={5} value={schedParams.maxParallelGames}
-              onChange={e => setSchedParams(p => ({ ...p, maxParallelGames: parseInt(e.target.value) }))}
-              style={{ width: '100%', marginTop: 4, background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 12px', color: 'var(--text)', fontSize: 13, outline: 'none' }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)' }}>Min players per game</label>
-            <input type="number" min={2} max={6} value={schedParams.minPlayersPerGame}
-              onChange={e => setSchedParams(p => ({ ...p, minPlayersPerGame: parseInt(e.target.value) }))}
-              style={{ width: '100%', marginTop: 4, background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 12px', color: 'var(--text)', fontSize: 13, outline: 'none' }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)' }}>Prioritize preferences (0 = ignore, 2 = strong)</label>
-            <input type="range" min={0} max={2} step={0.5} value={schedParams.prioritizePreferences}
-              onChange={e => setSchedParams(p => ({ ...p, prioritizePreferences: parseFloat(e.target.value) }))}
-              style={{ width: '100%', marginTop: 8 }}
-            />
-            <span style={{ fontSize: 11, color: 'var(--accent)' }}>{schedParams.prioritizePreferences}</span>
-          </div>
-          <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)' }}>Prioritize social mixing (0 = ignore, 2 = strong)</label>
-            <input type="range" min={0} max={2} step={0.5} value={schedParams.prioritizeSocial}
-              onChange={e => setSchedParams(p => ({ ...p, prioritizeSocial: parseFloat(e.target.value) }))}
-              style={{ width: '100%', marginTop: 8 }}
-            />
-            <span style={{ fontSize: 11, color: 'var(--accent)' }}>{schedParams.prioritizeSocial}</span>
-          </div>
-        </div>
-
-        <div style={{
-          background: 'var(--bg3)', border: '1px solid var(--border)',
-          borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--text3)',
-        }}>
-          Once all participants have set their preferences and availability, the admin will generate the schedule.
-        </div>
-      </Card>
+      <div style={{
+        background: 'var(--bg3)', border: '1px solid var(--border)',
+        borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--text3)',
+      }}>
+        Once all participants have set their preferences and availability, the admin will generate the schedule.
+      </div>
     </div>
   )
 }
