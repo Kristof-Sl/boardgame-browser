@@ -198,12 +198,35 @@ export function mergeCollections(collectionsMap) {
       var game = games[i]
       if (merged.has(game.id)) {
         var existing = merged.get(game.id)
+        // Track per-user status details
+        existing.ownerStatuses[username] = {
+          owned: game.owned,
+          wishlist: game.wishlist,
+          wantToPlay: game.wantToPlay,
+          prevOwned: game.prevOwned,
+          numPlays: game.numPlays,
+          userRating: game.userRating,
+        }
         if (!existing.owners.includes(username)) existing.owners.push(username)
+        if (game.owned && !existing.actualOwners.includes(username)) existing.actualOwners.push(username)
+        // Aggregate flags for filter compatibility
         existing.owned = existing.owned || game.owned
         existing.wishlist = existing.wishlist || game.wishlist
         existing.wantToPlay = existing.wantToPlay || game.wantToPlay
+        existing.prevOwned = existing.prevOwned || game.prevOwned
       } else {
-        merged.set(game.id, Object.assign({}, game))
+        var entry = Object.assign({}, game)
+        entry.ownerStatuses = {}
+        entry.ownerStatuses[username] = {
+          owned: game.owned,
+          wishlist: game.wishlist,
+          wantToPlay: game.wantToPlay,
+          prevOwned: game.prevOwned,
+          numPlays: game.numPlays,
+          userRating: game.userRating,
+        }
+        entry.actualOwners = game.owned ? [username] : []
+        merged.set(game.id, entry)
       }
     }
   }
