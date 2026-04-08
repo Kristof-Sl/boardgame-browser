@@ -405,6 +405,34 @@ export default function App() {
         </div>
       )}
 
+      {/* BGG credit footer */}
+      <footer style={{
+        borderTop: '1px solid var(--border)',
+        padding: '10px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        flexShrink: 0,
+      }}>
+        <a
+          href="https://boardgamegeek.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center',
+            textDecoration: 'none', opacity: 0.75, transition: 'opacity 150ms',
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
+        >
+          <img
+            src="/powered_by_BGG.png"
+            alt="Powered by BoardGameGeek"
+            style={{ height: 28, width: 'auto' }}
+          />
+        </a>
+      </footer>
+
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
