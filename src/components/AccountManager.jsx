@@ -3,12 +3,13 @@ import React, { useState, useRef } from 'react'
 const BGG_COLLECTION_URL = (username) =>
   `https://boardgamegeek.com/xmlapi2/collection?username=${encodeURIComponent(username)}&stats=1&excludesubtype=boardgameexpansion`
 
-export default function AccountManager({ accounts, onAdd, onRemove, onUploadXml, loading }) {
+export default function AccountManager({ accounts, onAdd, onRemove, onUploadXml, onUploadCombinedXml, loading }) {
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
-  const [mode, setMode] = useState('api') // 'api' | 'upload'
+  const [mode, setMode] = useState('api') // 'api' | 'upload' | 'combined'
   const [uploadUsername, setUploadUsername] = useState('')
   const fileRef = useRef()
+  const combinedFileRef = useRef()
 
   const handleAdd = async () => {
     const username = input.trim()
@@ -47,6 +48,16 @@ export default function AccountManager({ accounts, onAdd, onRemove, onUploadXml,
       setUploadUsername('')
       if (fileRef.current) fileRef.current.value = ''
     }
+  }
+
+  const handleCombinedFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setError('')
+    const text = await file.text()
+    const err = await onUploadCombinedXml(text)
+    if (err) setError(String(err))
+    else if (combinedFileRef.current) combinedFileRef.current.value = ''
   }
 
   const apiUrl = input.trim() ? BGG_COLLECTION_URL(input.trim()) : null
@@ -124,7 +135,7 @@ export default function AccountManager({ accounts, onAdd, onRemove, onUploadXml,
 
       {/* Mode toggle */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-        {['api', 'upload'].map(m => (
+        {['api', 'upload', 'combined'].map(m => (
           <button key={m} onClick={() => { setMode(m); setError('') }} style={{
             flex: 1, padding: '6px 0', borderRadius: 7, fontSize: 12, fontWeight: 500,
             border: `1px solid ${mode === m ? 'var(--accent)' : 'var(--border)'}`,
@@ -132,7 +143,7 @@ export default function AccountManager({ accounts, onAdd, onRemove, onUploadXml,
             color: mode === m ? 'var(--accent)' : 'var(--text3)',
             cursor: 'pointer', transition: 'all 140ms',
           }}>
-            {m === 'api' ? '⚡ API' : '📄 Upload XML'}
+            {m === 'api' ? '⚡ API' : m === 'upload' ? '📄 Upload XML' : '📦 Combined'}
           </button>
         ))}
       </div>
@@ -249,6 +260,37 @@ export default function AccountManager({ accounts, onAdd, onRemove, onUploadXml,
             />
           </div>
 
+          {error && <ErrorBox text={error} />}
+        </div>
+      )}
+
+      {/* Combined XML mode */}
+      {mode === 'combined' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>
+            Upload a combined XML file containing collections from multiple BGG users. All owners will be detected and added automatically.
+          </p>
+          <div
+            onClick={() => combinedFileRef.current?.click()}
+            style={{
+              border: '1px dashed var(--border2)',
+              borderRadius: 8, padding: '14px',
+              textAlign: 'center', cursor: 'pointer',
+              transition: 'border-color 140ms, background 140ms',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-bg)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.background = 'transparent' }}
+          >
+            <p style={{ fontSize: 13, color: 'var(--text2)' }}>Click to upload combined XML</p>
+            <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>.xml files only</p>
+            <input
+              ref={combinedFileRef}
+              type="file"
+              accept=".xml,text/xml,application/xml"
+              onChange={handleCombinedFileUpload}
+              style={{ display: 'none' }}
+            />
+          </div>
           {error && <ErrorBox text={error} />}
         </div>
       )}
