@@ -233,7 +233,7 @@ export default function App() {
         backdropFilter: 'blur(8px)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img
+          <img 
 			src="/MeepleSync_Logo.png"
 			alt="MeepleSync"
 			style={{ height: 36, width: 36, borderRadius: 8, objectFit: 'cover' }}
