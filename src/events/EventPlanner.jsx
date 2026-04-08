@@ -351,7 +351,9 @@ function EventDashboard({ initialEvent, localCollection }) {
 
   const mergedCollection = mergeCollections(event.collection || [], localCollection)
 
-  const commonProps = { event, participants, me, votes, eventGames, prefs, reload, refreshEvent, mergedCollection }
+  const isAdmin = sessionStorage.getItem('admin_auth') === '1'
+
+  const commonProps = { event, participants, me, votes, eventGames, prefs, reload, refreshEvent, mergedCollection, isAdmin }
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
@@ -599,7 +601,7 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload,
 
 // ─── Phase 2: Preferences & Availability ─────────────────────────────────────
 
-function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, refreshEvent }) {
+function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, refreshEvent, isAdmin }) {
   const [savingPref, setSavingPref] = useState(null)
   const [savingAvail, setSavingAvail] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -762,6 +764,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
       </Card>
 
       {/* Schedule parameters + generate (organizer action) */}
+      {isAdmin && (
       <Card>
         <p style={{ fontSize: 12, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>
           Schedule parameters (organizer)
@@ -820,13 +823,14 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
           Once all participants have set their preferences and availability, the admin will generate the schedule.
         </div>
       </Card>
+      )}
     </div>
   )
 }
 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
-function SchedulePhase({ event, participants }) {
+function SchedulePhase({ event, participants, isAdmin }) {
   const schedule = event.schedule || []
   const params = event.schedule_params || {}
 
@@ -847,7 +851,7 @@ function SchedulePhase({ event, participants }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Stats */}
-      {params.stats && (
+      {isAdmin && params.stats && (
         <Card>
           <p style={{ fontSize: 12, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Schedule overview</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
