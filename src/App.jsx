@@ -233,15 +233,18 @@ export default function App() {
         backdropFilter: 'blur(8px)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 22 }}>🎲</span>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 20, fontWeight: 500,
-            color: 'var(--text)',
-            letterSpacing: '-0.01em',
-          }}>
-            Board Game Browser
-          </h1>
+          <img 
+			src="/MeepleSync_Logo.png"
+			alt="MeepleSync"
+			style={{ height: 36, width: 36, borderRadius: 8, objectFit: 'cover' }}
+			/>
+		<h1 style={{
+			fontFamily: 'var(--font-display)',
+			fontSize: 20, fontWeight: 700,
+			letterSpacing: '-0.01em',
+		}}>
+		<span style={{ color: 'var(--text)' }}>Meeple</span><span style={{ color: 'var(--accent)' }}>Sync</span>
+	</h1>
           {/* Tab switcher */}
           <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
             {[['collection', 'Collection'], ['events', '🗓️ Events'], ['admin', '🔧 Admin']].map(([t, label]) => (
