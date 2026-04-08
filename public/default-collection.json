@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-04-06T09:53:31.767Z",
+  "exportedAt": "2026-04-08T21:38:31.366Z",
   "accounts": [
     {
       "username": "ksleurs",
@@ -21,6 +21,11 @@
       "username": "anoebiz",
       "count": 74,
       "fromFile": true
+    },
+    {
+      "username": "Ocristus",
+      "count": 48,
+      "fromFile": false
     }
   ],
   "collections": {
@@ -47,7 +52,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/68448"
       },
@@ -73,7 +79,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/180263"
       },
@@ -98,7 +105,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/299317"
       },
@@ -124,7 +132,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/22545"
       },
@@ -150,7 +159,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/4098"
       },
@@ -177,7 +187,9 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/31260"
       },
@@ -228,7 +240,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/6249"
       },
@@ -253,7 +266,8 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/5404"
       },
@@ -279,7 +293,8 @@
         "numPlays": 1,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/185343"
       },
@@ -304,7 +319,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/140934"
       },
@@ -355,7 +371,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/8051"
       },
@@ -380,7 +397,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/986"
       },
@@ -405,7 +423,8 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/25417"
       },
@@ -431,7 +450,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/37111"
       },
@@ -456,7 +476,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/27823"
       },
@@ -482,7 +503,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/9446"
       },
@@ -507,7 +529,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/21631"
       },
@@ -532,7 +555,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/140711"
       },
@@ -557,7 +581,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/39938"
       },
@@ -609,7 +634,8 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/84876"
       },
@@ -634,7 +660,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/155426"
       },
@@ -661,7 +688,9 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/13"
       },
@@ -687,7 +716,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/278"
       },
@@ -712,7 +742,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/554"
       },
@@ -763,7 +794,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/216132"
       },
@@ -788,7 +820,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/72225"
       },
@@ -814,7 +847,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/198773"
       },
@@ -866,7 +900,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/121"
       },
@@ -917,7 +952,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/12995"
       },
@@ -943,7 +979,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/10"
       },
@@ -994,7 +1031,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/33160"
       },
@@ -1019,7 +1057,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/715"
       },
@@ -1044,7 +1083,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/15511"
       },
@@ -1094,7 +1134,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/31481"
       },
@@ -1120,7 +1161,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/19857"
       },
@@ -1145,7 +1187,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/19100"
       },
@@ -1196,7 +1239,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/98778"
       },
@@ -1246,7 +1290,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/83629"
       },
@@ -1272,7 +1317,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/154203"
       },
@@ -1297,7 +1343,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/9674"
       },
@@ -1322,7 +1369,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/466"
       },
@@ -1347,7 +1395,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/1245"
       },
@@ -1373,7 +1422,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/176494"
       },
@@ -1398,7 +1448,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/855"
       },
@@ -1474,7 +1525,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/4610"
       },
@@ -1501,7 +1553,8 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/312484"
       },
@@ -1528,7 +1581,8 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/129622"
       },
@@ -1554,7 +1608,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/209778"
       },
@@ -1579,7 +1634,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/3931"
       },
@@ -1604,7 +1660,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/21791"
       },
@@ -1629,7 +1686,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/256"
       },
@@ -1654,7 +1712,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/209001"
       },
@@ -1679,7 +1738,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/12194"
       },
@@ -1731,7 +1791,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/226320"
       },
@@ -1781,7 +1842,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/193558"
       },
@@ -1833,7 +1895,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/164928"
       },
@@ -1860,7 +1923,8 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/163412"
       },
@@ -1885,7 +1949,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/145186"
       },
@@ -1910,7 +1975,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/24480"
       },
@@ -1962,7 +2028,8 @@
         "owners": [
           "ksleurs",
           "elpaljasso",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/3267"
       },
@@ -2013,7 +2080,9 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/2651"
       },
@@ -2039,7 +2108,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/44163"
       },
@@ -2065,7 +2135,8 @@
         "numPlays": 1,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/555"
       },
@@ -2092,7 +2163,8 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/3076"
       },
@@ -2120,7 +2192,8 @@
           "ksleurs",
           "jwelv",
           "elpaljasso",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/244521"
       },
@@ -2145,7 +2218,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/12"
       },
@@ -2171,7 +2245,9 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/28143"
       },
@@ -2197,7 +2273,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/245654"
       },
@@ -2222,7 +2299,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/12962"
       },
@@ -2298,7 +2376,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/121921"
       },
@@ -2323,7 +2402,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/18"
       },
@@ -2349,7 +2429,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/37380"
       },
@@ -2374,7 +2455,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/16496"
       },
@@ -2450,7 +2532,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/1198"
       },
@@ -2502,7 +2585,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/38453"
       },
@@ -2527,7 +2611,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/123096"
       },
@@ -2552,7 +2637,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/142079"
       },
@@ -2579,7 +2665,8 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/148228"
       },
@@ -2605,7 +2692,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/192291"
       },
@@ -2631,7 +2719,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/286096"
       },
@@ -2656,7 +2745,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/17161"
       },
@@ -2708,7 +2798,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/25613"
       },
@@ -2733,7 +2824,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/54"
       },
@@ -2785,7 +2877,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/9028"
       },
@@ -2811,7 +2904,8 @@
         "numPlays": 0,
         "owners": [
           "ksleurs",
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/247763"
       },
@@ -2836,7 +2930,9 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "ksleurs"
+          "ksleurs",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/491"
       },
@@ -2863,7 +2959,9 @@
         "owners": [
           "ksleurs",
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/266192"
       }
@@ -2890,7 +2988,8 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/207830"
       },
@@ -2940,7 +3039,8 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/316377"
       },
@@ -2966,7 +3066,9 @@
         "numPlays": 20,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/173346"
       },
@@ -3041,7 +3143,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/191189"
       },
@@ -3141,7 +3244,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/200680"
       },
@@ -3166,7 +3270,9 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/161970"
       },
@@ -3517,7 +3623,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/230802"
       },
@@ -3542,7 +3649,8 @@
         "prevOwned": false,
         "numPlays": 6,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/287954"
       },
@@ -3744,7 +3852,8 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/170216"
       },
@@ -3820,7 +3929,8 @@
         "numPlays": 3,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/224517"
       },
@@ -3896,7 +4006,8 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/822"
       },
@@ -3947,7 +4058,8 @@
         "numPlays": 1,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/295947"
       },
@@ -4076,7 +4188,9 @@
         "owners": [
           "jwelv",
           "elpaljasso",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/102794"
       },
@@ -4126,7 +4240,9 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/18602"
       },
@@ -4176,7 +4292,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/270970"
       },
@@ -4201,7 +4318,8 @@
         "prevOwned": false,
         "numPlays": 2,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/242574"
       },
@@ -4301,7 +4419,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/197376"
       },
@@ -4328,7 +4447,8 @@
         "owners": [
           "jwelv",
           "elpaljasso",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/478"
       },
@@ -4479,7 +4599,8 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/178900"
       },
@@ -4706,7 +4827,8 @@
         "prevOwned": false,
         "numPlays": 2,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/253344"
       },
@@ -4909,7 +5031,8 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/36218"
       },
@@ -5286,7 +5409,8 @@
         "numPlays": 7,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/199792"
       },
@@ -5311,7 +5435,8 @@
         "prevOwned": false,
         "numPlays": 10,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/177736"
       },
@@ -5386,7 +5511,9 @@
         "prevOwned": false,
         "numPlays": 3,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/157354"
       },
@@ -5437,7 +5564,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/175914"
       },
@@ -5540,7 +5668,8 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/284189"
       },
@@ -5615,7 +5744,8 @@
         "prevOwned": false,
         "numPlays": 21,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/220308"
       },
@@ -5740,7 +5870,8 @@
         "prevOwned": false,
         "numPlays": 45,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/174430"
       },
@@ -5792,7 +5923,8 @@
         "numPlays": 5,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/291457"
       },
@@ -5867,7 +5999,8 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/93"
       },
@@ -5943,7 +6076,9 @@
         "numPlays": 4,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/193738"
       },
@@ -6372,7 +6507,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/155821"
       },
@@ -6649,7 +6785,8 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/297562"
       },
@@ -6699,7 +6836,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/107529"
       },
@@ -6725,7 +6863,8 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/204583"
       },
@@ -6926,7 +7065,9 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/110327"
       },
@@ -7051,7 +7192,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/143884"
       },
@@ -7076,7 +7218,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/96848"
       },
@@ -7101,7 +7244,8 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/248562"
       },
@@ -7302,7 +7446,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/124708"
       },
@@ -7328,7 +7473,8 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/318977"
       },
@@ -7604,7 +7750,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/195421"
       },
@@ -7679,7 +7826,8 @@
         "prevOwned": false,
         "numPlays": 3,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/244711"
       },
@@ -7754,7 +7902,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/396790"
       },
@@ -7779,7 +7928,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/291572"
       },
@@ -8082,7 +8232,9 @@
         "prevOwned": false,
         "numPlays": 1,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/256730"
       },
@@ -8739,7 +8891,8 @@
         "owners": [
           "jwelv",
           "elpaljasso",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/194655"
       },
@@ -8789,7 +8942,8 @@
         "prevOwned": false,
         "numPlays": 8,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/169786"
       },
@@ -8995,7 +9149,9 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/40692"
       },
@@ -9046,7 +9202,8 @@
         "numPlays": 10,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/162886"
       },
@@ -9273,7 +9430,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/233312"
       },
@@ -9298,7 +9456,9 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/123260"
       },
@@ -9625,7 +9785,9 @@
         "prevOwned": false,
         "numPlays": 10,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/120677"
       },
@@ -9650,7 +9812,9 @@
         "prevOwned": false,
         "numPlays": 6,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/167791"
       },
@@ -9700,7 +9864,8 @@
         "prevOwned": false,
         "numPlays": 40,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/182028"
       },
@@ -9777,7 +9942,8 @@
         "owners": [
           "jwelv",
           "elpaljasso",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/14996"
       },
@@ -9803,7 +9969,9 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/42"
       },
@@ -9878,7 +10046,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/257283"
       },
@@ -10079,7 +10248,8 @@
         "prevOwned": false,
         "numPlays": 2,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/233078"
       },
@@ -10104,7 +10274,9 @@
         "prevOwned": false,
         "numPlays": 3,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/126163"
       },
@@ -10206,7 +10378,8 @@
         "prevOwned": false,
         "numPlays": 6,
         "owners": [
-          "jwelv"
+          "jwelv",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/224783"
       },
@@ -10282,7 +10455,8 @@
         "numPlays": 0,
         "owners": [
           "jwelv",
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/183394"
       },
@@ -11113,7 +11287,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/11"
       },
@@ -11789,7 +11964,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/27746"
       },
@@ -11864,7 +12040,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/192457"
       },
@@ -12014,7 +12191,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/1219"
       },
@@ -13739,7 +13917,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/286"
       },
@@ -13839,7 +14018,9 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/1261"
       },
@@ -14089,7 +14270,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/1927"
       },
@@ -14864,7 +15046,8 @@
         "prevOwned": false,
         "numPlays": 4,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/131260"
       },
@@ -15614,7 +15797,9 @@
         "prevOwned": true,
         "numPlays": 0,
         "owners": [
-          "elpaljasso"
+          "elpaljasso",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/204"
       },
@@ -16891,7 +17076,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/32116"
       },
@@ -16941,7 +17127,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/20080"
       },
@@ -16966,7 +17153,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/16499"
       },
@@ -16991,7 +17179,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/6752"
       },
@@ -17016,7 +17205,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/18723"
       },
@@ -17091,7 +17281,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/35248"
       },
@@ -17191,7 +17382,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/58602"
       },
@@ -17416,7 +17608,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/56707"
       },
@@ -17491,7 +17684,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/156129"
       },
@@ -17541,7 +17735,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/91312"
       },
@@ -17716,7 +17911,9 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/35677"
       },
@@ -17816,7 +18013,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/37461"
       },
@@ -17991,7 +18189,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/7967"
       },
@@ -18216,7 +18415,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/21239"
       },
@@ -18316,7 +18516,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/55600"
       },
@@ -18341,7 +18542,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/4095"
       },
@@ -18416,7 +18618,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/22825"
       },
@@ -18466,7 +18669,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/265736"
       },
@@ -18491,7 +18695,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/163805"
       },
@@ -18516,7 +18721,8 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/361545"
       },
@@ -18541,7 +18747,9 @@
         "prevOwned": false,
         "numPlays": 0,
         "owners": [
-          "anoebiz"
+          "anoebiz",
+          "gamersLeuven",
+          "Ocristus"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/104006"
       },
@@ -18644,6 +18852,1208 @@
           "anoebiz"
         ],
         "bggUrl": "https://boardgamegeek.com/boardgame/403150"
+      }
+    ],
+    "Ocristus": [
+      {
+        "id": "173346",
+        "name": "7 Wonders Duel",
+        "yearPublished": 2015,
+        "thumbnail": "https://cf.geekdo-images.com/zdagMskTF7wJBPjX74XsRw__small/img/gV1-ckZSIC-dCxxpq1Y7GmPITzQ=/fit-in/200x150/filters:strip_icc()/pic2576399.jpg",
+        "image": "https://cf.geekdo-images.com/zdagMskTF7wJBPjX74XsRw__original/img/Ju836WNSaW7Mab9Vjq2TJ_FqhWQ=/0x0/filters:format(jpeg)/pic2576399.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 2,
+        "minPlaytime": 30,
+        "maxPlaytime": 30,
+        "minAge": 0,
+        "rating": 8.1,
+        "numRatings": 108252,
+        "bggRank": 24,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/173346"
+      },
+      {
+        "id": "31260",
+        "name": "Agricola",
+        "yearPublished": 2007,
+        "thumbnail": "https://cf.geekdo-images.com/3L6ZtOll9W5O6-3-EwSMyw__small/img/TpNF65wCIb1n3EGW18eJJ3MlRMo=/fit-in/200x150/filters:strip_icc()/pic1899157.jpg",
+        "image": "https://cf.geekdo-images.com/3L6ZtOll9W5O6-3-EwSMyw__original/img/V37KuMJlCzpxAilzN39BzeLvc9Q=/0x0/filters:format(jpeg)/pic1899157.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 5,
+        "minPlaytime": 30,
+        "maxPlaytime": 150,
+        "minAge": 0,
+        "rating": 7.9,
+        "numRatings": 76547,
+        "bggRank": 64,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/31260"
+      },
+      {
+        "id": "161970",
+        "name": "Alchemists",
+        "yearPublished": 2014,
+        "thumbnail": "https://cf.geekdo-images.com/ztNshEv3Fsm46HCJaEOFPw__small/img/-a0oJ_E49V_7PDW78W7KIyS3rF8=/fit-in/200x150/filters:strip_icc()/pic2241156.png",
+        "image": "https://cf.geekdo-images.com/ztNshEv3Fsm46HCJaEOFPw__original/img/SP4ItZ27dLweUPbz_bF7C-P7GtA=/0x0/filters:format(png)/pic2241156.png",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 120,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 7.6,
+        "numRatings": 24371,
+        "bggRank": 177,
+        "userRating": 7,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/161970"
+      },
+      {
+        "id": "45358",
+        "name": "Alhambra: Big Box",
+        "yearPublished": 2009,
+        "thumbnail": "https://cf.geekdo-images.com/qZcmQvAUH6JJTpwGlqPwAA__small/img/UwYOZMmJTlRs4xwUuQ8j4aHnPUI=/fit-in/200x150/filters:strip_icc()/pic535726.jpg",
+        "image": "https://cf.geekdo-images.com/qZcmQvAUH6JJTpwGlqPwAA__original/img/c0OEuXcT_kd-y9aZ3ljE5wXOw74=/0x0/filters:format(jpeg)/pic535726.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 6,
+        "minPlaytime": 60,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 7.5,
+        "numRatings": 4800,
+        "bggRank": null,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/45358"
+      },
+      {
+        "id": "224517",
+        "name": "Brass: Birmingham",
+        "yearPublished": 2018,
+        "thumbnail": "https://cf.geekdo-images.com/x3zxjr-Vw5iU4yDPg70Jgw__small/img/o18rjEemoWaVru9Y2TyPwuIaRfE=/fit-in/200x150/filters:strip_icc()/pic3490053.jpg",
+        "image": "https://cf.geekdo-images.com/x3zxjr-Vw5iU4yDPg70Jgw__original/img/FpyxH41Y6_ROoePAilPNEhXnzO8=/0x0/filters:format(jpeg)/pic3490053.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 8.6,
+        "numRatings": 57768,
+        "bggRank": 1,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/224517"
+      },
+      {
+        "id": "141007",
+        "name": "Carcassonne Big Box 3",
+        "yearPublished": 2010,
+        "thumbnail": "https://cf.geekdo-images.com/O35jegbhvh0KXvJXf0sfpQ__small/img/sIR4wuI59cGP7fNNMVnZjivER3c=/fit-in/200x150/filters:strip_icc()/pic839811.jpg",
+        "image": "https://cf.geekdo-images.com/O35jegbhvh0KXvJXf0sfpQ__original/img/-XxvWUj57HtO4UvXtr3V1K5kGkI=/0x0/filters:format(jpeg)/pic839811.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 6,
+        "minPlaytime": 30,
+        "maxPlaytime": 30,
+        "minAge": 0,
+        "rating": 7.9,
+        "numRatings": 954,
+        "bggRank": null,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/141007"
+      },
+      {
+        "id": "295947",
+        "name": "Cascadia",
+        "yearPublished": 2021,
+        "thumbnail": "https://cf.geekdo-images.com/MjeJZfulbsM1DSV3DrGJYA__small/img/tVSFjSxYEcw7sKj3unIIQV8kxoc=/fit-in/200x150/filters:strip_icc()/pic5100691.jpg",
+        "image": "https://cf.geekdo-images.com/MjeJZfulbsM1DSV3DrGJYA__original/img/B374C04Eip7fmQBGJzgiOTp-jyQ=/0x0/filters:format(jpeg)/pic5100691.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 4,
+        "minPlaytime": 30,
+        "maxPlaytime": 45,
+        "minAge": 0,
+        "rating": 7.9,
+        "numRatings": 54458,
+        "bggRank": 60,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/295947"
+      },
+      {
+        "id": "13",
+        "name": "Catan",
+        "yearPublished": 1995,
+        "thumbnail": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__small/img/SNVfF23OQafv3u8xdFolJnMkBoM=/fit-in/200x150/filters:strip_icc()/pic9156909.png",
+        "image": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__original/img/oRc0AomWA9ZtFqQDZiZbIyKE1j0=/0x0/filters:format(png)/pic9156909.png",
+        "minPlayers": 3,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 7.1,
+        "numRatings": 141521,
+        "bggRank": 615,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/13"
+      },
+      {
+        "id": "102794",
+        "name": "Caverna: The Cave Farmers",
+        "yearPublished": 2013,
+        "thumbnail": "https://cf.geekdo-images.com/EAqbd46lFxo-7GumlO8U4w__small/img/g-qxFyjgqn7kwH3erf3jhmgYaIU=/fit-in/200x150/filters:strip_icc()/pic5598833.jpg",
+        "image": "https://cf.geekdo-images.com/EAqbd46lFxo-7GumlO8U4w__original/img/oNM6bkDbjww-7nKZX-WYYmPxRws=/0x0/filters:format(jpeg)/pic5598833.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 7,
+        "minPlaytime": 30,
+        "maxPlaytime": 210,
+        "minAge": 0,
+        "rating": 7.9,
+        "numRatings": 37188,
+        "bggRank": 62,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/102794"
+      },
+      {
+        "id": "18602",
+        "name": "Caylus",
+        "yearPublished": 2005,
+        "thumbnail": "https://cf.geekdo-images.com/yC7nOSc1x5PT-oNnh6TEcQ__small/img/ec9AK_e7FTbxy9tA8er2wW4UnqA=/fit-in/200x150/filters:strip_icc()/pic1638795.jpg",
+        "image": "https://cf.geekdo-images.com/yC7nOSc1x5PT-oNnh6TEcQ__original/img/ugJgRdFpYSsb5Pj1NDk76q6LKTo=/0x0/filters:format(jpeg)/pic1638795.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 5,
+        "minPlaytime": 60,
+        "maxPlaytime": 150,
+        "minAge": 0,
+        "rating": 7.7,
+        "numRatings": 29879,
+        "bggRank": 137,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/18602"
+      },
+      {
+        "id": "197376",
+        "name": "Charterstone",
+        "yearPublished": 2017,
+        "thumbnail": "https://cf.geekdo-images.com/yKjDaHQiv28iqtzDxfQOZQ__small/img/y0YNU2Bf4W6rNQUXVhhe4tWnU8E=/fit-in/200x150/filters:strip_icc()/pic3322613.jpg",
+        "image": "https://cf.geekdo-images.com/yKjDaHQiv28iqtzDxfQOZQ__original/img/TBiQWuVmimy-SBNrsBheCAspf78=/0x0/filters:format(jpeg)/pic3322613.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 6,
+        "minPlaytime": 45,
+        "maxPlaytime": 75,
+        "minAge": 0,
+        "rating": 7.2,
+        "numRatings": 15333,
+        "bggRank": 628,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/197376"
+      },
+      {
+        "id": "114031",
+        "name": "Copycat",
+        "yearPublished": 2012,
+        "thumbnail": "https://cf.geekdo-images.com/iqGEgT-ix04NlE4Y7chmcQ__small/img/kw4nJ6VvUvOFcBnSTprthxQtbR8=/fit-in/200x150/filters:strip_icc()/pic1425438.jpg",
+        "image": "https://cf.geekdo-images.com/iqGEgT-ix04NlE4Y7chmcQ__original/img/wdBsH_EdcbwcnY-s0Mgp_ILCg9E=/0x0/filters:format(jpeg)/pic1425438.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 95,
+        "maxPlaytime": 95,
+        "minAge": 0,
+        "rating": 6.7,
+        "numRatings": 2296,
+        "bggRank": 2672,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/114031"
+      },
+      {
+        "id": "204027",
+        "name": "Cottage Garden",
+        "yearPublished": 2016,
+        "thumbnail": "https://cf.geekdo-images.com/Au4uYEB-racSoMPLfp4e8w__small/img/9hFlAoI0tP1Z0U3r4aYJESzc5ZA=/fit-in/200x150/filters:strip_icc()/pic3159206.jpg",
+        "image": "https://cf.geekdo-images.com/Au4uYEB-racSoMPLfp4e8w__original/img/CyNNEq5FaSuSpXZ4bLycN3In73E=/0x0/filters:format(jpeg)/pic3159206.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 6.8,
+        "numRatings": 8820,
+        "bggRank": 1214,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/204027"
+      },
+      {
+        "id": "200954",
+        "name": "Fields of Green",
+        "yearPublished": 2016,
+        "thumbnail": "https://cf.geekdo-images.com/U7vYrViBcFbQ1Ip6iaZ8cw__small/img/Fy7OEIkraXBZKp_LNlTZcRcaNvI=/fit-in/200x150/filters:strip_icc()/pic3504382.jpg",
+        "image": "https://cf.geekdo-images.com/U7vYrViBcFbQ1Ip6iaZ8cw__original/img/wNWd-KX6dbeVuK0ET6n51wO92pI=/0x0/filters:format(jpeg)/pic3504382.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 45,
+        "maxPlaytime": 45,
+        "minAge": 0,
+        "rating": 7.1,
+        "numRatings": 4056,
+        "bggRank": 1282,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/200954"
+      },
+      {
+        "id": "157354",
+        "name": "Five Tribes: The Djinns of Naqala",
+        "yearPublished": 2014,
+        "thumbnail": "https://cf.geekdo-images.com/dmo-WD6HZHVUPrbVHunaTw__small/img/I6KVJlQgS1GfWDPSWAFNqce4Cgc=/fit-in/200x150/filters:strip_icc()/pic2055255.jpg",
+        "image": "https://cf.geekdo-images.com/dmo-WD6HZHVUPrbVHunaTw__original/img/PS9HXrThM8Pepbd-cuA1tX8KCYU=/0x0/filters:format(jpeg)/pic2055255.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 40,
+        "maxPlaytime": 80,
+        "minAge": 0,
+        "rating": 7.8,
+        "numRatings": 45056,
+        "bggRank": 95,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/157354"
+      },
+      {
+        "id": "66188",
+        "name": "Fresco",
+        "yearPublished": 2010,
+        "thumbnail": "https://cf.geekdo-images.com/DCVRR-zA7Jy9wjuZudTZ8w__small/img/7-_wICvkH7Opfpkc4vkNYvubia4=/fit-in/200x150/filters:strip_icc()/pic714398.jpg",
+        "image": "https://cf.geekdo-images.com/DCVRR-zA7Jy9wjuZudTZ8w__original/img/dF1pDf3JLgqAdzD9uhy14Pd3yx8=/0x0/filters:format(jpeg)/pic714398.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 7.2,
+        "numRatings": 13573,
+        "bggRank": 533,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/66188"
+      },
+      {
+        "id": "20963",
+        "name": "Fury of Dracula (Second Edition)",
+        "yearPublished": 2005,
+        "thumbnail": "https://cf.geekdo-images.com/IPdbwjsYJgokVAjYUa1aWg__small/img/IFs-IOi9pkODntXfiXuenUj3NeQ=/fit-in/200x150/filters:strip_icc()/pic1586916.jpg",
+        "image": "https://cf.geekdo-images.com/IPdbwjsYJgokVAjYUa1aWg__original/img/lkI0oUKnUil_VHxQOFtaQQNmcPE=/0x0/filters:format(jpeg)/pic1586916.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 5,
+        "minPlaytime": 120,
+        "maxPlaytime": 180,
+        "minAge": 0,
+        "rating": 7.1,
+        "numRatings": 9449,
+        "bggRank": 880,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/20963"
+      },
+      {
+        "id": "24509",
+        "name": "Gambit Royale",
+        "yearPublished": 2006,
+        "thumbnail": "https://cf.geekdo-images.com/qxmNSlJxY2FQ6HpGsrBglw__small/img/DXnjjLe4UCi4kXHUYyNK5v2cAJg=/fit-in/200x150/filters:strip_icc()/pic4410914.jpg",
+        "image": "https://cf.geekdo-images.com/qxmNSlJxY2FQ6HpGsrBglw__original/img/jO63Jplr3nanJWRnjI3ALIEMPz8=/0x0/filters:format(jpeg)/pic4410914.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 6,
+        "minPlaytime": 30,
+        "maxPlaytime": 30,
+        "minAge": 0,
+        "rating": 6.5,
+        "numRatings": 2033,
+        "bggRank": 3683,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/24509"
+      },
+      {
+        "id": "6472",
+        "name": "A Game of Thrones",
+        "yearPublished": 2003,
+        "thumbnail": "https://cf.geekdo-images.com/Gr3qfzoK-428kv1M9WUG1Q__small/img/ggRHe5WjwRhEIRtWI2TJBX-HPic=/fit-in/200x150/filters:strip_icc()/pic1222116.jpg",
+        "image": "https://cf.geekdo-images.com/Gr3qfzoK-428kv1M9WUG1Q__original/img/8TVCyztBT_50oYKLtC7dYTxDGnU=/0x0/filters:format(jpeg)/pic1222116.jpg",
+        "minPlayers": 3,
+        "maxPlayers": 5,
+        "minPlaytime": 180,
+        "maxPlaytime": 180,
+        "minAge": 0,
+        "rating": 7.2,
+        "numRatings": 10732,
+        "bggRank": 759,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/6472"
+      },
+      {
+        "id": "9216",
+        "name": "Goa",
+        "yearPublished": 2004,
+        "thumbnail": "https://cf.geekdo-images.com/qVr5oSdmchY0XauUmh5DrQ__small/img/CX75cO_XT7AJG5AheWvAvop_IGY=/fit-in/200x150/filters:strip_icc()/pic9209550.jpg",
+        "image": "https://cf.geekdo-images.com/qVr5oSdmchY0XauUmh5DrQ__original/img/gXfJ5AXK_wtArQYS4CJzzKcHu80=/0x0/filters:format(jpeg)/pic9209550.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 90,
+        "maxPlaytime": 90,
+        "minAge": 0,
+        "rating": 7.6,
+        "numRatings": 11770,
+        "bggRank": 309,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/9216"
+      },
+      {
+        "id": "193738",
+        "name": "Great Western Trail",
+        "yearPublished": 2016,
+        "thumbnail": "https://cf.geekdo-images.com/u1l0gH7sb_vnvDvoO_QHqA__small/img/9lxFidyDb8j6D1vobx4e3UwZ-FI=/fit-in/200x150/filters:strip_icc()/pic4887376.jpg",
+        "image": "https://cf.geekdo-images.com/u1l0gH7sb_vnvDvoO_QHqA__original/img/2zv_XMQoPFWk9Dn0oS4JY1IeFzw=/0x0/filters:format(jpeg)/pic4887376.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 75,
+        "maxPlaytime": 150,
+        "minAge": 0,
+        "rating": 8.2,
+        "numRatings": 43659,
+        "bggRank": 19,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/193738"
+      },
+      {
+        "id": "134157",
+        "name": "Guilds of London",
+        "yearPublished": 2016,
+        "thumbnail": "https://cf.geekdo-images.com/T4uNtrQucW_V5SaQW9jA8w__small/img/MfCF85O0t4XmvY4nD-sYdu_kzF0=/fit-in/200x150/filters:strip_icc()/pic2958283.png",
+        "image": "https://cf.geekdo-images.com/T4uNtrQucW_V5SaQW9jA8w__original/img/sWj48wnM9bzz1GnksGgKkQUqdL0=/0x0/filters:format(png)/pic2958283.png",
+        "minPlayers": 1,
+        "maxPlayers": 4,
+        "minPlaytime": 45,
+        "maxPlaytime": 90,
+        "minAge": 0,
+        "rating": 6.7,
+        "numRatings": 2398,
+        "bggRank": 2559,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/134157"
+      },
+      {
+        "id": "35677",
+        "name": "Le Havre",
+        "yearPublished": 2008,
+        "thumbnail": "https://cf.geekdo-images.com/y7Rqd3S6J7vyVhicR1bqTQ__small/img/w1iHoYZCVTDZI6gsPuxOScA7FqU=/fit-in/200x150/filters:strip_icc()/pic6091101.jpg",
+        "image": "https://cf.geekdo-images.com/y7Rqd3S6J7vyVhicR1bqTQ__original/img/tQFXv1w2R-J-1cjyaKG9LAS2UOs=/0x0/filters:format(jpeg)/pic6091101.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 5,
+        "minPlaytime": 30,
+        "maxPlaytime": 150,
+        "minAge": 0,
+        "rating": 7.8,
+        "numRatings": 33808,
+        "bggRank": 80,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/35677"
+      },
+      {
+        "id": "180901",
+        "name": "Joraku",
+        "yearPublished": 2015,
+        "thumbnail": "https://cf.geekdo-images.com/VGP4ZTOzo4OHjHiDBDfx1Q__small/img/EcU2AzVuptcrjEhUohyC9VBn4Ro=/fit-in/200x150/filters:strip_icc()/pic7049926.jpg",
+        "image": "https://cf.geekdo-images.com/VGP4ZTOzo4OHjHiDBDfx1Q__original/img/uLaMPJWtKAnJrT67m2qlDkpM56s=/0x0/filters:format(jpeg)/pic7049926.jpg",
+        "minPlayers": 3,
+        "maxPlayers": 4,
+        "minPlaytime": 30,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 7.2,
+        "numRatings": 1993,
+        "bggRank": 1935,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/180901"
+      },
+      {
+        "id": "1219",
+        "name": "Labyrinth",
+        "yearPublished": 1986,
+        "thumbnail": "https://cf.geekdo-images.com/qpL225YNN5iKRPotB7Q7MA__small/img/JZR5MVC8xYrboBrYMsZmWtjJTu0=/fit-in/200x150/filters:strip_icc()/pic6173371.jpg",
+        "image": "https://cf.geekdo-images.com/qpL225YNN5iKRPotB7Q7MA__original/img/5ZGo501PquASeGxpQLBIglcVSYs=/0x0/filters:format(jpeg)/pic6173371.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 20,
+        "maxPlaytime": 20,
+        "minAge": 0,
+        "rating": 6.4,
+        "numRatings": 15853,
+        "bggRank": 2087,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/1219"
+      },
+      {
+        "id": "110327",
+        "name": "Lords of Waterdeep",
+        "yearPublished": 2012,
+        "thumbnail": "https://cf.geekdo-images.com/DFZlakC9Lv8cB5Co5z3meA__small/img/zioDxFvYNCzSbh09ibB6arS017w=/fit-in/200x150/filters:strip_icc()/pic9230112.jpg",
+        "image": "https://cf.geekdo-images.com/DFZlakC9Lv8cB5Co5z3meA__original/img/zBcLeKy1quxQsUL3IWfXXBMvpqM=/0x0/filters:format(jpeg)/pic9230112.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 5,
+        "minPlaytime": 60,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 7.7,
+        "numRatings": 58953,
+        "bggRank": 106,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/110327"
+      },
+      {
+        "id": "143884",
+        "name": "Machi Koro",
+        "yearPublished": 2012,
+        "thumbnail": "https://cf.geekdo-images.com/_lI2eUDHfesfe5SswJiFAg__small/img/tCTP0XMMmsAfNqzb0iYmp0b-YUc=/fit-in/200x150/filters:strip_icc()/pic4783831.png",
+        "image": "https://cf.geekdo-images.com/_lI2eUDHfesfe5SswJiFAg__original/img/H4XHVffQ4SOxgWoG396I9LUrwg8=/0x0/filters:format(png)/pic4783831.png",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 30,
+        "maxPlaytime": 30,
+        "minAge": 0,
+        "rating": 6.6,
+        "numRatings": 35784,
+        "bggRank": 1372,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/143884"
+      },
+      {
+        "id": "95527",
+        "name": "Madeira",
+        "yearPublished": 2013,
+        "thumbnail": "https://cf.geekdo-images.com/wY6k5MmdPH3NVXsJ-SgtMw__small/img/Su3JBW4OIe8Qt6nXEyUcMOJtqsM=/fit-in/200x150/filters:strip_icc()/pic1762708.jpg",
+        "image": "https://cf.geekdo-images.com/wY6k5MmdPH3NVXsJ-SgtMw__original/img/I-0fr4331yRjHcjZlXiSzq0Lbnw=/0x0/filters:format(jpeg)/pic1762708.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 150,
+        "minAge": 0,
+        "rating": 7.5,
+        "numRatings": 4691,
+        "bggRank": 702,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/95527"
+      },
+      {
+        "id": "176734",
+        "name": "The Manhattan Project: Energy Empire",
+        "yearPublished": 2016,
+        "thumbnail": "https://cf.geekdo-images.com/-aaspZ2Oq1VuAADvbUoeww__small/img/6nMV_Bdtm2ShipBJfGle36DY1-U=/fit-in/200x150/filters:strip_icc()/pic3048617.jpg",
+        "image": "https://cf.geekdo-images.com/-aaspZ2Oq1VuAADvbUoeww__original/img/fr4sH1ViKPtRys-gjCY4dY8UuQE=/0x0/filters:format(jpeg)/pic3048617.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 5,
+        "minPlaytime": 60,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 7.7,
+        "numRatings": 6585,
+        "bggRank": 367,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/176734"
+      },
+      {
+        "id": "1261",
+        "name": "Medina",
+        "yearPublished": 2001,
+        "thumbnail": "https://cf.geekdo-images.com/-jyGarDLb4vX2uiffkKLag__small/img/-4QmqonK07LZYwp2Q4Q8-H2weWI=/fit-in/200x150/filters:strip_icc()/pic580033.jpg",
+        "image": "https://cf.geekdo-images.com/-jyGarDLb4vX2uiffkKLag__original/img/UXwkjPtpfuaEF2WBKKhiJdD7Rns=/0x0/filters:format(jpeg)/pic580033.jpg",
+        "minPlayers": 3,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 7,
+        "numRatings": 3379,
+        "bggRank": 1563,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/1261"
+      },
+      {
+        "id": "10630",
+        "name": "Memoir '44",
+        "yearPublished": 2004,
+        "thumbnail": "https://cf.geekdo-images.com/Ij9Zpnx1jVmtLtBD3DvLXQ__small/img/YvzL5r5jpC7tTYckNgTediSiiXU=/fit-in/200x150/filters:strip_icc()/pic9000036.png",
+        "image": "https://cf.geekdo-images.com/Ij9Zpnx1jVmtLtBD3DvLXQ__original/img/S5OMoCGqlYwZQWcnYRUvVmap2NE=/0x0/filters:format(png)/pic9000036.png",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 30,
+        "maxPlaytime": 45,
+        "minAge": 0,
+        "rating": 7.5,
+        "numRatings": 31833,
+        "bggRank": 219,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/10630"
+      },
+      {
+        "id": "244711",
+        "name": "Newton",
+        "yearPublished": 2018,
+        "thumbnail": "https://cf.geekdo-images.com/ZyCjYnNS6VFF1X7e6IFA1A__small/img/GW009LiSNJwiMx7Thb8TT9nSfDk=/fit-in/200x150/filters:strip_icc()/pic4058665.jpg",
+        "image": "https://cf.geekdo-images.com/ZyCjYnNS6VFF1X7e6IFA1A__original/img/4CK6Cx5xj0b0p6r69c7kvDjANGE=/0x0/filters:format(jpeg)/pic4058665.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 4,
+        "minPlaytime": 90,
+        "maxPlaytime": 90,
+        "minAge": 0,
+        "rating": 7.5,
+        "numRatings": 7985,
+        "bggRank": 463,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/244711"
+      },
+      {
+        "id": "396790",
+        "name": "Nucleum",
+        "yearPublished": 2023,
+        "thumbnail": "https://cf.geekdo-images.com/fIVUaMvbfy6GCOgfxt7xaw__small/img/jKsO4nKmtNjX5bfH7aCPeK7hsqU=/fit-in/200x150/filters:strip_icc()/pic7647168.jpg",
+        "image": "https://cf.geekdo-images.com/fIVUaMvbfy6GCOgfxt7xaw__original/img/dBMnuz3SrgxsDLHT6pwbQFPQBIw=/0x0/filters:format(jpeg)/pic7647168.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 150,
+        "minAge": 0,
+        "rating": 8.1,
+        "numRatings": 8139,
+        "bggRank": 143,
+        "userRating": null,
+        "owned": false,
+        "wishlist": true,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/396790"
+      },
+      {
+        "id": "70149",
+        "name": "Ora et Labora",
+        "yearPublished": 2011,
+        "thumbnail": "https://cf.geekdo-images.com/MLvyN4VJ3QNXBKxli8XLiA__small/img/mvTvon7ry-QKtYenVgg0LYUtdRc=/fit-in/200x150/filters:strip_icc()/pic5089618.jpg",
+        "image": "https://cf.geekdo-images.com/MLvyN4VJ3QNXBKxli8XLiA__original/img/eDqWAa7vUdsYE6_LXVNzIdClbhw=/0x0/filters:format(jpeg)/pic5089618.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 180,
+        "minAge": 0,
+        "rating": 7.7,
+        "numRatings": 11569,
+        "bggRank": 244,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/70149"
+      },
+      {
+        "id": "218603",
+        "name": "Photosynthesis",
+        "yearPublished": 2017,
+        "thumbnail": "https://cf.geekdo-images.com/HhkYuVxMy-XrRCBWmZ78Eg__small/img/eVdvmMALg8vjPr6eDoj-mqvDbUc=/fit-in/200x150/filters:strip_icc()/pic3364832.jpg",
+        "image": "https://cf.geekdo-images.com/HhkYuVxMy-XrRCBWmZ78Eg__original/img/V6bgfuxV2jfmRbz9pJVyK01x6dI=/0x0/filters:format(jpeg)/pic3364832.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 30,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 6.9,
+        "numRatings": 25840,
+        "bggRank": 802,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/218603"
+      },
+      {
+        "id": "256730",
+        "name": "Pipeline",
+        "yearPublished": 2019,
+        "thumbnail": "https://cf.geekdo-images.com/x39hXnP-GkLN1CDEq932oA__small/img/xxiGCk0hEUpP3hOtItpKI3sKZfo=/fit-in/200x150/filters:strip_icc()/pic4227162.jpg",
+        "image": "https://cf.geekdo-images.com/x39hXnP-GkLN1CDEq932oA__original/img/dns582_OrWD9ZbABtUmXcQOxguQ=/0x0/filters:format(jpeg)/pic4227162.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 7.5,
+        "numRatings": 5589,
+        "bggRank": 588,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/256730"
+      },
+      {
+        "id": "2651",
+        "name": "Power Grid",
+        "yearPublished": 2004,
+        "thumbnail": "https://cf.geekdo-images.com/yd6LuatytHRhcFCxCf-EEg__small/img/jWTonZ5oYNlPzpELKHIJGWSS0Y8=/fit-in/200x150/filters:strip_icc()/pic4459753.jpg",
+        "image": "https://cf.geekdo-images.com/yd6LuatytHRhcFCxCf-EEg__original/img/OS13C6W4i1XW__wWVVVaqF7BV0c=/0x0/filters:format(jpeg)/pic4459753.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 6,
+        "minPlaytime": 120,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 7.8,
+        "numRatings": 69363,
+        "bggRank": 73,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/2651"
+      },
+      {
+        "id": "28143",
+        "name": "Race for the Galaxy",
+        "yearPublished": 2007,
+        "thumbnail": "https://cf.geekdo-images.com/-DOqixs8uwKUvvWPKI4f9w__small/img/xLs-ldTPwaADbvzkOpF0sgWzwck=/fit-in/200x150/filters:strip_icc()/pic5261714.jpg",
+        "image": "https://cf.geekdo-images.com/-DOqixs8uwKUvvWPKI4f9w__original/img/Vh-DCkTPa8OU45LaJdUywwhiYqE=/0x0/filters:format(jpeg)/pic5261714.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 30,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 7.7,
+        "numRatings": 58743,
+        "bggRank": 94,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/28143"
+      },
+      {
+        "id": "40692",
+        "name": "Small World",
+        "yearPublished": 2009,
+        "thumbnail": "https://cf.geekdo-images.com/aoPM07XzoceB-RydLh08zA__small/img/o3Bw9heVDJRgPYlI_PksCvLAgnM=/fit-in/200x150/filters:strip_icc()/pic428828.jpg",
+        "image": "https://cf.geekdo-images.com/aoPM07XzoceB-RydLh08zA__original/img/bYLzrwZO9u-3h2wyU-PHc8aTOY4=/0x0/filters:format(jpeg)/pic428828.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 5,
+        "minPlaytime": 40,
+        "maxPlaytime": 80,
+        "minAge": 0,
+        "rating": 7.2,
+        "numRatings": 74861,
+        "bggRank": 403,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/40692"
+      },
+      {
+        "id": "204",
+        "name": "Stephenson's Rocket",
+        "yearPublished": 1999,
+        "thumbnail": "https://cf.geekdo-images.com/8wlt4GYoByELYHDR9r4mzA__small/img/9gO8bpdb9-WmfbNpw7bGtNmJ9_g=/fit-in/200x150/filters:strip_icc()/pic6773824.jpg",
+        "image": "https://cf.geekdo-images.com/8wlt4GYoByELYHDR9r4mzA__original/img/c5_VQijOHBFnfdw_QJ2_XtNWuiI=/0x0/filters:format(jpeg)/pic6773824.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 6.9,
+        "numRatings": 3243,
+        "bggRank": 1735,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/204"
+      },
+      {
+        "id": "123260",
+        "name": "Suburbia",
+        "yearPublished": 2012,
+        "thumbnail": "https://cf.geekdo-images.com/1YcHesB7LRvCF8i9vgH7qw__small/img/LmYQpfDR6ds-9jGknAgbqjwuVs8=/fit-in/200x150/filters:strip_icc()/pic6009608.png",
+        "image": "https://cf.geekdo-images.com/1YcHesB7LRvCF8i9vgH7qw__original/img/BVcGhHh0nedwcBBzu_ku-yh8LWY=/0x0/filters:format(png)/pic6009608.png",
+        "minPlayers": 1,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 90,
+        "minAge": 0,
+        "rating": 7.5,
+        "numRatings": 26462,
+        "bggRank": 247,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/123260"
+      },
+      {
+        "id": "120677",
+        "name": "Terra Mystica",
+        "yearPublished": 2012,
+        "thumbnail": "https://cf.geekdo-images.com/bre12I1YiXkZr7elvriz4A__small/img/GW-ip0dfeAee7KQqJ04SRZxF1lg=/fit-in/200x150/filters:strip_icc()/pic5375624.jpg",
+        "image": "https://cf.geekdo-images.com/bre12I1YiXkZr7elvriz4A__original/img/_dZS7fVfdc4DhJPbqnDpwTT4uF0=/0x0/filters:format(jpeg)/pic5375624.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 5,
+        "minPlaytime": 60,
+        "maxPlaytime": 150,
+        "minAge": 0,
+        "rating": 8,
+        "numRatings": 50840,
+        "bggRank": 35,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/120677"
+      },
+      {
+        "id": "167791",
+        "name": "Terraforming Mars",
+        "yearPublished": 2016,
+        "thumbnail": "https://cf.geekdo-images.com/wg9oOLcsKvDesSUdZQ4rxw__small/img/BTxqxgYay5tHJfVoJ2NF5g43_gA=/fit-in/200x150/filters:strip_icc()/pic3536616.jpg",
+        "image": "https://cf.geekdo-images.com/wg9oOLcsKvDesSUdZQ4rxw__original/img/thIqWDnH9utKuoKVEUqveDixprI=/0x0/filters:format(jpeg)/pic3536616.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 5,
+        "minPlaytime": 120,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 8.3,
+        "numRatings": 112460,
+        "bggRank": 9,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/167791"
+      },
+      {
+        "id": "42",
+        "name": "Tigris & Euphrates",
+        "yearPublished": 1997,
+        "thumbnail": "https://cf.geekdo-images.com/t-cfSQs4Ic3SAzCSxTigLg__small/img/S1_WOK5YsEMbw0EHwCFIN026tkM=/fit-in/200x150/filters:strip_icc()/pic9203204.png",
+        "image": "https://cf.geekdo-images.com/t-cfSQs4Ic3SAzCSxTigLg__original/img/SfOjGBpLyPrnntZjjxrnSXmJWT4=/0x0/filters:format(png)/pic9203204.png",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 120,
+        "minAge": 0,
+        "rating": 7.7,
+        "numRatings": 29905,
+        "bggRank": 131,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/42"
+      },
+      {
+        "id": "126163",
+        "name": "Tzolk'in: The Mayan Calendar",
+        "yearPublished": 2012,
+        "thumbnail": "https://cf.geekdo-images.com/kXf7mDyDYuHg6oe8yTUIEA__small/img/or9mAn4ClljY_wO_zvsLJDqs9tU=/fit-in/200x150/filters:strip_icc()/pic4604439.jpg",
+        "image": "https://cf.geekdo-images.com/kXf7mDyDYuHg6oe8yTUIEA__original/img/f6-Au0KTnNR4nugSu2U-wPNbZCU=/0x0/filters:format(jpeg)/pic4604439.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 90,
+        "maxPlaytime": 90,
+        "minAge": 0,
+        "rating": 7.8,
+        "numRatings": 42290,
+        "bggRank": 72,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/126163"
+      },
+      {
+        "id": "104006",
+        "name": "Village",
+        "yearPublished": 2011,
+        "thumbnail": "https://cf.geekdo-images.com/5FBIAvZi3Sw8dvmfwwJTjg__small/img/5H-bOQSAtO8LaWI3i3_oG3CQHHg=/fit-in/200x150/filters:strip_icc()/pic2760568.jpg",
+        "image": "https://cf.geekdo-images.com/5FBIAvZi3Sw8dvmfwwJTjg__original/img/HZYRVZoUtl7COYnS0NvXNSuaf80=/0x0/filters:format(jpeg)/pic2760568.jpg",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "minPlaytime": 60,
+        "maxPlaytime": 90,
+        "minAge": 0,
+        "rating": 7.5,
+        "numRatings": 24403,
+        "bggRank": 246,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/104006"
+      },
+      {
+        "id": "491",
+        "name": "Web of Power",
+        "yearPublished": 2000,
+        "thumbnail": "https://cf.geekdo-images.com/AQiDnYHjzFh34SOPCNzrHg__small/img/-XcIT5SRD0sJpLwitIKbQfkzmz0=/fit-in/200x150/filters:strip_icc()/pic209855.jpg",
+        "image": "https://cf.geekdo-images.com/AQiDnYHjzFh34SOPCNzrHg__original/img/k7n0mXH7EpF3gAZA2q4PZS__UUQ=/0x0/filters:format(jpeg)/pic209855.jpg",
+        "minPlayers": 3,
+        "maxPlayers": 5,
+        "minPlaytime": 50,
+        "maxPlaytime": 60,
+        "minAge": 0,
+        "rating": 7.3,
+        "numRatings": 3642,
+        "bggRank": 1162,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/491"
+      },
+      {
+        "id": "266192",
+        "name": "Wingspan",
+        "yearPublished": 2019,
+        "thumbnail": "https://cf.geekdo-images.com/yLZJCVLlIx4c7eJEWUNJ7w__small/img/VNToqgS2-pOGU6MuvIkMPKn_y-s=/fit-in/200x150/filters:strip_icc()/pic4458123.jpg",
+        "image": "https://cf.geekdo-images.com/yLZJCVLlIx4c7eJEWUNJ7w__original/img/cI782Zis9cT66j2MjSHKJGnFPNw=/0x0/filters:format(jpeg)/pic4458123.jpg",
+        "minPlayers": 1,
+        "maxPlayers": 5,
+        "minPlaytime": 40,
+        "maxPlaytime": 70,
+        "minAge": 0,
+        "rating": 8,
+        "numRatings": 112012,
+        "bggRank": 38,
+        "userRating": null,
+        "owned": true,
+        "wishlist": false,
+        "wantToPlay": false,
+        "prevOwned": false,
+        "numPlays": 0,
+        "owners": [
+          "Ocristus"
+        ],
+        "bggUrl": "https://boardgamegeek.com/boardgame/266192"
       }
     ]
   }
