@@ -46,6 +46,7 @@ export default function App() {
   const [tab, setTab] = useState('collection')
   const [defaultLoaded, setDefaultLoaded] = useState(false)
   const [toast, setToast] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(sessionStorage.getItem('admin_auth') === '1')
   const importRef = useRef()
 
   // On mount: if nothing in localStorage, try default-collection.json
@@ -218,6 +219,12 @@ export default function App() {
     e.target.value = ''
   }, [])
 
+  const handleAdminLogout = useCallback(() => {
+    sessionStorage.removeItem('admin_auth')
+    setIsAdmin(false)
+    setTab('collection')
+  }, [])
+
   const anyLoading = accounts.some(a => a.loading)
 
   return (
@@ -280,6 +287,13 @@ export default function App() {
             </HeaderBtn>
           )}
 
+          {/* Admin logout */}
+          {isAdmin && (
+            <HeaderBtn onClick={handleAdminLogout} title="Log out of admin session">
+              🔧 Admin log out
+            </HeaderBtn>
+          )}
+
           {/* Save as default */}
           {allGames.length > 0 && (
             <HeaderBtn onClick={handleExportDefault} accent
@@ -315,7 +329,7 @@ export default function App() {
         {/* Admin tab */}
         {tab === 'admin' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
-            <AdminPage localCollection={allGames} />
+            <AdminPage localCollection={allGames} onAuthChange={setIsAdmin} />
           </div>
         )}
 
