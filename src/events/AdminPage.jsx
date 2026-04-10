@@ -613,12 +613,23 @@ function mergeCollections(eventCol, localCol) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function AdminPage({ localCollection }) {
+export default function AdminPage({ localCollection, onAuthChange }) {
   const [authed, setAuthed] = useState(sessionStorage.getItem('admin_auth') === '1')
   const [view, setView] = useState('list')  // list | event
   const [currentEvent, setCurrentEvent] = useState(null)
 
-  if (!authed) return <AdminLogin onLogin={() => setAuthed(true)} />
+  const handleLogin = () => {
+    setAuthed(true)
+    onAuthChange?.(true)
+  }
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('admin_auth')
+    setAuthed(false)
+    onAuthChange?.(false)
+  }
+
+  if (!authed) return <AdminLogin onLogin={handleLogin} />
 
   if (view === 'event' && currentEvent) {
     return (
