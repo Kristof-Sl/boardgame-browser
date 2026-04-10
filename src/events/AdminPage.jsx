@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { db } from './supabase'
 import { generateSchedule, scheduleStats } from './scheduler'
+// ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
+import DevTestingWorkflow from './DevTestingWorkflow'
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
 //test
@@ -600,6 +602,10 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
           </Card>
         )}
       </div>
+
+      {/* ⚠️ DEV ONLY — remove the line below together with DevTestingWorkflow.jsx */}
+      <DevTestingWorkflow event={event} participants={participants} eventGames={eventGames} onRefresh={reload} />
+
     </div>
   )
 }
