@@ -355,9 +355,14 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
               </Btn>
             )}
             {event.status === 'preferences' && (
-              <Btn accent onClick={handleGenerate} disabled={busy}>
-                ✨ Generate schedule
-              </Btn>
+              <>
+                <Btn accent onClick={handleGenerate} disabled={busy}>
+                  ✨ Generate schedule
+                </Btn>
+                <Btn onClick={() => setStatus('voting')} disabled={busy}>
+                  ← Reopen voting
+                </Btn>
+              </>
             )}
             {event.status === 'scheduled' && (
               <>
