@@ -102,6 +102,30 @@ export default function FilterBar({ filters, onChange, games }) {
         </div>
       </Section>
 
+      {/* Release Date */}
+      <Section label="Release date">
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {pill('Any', !filters.minYear, () => onChange('minYear', null))}
+          {(() => {
+            const years = games.map(g => g.yearPublished).filter(Boolean)
+            if (!years.length) return null
+            const maxYear = new Date().getFullYear()
+            const minYear = Math.min(...years)
+            // Build decade buckets that exist in the collection
+            const decades = []
+            const startDecade = Math.floor(minYear / 10) * 10
+            for (let d = startDecade; d < maxYear; d += 10) {
+              if (years.some(y => y >= d && y < d + 10)) {
+                decades.push(d)
+              }
+            }
+            return decades.map(d => {
+              return pill(`${d}s`, filters.minYear === d, () => onChange('minYear', filters.minYear === d ? null : d))
+            })
+          })()}
+        </div>
+      </Section>
+
       {/* Sort */}
       <Section label="Sort by">
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
