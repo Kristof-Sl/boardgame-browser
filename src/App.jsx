@@ -13,6 +13,7 @@ const DEFAULT_FILTERS = {
   players: null,
   minRating: null,
   maxTime: null,
+  minYear: null,
   sort: 'rating',
 }
 
