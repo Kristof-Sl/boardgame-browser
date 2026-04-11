@@ -126,14 +126,9 @@ function AdminEventList({ onOpen }) {
     if (!confirm(`Delete event "${ev.name}"? This cannot be undone.`)) return
     setDeleting(ev.id)
     try {
-      const result = await db.deleteDebug('events', `id=eq.${ev.id}`)
-      alert(`DELETE result:\nStatus: ${result.status}\nOK: ${result.ok}\nBody: ${result.body || '(empty)'}`)
-      if (result.ok) {
-        setEvents(prev => prev.filter(e => e.id !== ev.id))
-      }
-    } catch (e) {
-      alert(`DELETE error:\n${e.message}`)
-    }
+      await db.delete('events', `id=eq.${ev.id}`)
+      setEvents(prev => prev.filter(e => e.id !== ev.id))
+    } catch (e) { alert(e.message) }
     finally { setDeleting(null) }
   }
 

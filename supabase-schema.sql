@@ -78,6 +78,7 @@ alter table event_games enable row level security;
 create policy "public read events" on events for select using (true);
 create policy "public insert events" on events for insert with check (true);
 create policy "public update events" on events for update using (true);
+create policy "public delete events" on events for delete using (true);
 
 create policy "public read participants" on participants for select using (true);
 create policy "public insert participants" on participants for insert with check (true);
