@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { db } from './supabase'
 import { generateSchedule, scheduleStats } from './scheduler'
+// ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
+import DevTestingWorkflow from './DevTestingWorkflow'
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
 //test
@@ -600,6 +602,10 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
           </Card>
         )}
       </div>
+
+      {/* ⚠️ DEV ONLY — remove the line below together with DevTestingWorkflow.jsx */}
+      <DevTestingWorkflow event={event} participants={participants} eventGames={eventGames} onRefresh={reload} />
+
     </div>
   )
 }
@@ -613,12 +619,23 @@ function mergeCollections(eventCol, localCol) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function AdminPage({ localCollection }) {
+export default function AdminPage({ localCollection, onAuthChange }) {
   const [authed, setAuthed] = useState(sessionStorage.getItem('admin_auth') === '1')
   const [view, setView] = useState('list')  // list | event
   const [currentEvent, setCurrentEvent] = useState(null)
 
-  if (!authed) return <AdminLogin onLogin={() => setAuthed(true)} />
+  const handleLogin = () => {
+    setAuthed(true)
+    onAuthChange?.(true)
+  }
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('admin_auth')
+    setAuthed(false)
+    onAuthChange?.(false)
+  }
+
+  if (!authed) return <AdminLogin onLogin={handleLogin} />
 
   if (view === 'event' && currentEvent) {
     return (

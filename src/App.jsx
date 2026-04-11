@@ -46,6 +46,7 @@ export default function App() {
   const [tab, setTab] = useState('collection')
   const [defaultLoaded, setDefaultLoaded] = useState(false)
   const [toast, setToast] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(sessionStorage.getItem('admin_auth') === '1')
   const importRef = useRef()
 
   // On mount: if nothing in localStorage, try default-collection.json
@@ -218,6 +219,12 @@ export default function App() {
     e.target.value = ''
   }, [])
 
+  const handleAdminLogout = useCallback(() => {
+    sessionStorage.removeItem('admin_auth')
+    setIsAdmin(false)
+    setTab('collection')
+  }, [])
+
   const anyLoading = accounts.some(a => a.loading)
 
   return (
@@ -233,15 +240,18 @@ export default function App() {
         backdropFilter: 'blur(8px)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 22 }}>🎲</span>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 20, fontWeight: 500,
-            color: 'var(--text)',
-            letterSpacing: '-0.01em',
-          }}>
-            Board Game Browser
-          </h1>
+          <img 
+			src="/MeepleSync_Logo.png"
+			alt="MeepleSync"
+			style={{ height: 36, width: 36, borderRadius: 8, objectFit: 'cover' }}
+			/>
+		<h1 style={{
+			fontFamily: 'var(--font-display)',
+			fontSize: 20, fontWeight: 700,
+			letterSpacing: '-0.01em',
+		}}>
+		<span style={{ color: 'var(--text)' }}>Meeple</span><span style={{ color: 'var(--accent)' }}>Sync</span>
+	</h1>
           {/* Tab switcher */}
           <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
             {[['collection', 'Collection'], ['events', '🗓️ Events'], ['admin', '🔧 Admin']].map(([t, label]) => (
@@ -274,6 +284,13 @@ export default function App() {
           {allGames.length > 0 && (
             <HeaderBtn onClick={handleExport} title="Export current collection as a JSON file">
               ↓ Export
+            </HeaderBtn>
+          )}
+
+          {/* Admin logout */}
+          {isAdmin && (
+            <HeaderBtn onClick={handleAdminLogout} title="Log out of admin session">
+              🔧 Admin log out
             </HeaderBtn>
           )}
 
@@ -312,7 +329,7 @@ export default function App() {
         {/* Admin tab */}
         {tab === 'admin' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
-            <AdminPage localCollection={allGames} />
+            <AdminPage localCollection={allGames} onAuthChange={setIsAdmin} />
           </div>
         )}
 
