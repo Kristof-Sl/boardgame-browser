@@ -61,9 +61,15 @@ class SupabaseClient {
   async delete(table, filter) {
     const res = await fetch(`${this.url}/rest/v1/${table}?${filter}`, {
       method: 'DELETE',
-      headers: this.headers(),
+      headers: {
+        'apikey': this.key,
+        'Authorization': `Bearer ${this.key}`,
+        'Content-Type': 'application/json',
+        // Omit 'Prefer: return=representation' — DELETE doesn't need to return rows
+        // and some Supabase configs reject it, causing the delete to fail silently
+      },
     })
-    if (!res.ok) throw new Error(`Supabase delete error: ${await res.text()}`)
+    if (!res.ok) throw new Error(`Supabase delete error (${res.status}): ${await res.text()}`)
   }
 
   // UPSERT (insert or update on conflict)
