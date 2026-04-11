@@ -108,6 +108,10 @@ export default function App() {
       games = games.filter(g => g.maxPlaytime > 0 && g.maxPlaytime <= filters.maxTime)
     }
 
+    if (filters.minYear) {
+      games = games.filter(g => g.yearPublished && g.yearPublished >= filters.minYear)
+    }
+
     games.sort((a, b) => {
       switch (filters.sort) {
         case 'name': return a.name.localeCompare(b.name)
