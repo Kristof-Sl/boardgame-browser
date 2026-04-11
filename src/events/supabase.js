@@ -57,6 +57,23 @@ class SupabaseClient {
     return await res.json()
   }
 
+  // DELETE (debug version — returns full response info instead of throwing)
+  async deleteDebug(table, filter) {
+    const url = `${this.url}/rest/v1/${table}?${filter}`
+    console.log('DELETE URL:', url)
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'apikey': this.key,
+        'Authorization': `Bearer ${this.key}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    const body = await res.text()
+    console.log('DELETE status:', res.status, 'body:', body)
+    return { status: res.status, ok: res.ok, body }
+  }
+
   // DELETE
   async delete(table, filter) {
     const res = await fetch(`${this.url}/rest/v1/${table}?${filter}`, {
