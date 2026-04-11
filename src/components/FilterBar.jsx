@@ -105,23 +105,52 @@ export default function FilterBar({ filters, onChange, games }) {
       {/* Release Date */}
       <Section label="Release date">
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {pill('Any', !filters.minYear, () => onChange('minYear', null))}
           {(() => {
             const years = games.map(g => g.yearPublished).filter(Boolean)
             if (!years.length) return null
             const maxYear = new Date().getFullYear()
             const minYear = Math.min(...years)
-            // Build decade buckets that exist in the collection
-            const decades = []
+            const allDecades = []
             const startDecade = Math.floor(minYear / 10) * 10
-            for (let d = startDecade; d < maxYear; d += 10) {
-              if (years.some(y => y >= d && y < d + 10)) {
-                decades.push(d)
-              }
+            for (let d = startDecade; d <= maxYear; d += 10) {
+              if (years.some(y => y >= d && y < d + 10)) allDecades.push(d)
             }
-            return decades.map(d => {
-              return pill(`${d}s`, filters.minYear === d, () => onChange('minYear', filters.minYear === d ? null : d))
-            })
+            const selected = filters.decades || []
+            const toggle = (d) => {
+              const next = selected.includes(d) ? selected.filter(x => x !== d) : [...selected, d]
+              onChange('decades', next)
+            }
+            return [
+              <button
+                key="any"
+                onClick={() => onChange('decades', [])}
+                style={{
+                  padding: '5px 12px', borderRadius: 20, fontSize: 13,
+                  border: `1px solid ${selected.length === 0 ? 'var(--accent)' : 'var(--border)'}`,
+                  background: selected.length === 0 ? 'var(--accent-bg)' : 'transparent',
+                  color: selected.length === 0 ? 'var(--accent)' : 'var(--text2)',
+                  fontWeight: selected.length === 0 ? 500 : 400,
+                  cursor: 'pointer', transition: 'all 140ms ease', whiteSpace: 'nowrap',
+                }}
+              >Any</button>,
+              ...allDecades.map(d => {
+                const active = selected.includes(d)
+                return (
+                  <button
+                    key={d}
+                    onClick={() => toggle(d)}
+                    style={{
+                      padding: '5px 12px', borderRadius: 20, fontSize: 13,
+                      border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                      background: active ? 'var(--accent-bg)' : 'transparent',
+                      color: active ? 'var(--accent)' : 'var(--text2)',
+                      fontWeight: active ? 500 : 400,
+                      cursor: 'pointer', transition: 'all 140ms ease', whiteSpace: 'nowrap',
+                    }}
+                  >{d}s</button>
+                )
+              })
+            ]
           })()}
         </div>
       </Section>

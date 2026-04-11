@@ -13,7 +13,7 @@ const DEFAULT_FILTERS = {
   players: null,
   minRating: null,
   maxTime: null,
-  minYear: null,
+  decades: [],
   sort: 'rating',
 }
 
@@ -108,8 +108,8 @@ export default function App() {
       games = games.filter(g => g.maxPlaytime > 0 && g.maxPlaytime <= filters.maxTime)
     }
 
-    if (filters.minYear) {
-      games = games.filter(g => g.yearPublished && g.yearPublished >= filters.minYear)
+    if (filters.decades && filters.decades.length > 0) {
+      games = games.filter(g => g.yearPublished && filters.decades.some(d => g.yearPublished >= d && g.yearPublished < d + 10))
     }
 
     games.sort((a, b) => {
