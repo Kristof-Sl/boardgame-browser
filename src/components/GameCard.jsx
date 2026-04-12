@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react'
 
-// Status display config for the popup
 const STATUS_INFO = {
   owned:      { label: 'Owns',             color: 'var(--green)',  bg: 'var(--green-bg)' },
   wishlist:   { label: 'Wishlist',          color: 'var(--blue)',   bg: 'var(--blue-bg)' },
@@ -11,6 +10,7 @@ const STATUS_INFO = {
 export default function GameCard({ game }) {
   const [imgErr, setImgErr] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const [popupPos, setPopupPos] = useState({ top: false, left: false })
   const cardRef = useRef()
 
@@ -39,29 +39,98 @@ export default function GameCard({ game }) {
     setHovered(true)
   }
 
-  // Only badge users who actually own the game
   const ownerBadges = game.actualOwners || []
-
-  // Per-user statuses for the popup (from ownerStatuses map)
   const userStatuses = Object.entries(game.ownerStatuses || {})
+  const showPopup = hovered || detailsOpen
+
+  // Popup content — shared between hover and details panel
+  const popupContent = (
+    <>
+      <p style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 8, lineHeight: 1.3 }}>
+        {game.name}{game.yearPublished ? ` (${game.yearPublished})` : ''}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {game.rating > 0 && (
+          <PopupRow label="BGG rating">
+            <span style={{ color: ratingColor, fontWeight: 600 }}>★ {game.rating.toFixed(1)}</span>
+            {game.numRatings > 0 && <span style={{ color: 'var(--text3)', fontSize: 10 }}> ({game.numRatings.toLocaleString()})</span>}
+          </PopupRow>
+        )}
+        {game.bggRank && <PopupRow label="BGG rank">#{game.bggRank.toLocaleString()}</PopupRow>}
+        {playerStr && <PopupRow label="Players">{playerStr}</PopupRow>}
+        {timeStr && <PopupRow label="Playtime">{timeStr}</PopupRow>}
+        {game.minAge > 0 && <PopupRow label="Min. age">{game.minAge}+</PopupRow>}
+      </div>
+      {userStatuses.length > 0 && (
+        <>
+          <div style={{ height: 1, background: 'var(--border)', margin: '10px 0 8px' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {userStatuses.map(([username, status]) => {
+              const hasStatus = status.owned || status.wishlist || status.wantToPlay || status.prevOwned
+              return (
+                <div key={username}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', flexShrink: 0 }}>{username}</span>
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      {status.owned      && <StatusPill type="owned" />}
+                      {status.wishlist   && <StatusPill type="wishlist" />}
+                      {status.wantToPlay && <StatusPill type="wantToPlay" />}
+                      {!status.owned && status.prevOwned && <StatusPill type="prevOwned" />}
+                      {!hasStatus && <span style={{ fontSize: 10, color: 'var(--text3)' }}>in collection</span>}
+                    </div>
+                  </div>
+                  {(status.numPlays > 0 || status.userRating) && (
+                    <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
+                      {status.numPlays > 0 && (
+                        <span style={{ fontSize: 10, color: 'var(--text3)' }}>
+                          {status.numPlays} play{status.numPlays !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {status.userRating && (
+                        <span style={{ fontSize: 10, color: 'var(--accent)' }}>
+                          ★ {status.userRating.toFixed(1)} personal
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+      <a
+        href={game.bggUrl} target="_blank" rel="noopener noreferrer"
+        style={{ display: 'block', marginTop: 10, fontSize: 10, color: 'var(--accent)', textDecoration: 'none' }}
+      >
+        Open on BGG ↗
+      </a>
+    </>
+  )
 
   return (
-    <div ref={cardRef} style={{ position: 'relative' }}
+    <div
+      ref={cardRef}
+      style={{ position: 'relative' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHovered(false)}
     >
-      <a href={game.bggUrl} target="_blank" rel="noopener noreferrer" style={{
+      {/* Card — no longer an <a>, so clicks on body don't navigate */}
+      <div style={{
         display: 'flex', flexDirection: 'column',
         background: 'var(--surface)',
         border: `1px solid ${hovered ? 'var(--border2)' : 'var(--border)'}`,
         borderRadius: 'var(--radius-lg)', overflow: 'hidden',
-        textDecoration: 'none', color: 'inherit',
+        color: 'inherit',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         transition: 'border-color 180ms ease, transform 180ms ease',
-        cursor: 'pointer', height: '100%',
+        height: '100%',
       }}>
-        {/* Thumbnail */}
-        <div style={{ position: 'relative', paddingTop: '56%', background: 'var(--bg3)', flexShrink: 0 }}>
+        {/* Thumbnail — this IS the link to BGG */}
+        <a
+          href={game.bggUrl} target="_blank" rel="noopener noreferrer"
+          style={{ display: 'block', position: 'relative', paddingTop: '56%', background: 'var(--bg3)', flexShrink: 0, textDecoration: 'none' }}
+        >
           {game.thumbnail && !imgErr ? (
             <img src={game.thumbnail} alt={game.name} onError={() => setImgErr(true)}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -80,7 +149,7 @@ export default function GameCard({ game }) {
             }}>★ {game.rating.toFixed(1)}</div>
           )}
 
-          {/* Owner badges — only users who actually own the game */}
+          {/* Owner badges */}
           {ownerBadges.length > 0 && (
             <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: '70%' }}>
               {ownerBadges.map(o => (
@@ -92,9 +161,9 @@ export default function GameCard({ game }) {
               ))}
             </div>
           )}
-        </div>
+        </a>
 
-        {/* Card body */}
+        {/* Card body — plain div, no navigation */}
         <div style={{ padding: '10px 12px 12px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
           <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 500, lineHeight: 1.3, color: 'var(--text)' }}>
             {game.name}
@@ -106,18 +175,44 @@ export default function GameCard({ game }) {
             {timeStr && <Stat icon="⏱" label={timeStr} />}
           </div>
 
-          {/* Aggregated status tags */}
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
             {game.owned && <Tag color="green">Owned</Tag>}
             {game.wishlist && <Tag color="blue">Wishlist</Tag>}
             {game.wantToPlay && <Tag color="amber">Want to play</Tag>}
             {game.prevOwned && <Tag color="gray">Prev. owned</Tag>}
           </div>
-        </div>
-      </a>
 
-      {/* Hover popup */}
-      {hovered && (
+          {/* Show details button */}
+          <button
+            onClick={() => setDetailsOpen(o => !o)}
+            style={{
+              marginTop: 6, padding: '4px 0',
+              background: 'none', border: 'none',
+              fontSize: 11, color: detailsOpen ? 'var(--accent)' : 'var(--text3)',
+              cursor: 'pointer', textAlign: 'left',
+              transition: 'color 140ms',
+            }}
+          >
+            {detailsOpen ? '▲ Hide details' : '▼ Show details'}
+          </button>
+
+          {/* Inline details panel (visible when detailsOpen) */}
+          {detailsOpen && (
+            <div style={{
+              marginTop: 4,
+              background: 'var(--bg3)',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              padding: '10px 12px',
+            }}>
+              {popupContent}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Hover popup — only on desktop (pointer: fine), hidden when detailsOpen */}
+      {hovered && !detailsOpen && (
         <div style={{
           position: 'absolute',
           ...(popupPos.top ? { bottom: '100%', marginBottom: 6 } : { top: '100%', marginTop: 6 }),
@@ -131,66 +226,7 @@ export default function GameCard({ game }) {
           boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
           pointerEvents: 'none',
         }}>
-          {/* Game title */}
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 8, lineHeight: 1.3 }}>
-            {game.name}{game.yearPublished ? ` (${game.yearPublished})` : ''}
-          </p>
-
-          {/* Game stats */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {game.rating > 0 && (
-              <PopupRow label="BGG rating">
-                <span style={{ color: ratingColor, fontWeight: 600 }}>★ {game.rating.toFixed(1)}</span>
-                {game.numRatings > 0 && <span style={{ color: 'var(--text3)', fontSize: 10 }}> ({game.numRatings.toLocaleString()})</span>}
-              </PopupRow>
-            )}
-            {game.bggRank && <PopupRow label="BGG rank">#{game.bggRank.toLocaleString()}</PopupRow>}
-            {playerStr && <PopupRow label="Players">{playerStr}</PopupRow>}
-            {timeStr && <PopupRow label="Playtime">{timeStr}</PopupRow>}
-            {game.minAge > 0 && <PopupRow label="Min. age">{game.minAge}+</PopupRow>}
-          </div>
-
-          {/* Per-user section */}
-          {userStatuses.length > 0 && (
-            <>
-              <div style={{ height: 1, background: 'var(--border)', margin: '10px 0 8px' }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {userStatuses.map(([username, status]) => {
-                  const hasStatus = status.owned || status.wishlist || status.wantToPlay || status.prevOwned
-                  return (
-                    <div key={username}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                        <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', flexShrink: 0 }}>{username}</span>
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                          {status.owned      && <StatusPill type="owned" />}
-                          {status.wishlist   && <StatusPill type="wishlist" />}
-                          {status.wantToPlay && <StatusPill type="wantToPlay" />}
-                          {!status.owned && status.prevOwned && <StatusPill type="prevOwned" />}
-                          {!hasStatus && <span style={{ fontSize: 10, color: 'var(--text3)' }}>in collection</span>}
-                        </div>
-                      </div>
-                      {(status.numPlays > 0 || status.userRating) && (
-                        <div style={{ display: 'flex', gap: 10, marginTop: 2, paddingLeft: 0 }}>
-                          {status.numPlays > 0 && (
-                            <span style={{ fontSize: 10, color: 'var(--text3)' }}>
-                              {status.numPlays} play{status.numPlays !== 1 ? 's' : ''}
-                            </span>
-                          )}
-                          {status.userRating && (
-                            <span style={{ fontSize: 10, color: 'var(--accent)' }}>
-                              ★ {status.userRating.toFixed(1)} personal
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </>
-          )}
-
-          <p style={{ fontSize: 10, color: 'var(--text3)', marginTop: 10 }}>Click to open on BGG ↗</p>
+          {popupContent}
         </div>
       )}
     </div>
