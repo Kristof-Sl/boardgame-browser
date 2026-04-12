@@ -156,6 +156,32 @@ function GameFilterBar({ games, filters, onChange }) {
               onClick={() => onChange({ ...filters, minRating: filters.minRating === n ? null : n })} />
           ))}
         </FilterGroup>
+
+        {/* Release date */}
+        {(() => {
+          const years = games.map(g => g.yearPublished).filter(Boolean)
+          if (!years.length) return null
+          const maxYear = new Date().getFullYear()
+          const startDecade = Math.floor(Math.min(...years) / 10) * 10
+          const allDecades = []
+          for (let d = startDecade; d <= maxYear; d += 10) {
+            if (years.some(y => y >= d && y < d + 10)) allDecades.push(d)
+          }
+          if (!allDecades.length) return null
+          const selected = filters.decades || []
+          const toggle = d => {
+            const next = selected.includes(d) ? selected.filter(x => x !== d) : [...selected, d]
+            onChange({ ...filters, decades: next })
+          }
+          return (
+            <FilterGroup label="Release date">
+              <Pill label="Any" active={selected.length === 0} onClick={() => onChange({ ...filters, decades: [] })} />
+              {allDecades.map(d => (
+                <Pill key={d} label={`${d}s`} active={selected.includes(d)} onClick={() => toggle(d)} />
+              ))}
+            </FilterGroup>
+          )
+        })()}
       </div>
     </div>
   )
@@ -180,11 +206,14 @@ function applyGameFilters(games, filters) {
     if (filters.maxTime === 999) { if (g.maxPlaytime < 120) return false }
     else if (filters.maxTime) { if (!g.maxPlaytime || g.maxPlaytime > filters.maxTime) return false }
     if (filters.minRating && g.rating < filters.minRating) return false
+    if (filters.decades && filters.decades.length > 0) {
+      if (!g.yearPublished || !filters.decades.some(d => g.yearPublished >= d && g.yearPublished < d + 10)) return false
+    }
     return true
   })
 }
 
-const EMPTY_GAME_FILTERS = { search: '', players: null, maxTime: null, minRating: null }
+const EMPTY_GAME_FILTERS = { search: '', players: null, maxTime: null, minRating: null, decades: [] }
 
 // ─── Not configured banner ────────────────────────────────────────────────────
 
@@ -755,7 +784,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }
 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
-function SchedulePhase({ event, participants, me, eventGames }) {
+function SchedulePhase({ event, participants, me, eventGames, mergedCollection }) {
   const schedule = event.schedule || []
   const params = event.schedule_params || {}
   const [myGamesOnly, setMyGamesOnly] = useState(false)
@@ -780,14 +809,15 @@ function SchedulePhase({ event, participants, me, eventGames }) {
 
   const partColors = { morning: 'var(--blue)', afternoon: 'var(--accent)', evening: 'var(--green)' }
 
-  // Build "what to bring" list: unique games in schedule, with owner info from eventGames
+  // Build "what to bring" list: unique games in schedule, with owner info from mergedCollection
   const scheduledGameIds = new Set(schedule.map(s => s.gameId))
   const bringList = eventGames
     .filter(eg => scheduledGameIds.has(eg.game_id))
     .map(eg => {
       const g = eg.game_data || {}
-      // ownerStatuses is on merged collection games; fall back to checking actualOwners
-      const owners = g.actualOwners || g.owners || []
+      // Look up ownership from the local mergedCollection which has actualOwners populated
+      const localGame = (mergedCollection || []).find(m => m.id === eg.game_id)
+      const owners = localGame?.actualOwners || localGame?.owners || []
       return { id: eg.game_id, name: eg.game_name, thumbnail: g.thumbnail, owners }
     })
 
