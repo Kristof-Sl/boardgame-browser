@@ -784,7 +784,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }
 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
-function SchedulePhase({ event, participants, me, eventGames }) {
+function SchedulePhase({ event, participants, me, eventGames, mergedCollection }) {
   const schedule = event.schedule || []
   const params = event.schedule_params || {}
   const [myGamesOnly, setMyGamesOnly] = useState(false)
@@ -809,14 +809,15 @@ function SchedulePhase({ event, participants, me, eventGames }) {
 
   const partColors = { morning: 'var(--blue)', afternoon: 'var(--accent)', evening: 'var(--green)' }
 
-  // Build "what to bring" list: unique games in schedule, with owner info from eventGames
+  // Build "what to bring" list: unique games in schedule, with owner info from mergedCollection
   const scheduledGameIds = new Set(schedule.map(s => s.gameId))
   const bringList = eventGames
     .filter(eg => scheduledGameIds.has(eg.game_id))
     .map(eg => {
       const g = eg.game_data || {}
-      // ownerStatuses is on merged collection games; fall back to checking actualOwners
-      const owners = g.actualOwners || g.owners || []
+      // Look up ownership from the local mergedCollection which has actualOwners populated
+      const localGame = (mergedCollection || []).find(m => m.id === eg.game_id)
+      const owners = localGame?.actualOwners || localGame?.owners || []
       return { id: eg.game_id, name: eg.game_name, thumbnail: g.thumbnail, owners }
     })
 
