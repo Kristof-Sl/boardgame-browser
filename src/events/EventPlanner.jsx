@@ -794,12 +794,10 @@ function SchedulePhase({ event, participants, me, eventGames, mergedCollection }
     return <Card><p style={{ color: 'var(--text3)' }}>No schedule generated yet.</p></Card>
   }
 
-  // Filter schedule if "my games only" is on
   const visibleSchedule = myGamesOnly
     ? schedule.filter(slot => slot.players && slot.players.some(p => p.id === me.id))
     : schedule
 
-  // Group by date + part
   const grouped = {}
   for (const slot of visibleSchedule) {
     const key = `${slot.date}_${slot.part}`
@@ -809,17 +807,31 @@ function SchedulePhase({ event, participants, me, eventGames, mergedCollection }
 
   const partColors = { morning: 'var(--blue)', afternoon: 'var(--accent)', evening: 'var(--green)' }
 
-  // Build "what to bring" list: unique games in schedule, with owner info from mergedCollection
+  // Build bring list enriched with ownership from mergedCollection
   const scheduledGameIds = new Set(schedule.map(s => s.gameId))
   const bringList = eventGames
     .filter(eg => scheduledGameIds.has(eg.game_id))
     .map(eg => {
       const g = eg.game_data || {}
-      // Look up ownership from the local mergedCollection which has actualOwners populated
       const localGame = (mergedCollection || []).find(m => m.id === eg.game_id)
       const owners = localGame?.actualOwners || localGame?.owners || []
       return { id: eg.game_id, name: eg.game_name, thumbnail: g.thumbnail, owners }
     })
+
+  // Build a lookup: gameId -> enriched data (from eventGames + mergedCollection)
+  const gameDataMap = {}
+  for (const eg of eventGames) {
+    const localGame = (mergedCollection || []).find(m => m.id === eg.game_id)
+    gameDataMap[eg.game_id] = {
+      ...(eg.game_data || {}),
+      bggUrl: `https://boardgamegeek.com/boardgame/${eg.game_id}`,
+      actualOwners: localGame?.actualOwners || localGame?.owners || [],
+      ownerStatuses: localGame?.ownerStatuses || {},
+      rating: eg.game_data?.rating || localGame?.rating || 0,
+      numRatings: localGame?.numRatings || 0,
+      bggRank: localGame?.bggRank || null,
+    }
+  }
 
   if (showBringList) {
     return (
@@ -832,9 +844,7 @@ function SchedulePhase({ event, participants, me, eventGames, mergedCollection }
             What to bring
           </h3>
         </div>
-        <p style={{ fontSize: 13, color: 'var(--text3)' }}>
-          All games scheduled for this event, and who owns them.
-        </p>
+        <p style={{ fontSize: 13, color: 'var(--text3)' }}>All games scheduled for this event, and who owns them.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {bringList.map(g => (
             <div key={g.id} style={{
@@ -908,43 +918,187 @@ function SchedulePhase({ event, participants, me, eventGames, mergedCollection }
             <span style={{ fontSize: 13, color: 'var(--text2)' }}>{block.date}</span>
             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-            {block.games.map((slot, i) => {
-              const isMe = slot.players && slot.players.some(p => p.id === me.id)
-              return (
-                <div key={i} style={{
-                  background: 'var(--surface)',
-                  border: `1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}`,
-                  borderRadius: 10, overflow: 'hidden',
-                }}>
-                  {slot.thumbnail && (
-                    <img src={slot.thumbnail} alt="" style={{ width: '100%', height: 80, objectFit: 'cover' }} />
-                  )}
-                  <div style={{ padding: '10px 12px' }}>
-                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>
-                      {slot.gameName}
-                      {isMe && <span style={{ fontSize: 10, color: 'var(--accent)', marginLeft: 8, fontFamily: 'var(--font-body)' }}>★ you</span>}
-                    </p>
-                    <p style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>⏱ ~{slot.gameDuration} min</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                      {slot.players && slot.players.map(p => (
-                        <span key={p.id} style={{
-                          fontSize: 11, borderRadius: 4,
-                          padding: '2px 8px',
-                          background: p.id === me.id ? 'var(--accent-bg)' : 'var(--bg3)',
-                          color: p.id === me.id ? 'var(--accent)' : 'var(--text2)',
-                          fontWeight: p.id === me.id ? 500 : 400,
-                        }}>{p.name}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+            {block.games.map((slot, i) => (
+              <ScheduleGameCard
+                key={i}
+                slot={slot}
+                gameData={gameDataMap[slot.gameId] || {}}
+                me={me}
+              />
+            ))}
           </div>
         </div>
       ))}
     </div>
+  )
+}
+
+function ScheduleGameCard({ slot, gameData, me }) {
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [imgErr, setImgErr] = useState(false)
+
+  const isMe = slot.players && slot.players.some(p => p.id === me.id)
+  const thumbnail = slot.thumbnail || gameData.thumbnail
+  const bggUrl = gameData.bggUrl || `https://boardgamegeek.com/boardgame/${slot.gameId}`
+
+  const ratingColor = (gameData.rating || 0) >= 8 ? 'var(--green)'
+    : (gameData.rating || 0) >= 7 ? 'var(--accent)'
+    : (gameData.rating || 0) >= 6 ? 'var(--text2)'
+    : 'var(--text3)'
+
+  const playerStr = gameData.minPlayers && gameData.maxPlayers
+    ? gameData.minPlayers === gameData.maxPlayers ? `${gameData.minPlayers}`
+      : `${gameData.minPlayers}–${gameData.maxPlayers}`
+    : null
+
+  const timeStr = gameData.minPlaytime && gameData.maxPlaytime
+    ? gameData.minPlaytime === gameData.maxPlaytime ? `${gameData.minPlaytime} min`
+      : `${gameData.minPlaytime}–${gameData.maxPlaytime} min`
+    : gameData.maxPlaytime ? `${gameData.maxPlaytime} min` : null
+
+  const ownerStatuses = gameData.ownerStatuses || {}
+  const actualOwners = gameData.actualOwners || []
+
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: `1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}`,
+      borderRadius: 10, overflow: 'hidden',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Thumbnail — links to BGG */}
+      <a href={bggUrl} target="_blank" rel="noopener noreferrer"
+        style={{ display: 'block', position: 'relative', paddingTop: '56%', background: 'var(--bg3)', flexShrink: 0, textDecoration: 'none' }}
+      >
+        {thumbnail && !imgErr ? (
+          <img src={thumbnail} alt={slot.gameName} onError={() => setImgErr(true)}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'var(--text3)' }}>🎲</div>
+        )}
+        {/* Rating badge */}
+        {gameData.rating > 0 && (
+          <div style={{
+            position: 'absolute', bottom: 6, right: 6,
+            background: 'rgba(15,14,12,0.88)', backdropFilter: 'blur(4px)',
+            borderRadius: 5, padding: '2px 6px',
+            fontSize: 11, fontWeight: 600, color: ratingColor,
+          }}>★ {gameData.rating.toFixed(1)}</div>
+        )}
+        {/* Owner badges */}
+        {actualOwners.length > 0 && (
+          <div style={{ position: 'absolute', top: 6, left: 6, display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: '70%' }}>
+            {actualOwners.map(o => (
+              <span key={o} style={{
+                background: 'rgba(15,14,12,0.88)', backdropFilter: 'blur(4px)',
+                borderRadius: 3, padding: '1px 5px',
+                fontSize: 10, color: 'var(--green)', fontWeight: 500,
+              }}>{o}</span>
+            ))}
+          </div>
+        )}
+      </a>
+
+      {/* Card body */}
+      <div style={{ padding: '10px 12px 12px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+        <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 500, lineHeight: 1.3, color: 'var(--text)' }}>
+          {slot.gameName}
+          {isMe && <span style={{ fontSize: 10, color: 'var(--accent)', marginLeft: 6, fontFamily: 'var(--font-body)', fontWeight: 500 }}>★ you</span>}
+        </p>
+
+        <p style={{ fontSize: 11, color: 'var(--text3)' }}>⏱ ~{slot.gameDuration} min</p>
+
+        {/* Players in this slot */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+          {slot.players && slot.players.map(p => (
+            <span key={p.id} style={{
+              fontSize: 11, borderRadius: 4, padding: '2px 7px',
+              background: p.id === me.id ? 'var(--accent-bg)' : 'var(--bg3)',
+              color: p.id === me.id ? 'var(--accent)' : 'var(--text2)',
+              fontWeight: p.id === me.id ? 500 : 400,
+            }}>{p.name}</span>
+          ))}
+        </div>
+
+        {/* Show details toggle */}
+        <button
+          onClick={() => setDetailsOpen(o => !o)}
+          style={{
+            marginTop: 6, padding: '4px 0', background: 'none', border: 'none',
+            fontSize: 11, color: detailsOpen ? 'var(--accent)' : 'var(--text3)',
+            cursor: 'pointer', textAlign: 'left', transition: 'color 140ms',
+          }}
+        >
+          {detailsOpen ? '▲ Hide details' : '▼ Show details'}
+        </button>
+
+        {/* Inline details panel */}
+        {detailsOpen && (
+          <div style={{
+            marginTop: 4, background: 'var(--bg3)',
+            border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px',
+            display: 'flex', flexDirection: 'column', gap: 4,
+          }}>
+            {gameData.rating > 0 && (
+              <SchRow label="BGG rating">
+                <span style={{ color: ratingColor, fontWeight: 600 }}>★ {gameData.rating.toFixed(1)}</span>
+                {gameData.numRatings > 0 && <span style={{ color: 'var(--text3)', fontSize: 10 }}> ({gameData.numRatings.toLocaleString()})</span>}
+              </SchRow>
+            )}
+            {gameData.bggRank && <SchRow label="BGG rank">#{gameData.bggRank.toLocaleString()}</SchRow>}
+            {playerStr && <SchRow label="Players">{playerStr}</SchRow>}
+            {timeStr && <SchRow label="BGG playtime">{timeStr}</SchRow>}
+            {gameData.minAge > 0 && <SchRow label="Min. age">{gameData.minAge}+</SchRow>}
+
+            {/* Per-user ownership status */}
+            {Object.keys(ownerStatuses).length > 0 && (
+              <>
+                <div style={{ height: 1, background: 'var(--border)', margin: '6px 0 4px' }} />
+                {Object.entries(ownerStatuses).map(([username, status]) => {
+                  const hasStatus = status.owned || status.wishlist || status.wantToPlay || status.prevOwned
+                  return (
+                    <div key={username} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', flexShrink: 0 }}>{username}</span>
+                      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        {status.owned      && <SChPill label="Owns" color="var(--green)" bg="var(--green-bg)" />}
+                        {status.wishlist   && <SChPill label="Wishlist" color="var(--blue)" bg="var(--blue-bg)" />}
+                        {status.wantToPlay && <SChPill label="Wants to play" color="var(--accent)" bg="rgba(232,200,74,0.12)" />}
+                        {!status.owned && status.prevOwned && <SChPill label="Prev. owned" color="var(--text3)" bg="rgba(255,255,255,0.06)" />}
+                        {!hasStatus && <span style={{ fontSize: 10, color: 'var(--text3)' }}>in collection</span>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </>
+            )}
+
+            <a href={bggUrl} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'block', marginTop: 6, fontSize: 10, color: 'var(--accent)', textDecoration: 'none' }}>
+              Open on BGG ↗
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SchRow({ label, children }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+      <span style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 11, color: 'var(--text)', textAlign: 'right' }}>{children}</span>
+    </div>
+  )
+}
+
+function SChPill({ label, color, bg }) {
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 500, padding: '1px 6px',
+      borderRadius: 4, background: bg, color, whiteSpace: 'nowrap',
+    }}>{label}</span>
   )
 }
 
