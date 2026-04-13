@@ -550,7 +550,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
                   really_want: { label: '❤️', color: '#e87d4a', text: 'Really want' },
                   want:        { label: '👍', color: 'var(--green)', text: 'Want' },
                   neutral:     { label: '😐', color: 'var(--text3)', text: 'Neutral' },
-                  dont_want:   { label: '👎', color: 'var(--red)', text: 'Don't want' },
+                  dont_want:   { label: '👎', color: 'var(--red)', text: "Don't want" },
                 }
                 return (
                   <div key={eg.game_id} style={{
