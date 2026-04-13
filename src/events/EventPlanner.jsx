@@ -459,8 +459,34 @@ function EventDashboard({ initialEvent, localCollection }) {
 
 function mergeCollections(eventCol, localCol) {
   const map = new Map()
+  // Start with event collection (basic game data from Supabase)
   for (const g of (eventCol || [])) map.set(g.id, g)
-  for (const g of (localCol || [])) if (!map.has(g.id)) map.set(g.id, g)
+  // Layer in local collection — always copy ownership fields even if game already exists,
+  // because the event collection never has ownerStatuses/actualOwners (those are browser-only)
+  for (const g of (localCol || [])) {
+    if (map.has(g.id)) {
+      const existing = map.get(g.id)
+      map.set(g.id, {
+        ...existing,
+        ownerStatuses: g.ownerStatuses || existing.ownerStatuses,
+        actualOwners:  g.actualOwners  || existing.actualOwners,
+        owners:        g.owners        || existing.owners,
+        // Also fill in any missing stats from local collection
+        rating:      existing.rating      || g.rating,
+        numRatings:  existing.numRatings  || g.numRatings,
+        bggRank:     existing.bggRank     || g.bggRank,
+        minPlayers:  existing.minPlayers  || g.minPlayers,
+        maxPlayers:  existing.maxPlayers  || g.maxPlayers,
+        minPlaytime: existing.minPlaytime || g.minPlaytime,
+        maxPlaytime: existing.maxPlaytime || g.maxPlaytime,
+        minAge:      existing.minAge      || g.minAge,
+        yearPublished: existing.yearPublished || g.yearPublished,
+        thumbnail:   existing.thumbnail   || g.thumbnail,
+      })
+    } else {
+      map.set(g.id, g)
+    }
+  }
   return Array.from(map.values())
 }
 
