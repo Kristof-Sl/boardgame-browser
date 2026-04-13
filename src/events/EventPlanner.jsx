@@ -769,32 +769,66 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }
               const myPref = myPrefs[eg.game_id]
               return (
                 <div key={eg.game_id} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  background: 'var(--bg3)', borderRadius: 8, padding: '8px 12px',
+                  background: 'var(--bg3)', borderRadius: 8, padding: '10px 12px',
                 }}>
-                  {g.thumbnail && <img src={g.thumbnail} alt="" style={{ width: 36, height: 36, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eg.game_name}</p>
-                    <p style={{ fontSize: 11, color: 'var(--text3)' }}>
-                      {g.maxPlayers > 0 && `👤 ${g.minPlayers}–${g.maxPlayers}`}
-                      {g.maxPlaytime > 0 && ` · ⏱ ${g.maxPlaytime}m`}
-                      {g.rating > 0 && ` · ★ ${g.rating.toFixed(1)}`}
-                    </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {g.thumbnail && <img src={g.thumbnail} alt="" style={{ width: 36, height: 36, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eg.game_name}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text3)' }}>
+                        {g.maxPlayers > 0 && `👤 ${g.minPlayers}–${g.maxPlayers}`}
+                        {g.maxPlaytime > 0 && ` · ⏱ ${g.maxPlaytime}m`}
+                        {g.rating > 0 && ` · ★ ${g.rating.toFixed(1)}`}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 5, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      {PREF_OPTS.map(opt => (
+                        <button key={opt.value} onClick={() => handlePref(eg.game_id, opt.value)}
+                          disabled={savingPref === eg.game_id}
+                          style={{
+                            padding: '3px 8px', borderRadius: 5, fontSize: 11,
+                            border: `1px solid ${myPref === opt.value ? opt.color : 'var(--border)'}`,
+                            background: myPref === opt.value ? `${opt.color}22` : 'transparent',
+                            color: myPref === opt.value ? opt.color : 'var(--text3)',
+                            cursor: 'pointer', transition: 'all 120ms',
+                          }}
+                        >{opt.label}</button>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 5, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    {PREF_OPTS.map(opt => (
-                      <button key={opt.value} onClick={() => handlePref(eg.game_id, opt.value)}
-                        disabled={savingPref === eg.game_id}
-                        style={{
-                          padding: '3px 8px', borderRadius: 5, fontSize: 11,
-                          border: `1px solid ${myPref === opt.value ? opt.color : 'var(--border)'}`,
-                          background: myPref === opt.value ? `${opt.color}22` : 'transparent',
-                          color: myPref === opt.value ? opt.color : 'var(--text3)',
-                          cursor: 'pointer', transition: 'all 120ms',
-                        }}
-                      >{opt.label}</button>
-                    ))}
-                  </div>
+                  {/* Others' preferences */}
+                  {(() => {
+                    const others = participants.filter(p => p.id !== me.id)
+                    const gamePrefs = prefs.filter(p => p.game_id === eg.game_id && p.participant_id !== me.id)
+                    if (gamePrefs.length === 0 && others.length === 0) return null
+                    const PREF_DISPLAY = {
+                      really_want: { icon: '❤️', color: '#e87d4a' },
+                      want:        { icon: '👍', color: 'var(--green)' },
+                      neutral:     { icon: '😐', color: 'var(--text3)' },
+                      dont_want:   { icon: '👎', color: 'var(--red)' },
+                    }
+                    return (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+                        <span style={{ fontSize: 10, color: 'var(--text3)', alignSelf: 'center', marginRight: 2 }}>Others:</span>
+                        {others.map(p => {
+                          const pref = gamePrefs.find(r => r.participant_id === p.id)
+                          const d = pref ? PREF_DISPLAY[pref.preference] : null
+                          return (
+                            <span key={p.id} title={pref ? pref.preference.replace('_', ' ') : 'not rated'} style={{
+                              fontSize: 11, display: 'flex', alignItems: 'center', gap: 3,
+                              background: 'var(--bg4)', borderRadius: 4, padding: '2px 7px',
+                              color: d ? d.color : 'var(--text3)',
+                              opacity: d ? 1 : 0.4,
+                              border: `1px solid ${d ? d.color + '55' : 'var(--border)'}`,
+                            }}>
+                              <span style={{ fontSize: 10 }}>{d ? d.icon : '·'}</span>
+                              {p.name}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
                 </div>
               )
             })}
@@ -810,7 +844,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }
 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
-function SchedulePhase({ event, participants, me, eventGames, mergedCollection }) {
+function SchedulePhase({ event, participants, me, eventGames, prefs, mergedCollection }) {
   const schedule = event.schedule || []
   const params = event.schedule_params || {}
   const [myGamesOnly, setMyGamesOnly] = useState(false)
@@ -928,6 +962,11 @@ function SchedulePhase({ event, participants, me, eventGames, mergedCollection }
         </Card>
       )}
 
+      {/* Preferences overview */}
+      {eventGames.length > 0 && (
+        <PreferencesOverview eventGames={eventGames} participants={participants} prefs={prefs} me={me} />
+      )}
+
       {Object.keys(grouped).length === 0 && (
         <p style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)', fontSize: 14 }}>
           You are not participating in any scheduled games.
@@ -957,6 +996,105 @@ function SchedulePhase({ event, participants, me, eventGames, mergedCollection }
         </div>
       ))}
     </div>
+  )
+}
+
+function PreferencesOverview({ eventGames, participants, prefs, me }) {
+  const [open, setOpen] = useState(false)
+
+  const PREF_DISPLAY = {
+    really_want: { icon: '❤️', label: 'Really want', color: '#e87d4a' },
+    want:        { icon: '👍', label: 'Want',        color: 'var(--green)' },
+    neutral:     { icon: '😐', label: 'Neutral',     color: 'var(--text3)' },
+    dont_want:   { icon: '👎', label: "Don't want",  color: 'var(--red)' },
+  }
+
+  // Build map: gameId -> participantId -> preference
+  const prefMap = {}
+  for (const p of prefs) {
+    if (!prefMap[p.game_id]) prefMap[p.game_id] = {}
+    prefMap[p.game_id][p.participant_id] = p.preference
+  }
+
+  return (
+    <Card>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+        }}
+      >
+        <p style={{ fontSize: 12, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Preferences overview
+        </p>
+        <span style={{ fontSize: 11, color: 'var(--text3)' }}>{open ? '▲ hide' : '▼ show'}</span>
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 14, overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', padding: '6px 10px 6px 0', color: 'var(--text3)', fontWeight: 500, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>
+                  Game
+                </th>
+                {participants.map(p => (
+                  <th key={p.id} style={{
+                    padding: '6px 8px', color: p.id === me.id ? 'var(--accent)' : 'var(--text3)',
+                    fontWeight: p.id === me.id ? 600 : 500,
+                    textAlign: 'center', whiteSpace: 'nowrap',
+                    borderBottom: '1px solid var(--border)',
+                    fontSize: 11,
+                  }}>
+                    {p.name}{p.id === me.id ? ' ★' : ''}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {eventGames.map((eg, i) => {
+                const gamePrefs = prefMap[eg.game_id] || {}
+                return (
+                  <tr key={eg.game_id} style={{ background: i % 2 === 0 ? 'transparent' : 'var(--bg3)' }}>
+                    <td style={{ padding: '7px 10px 7px 0', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: 160, textOverflow: 'ellipsis', borderBottom: '1px solid var(--border)' }}>
+                      {eg.game_name}
+                    </td>
+                    {participants.map(p => {
+                      const pref = gamePrefs[p.id]
+                      const d = pref ? PREF_DISPLAY[pref] : null
+                      return (
+                        <td key={p.id} style={{
+                          textAlign: 'center', padding: '7px 8px',
+                          borderBottom: '1px solid var(--border)',
+                        }}>
+                          {d ? (
+                            <span title={d.label} style={{ fontSize: 14 }}>{d.icon}</span>
+                          ) : (
+                            <span style={{ color: 'var(--border2)', fontSize: 12 }}>–</span>
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          {/* Legend */}
+          <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
+            {Object.values(PREF_DISPLAY).map(d => (
+              <span key={d.label} style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span>{d.icon}</span> {d.label}
+              </span>
+            ))}
+            <span style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ color: 'var(--border2)' }}>–</span> Not rated
+            </span>
+          </div>
+        </div>
+      )}
+    </Card>
   )
 }
 
