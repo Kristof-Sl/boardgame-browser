@@ -539,27 +539,56 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {eventGames.map(eg => {
                 const g = eg.game_data || {}
-                const wantCount = prefs.filter(p => p.game_id === eg.game_id && (p.preference === 'really_want' || p.preference === 'want')).length
-                const dontWantCount = prefs.filter(p => p.game_id === eg.game_id && p.preference === 'dont_want').length
+                // Build per-participant preference map for this game
+                const gamePrefs = prefs.filter(p => p.game_id === eg.game_id)
+                const prefByParticipant = {}
+                for (const p of gamePrefs) prefByParticipant[p.participant_id] = p.preference
+                const PREF_DISPLAY = {
+                  really_want: { label: '❤️', color: '#e87d4a', text: 'Really want' },
+                  want:        { label: '👍', color: 'var(--green)', text: 'Want' },
+                  neutral:     { label: '😐', color: 'var(--text3)', text: 'Neutral' },
+                  dont_want:   { label: '👎', color: 'var(--red)', text: 'Don't want' },
+                }
                 return (
                   <div key={eg.game_id} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    background: 'var(--bg3)', borderRadius: 8, padding: '8px 12px',
+                    background: 'var(--bg3)', borderRadius: 8, padding: '10px 12px',
                   }}>
-                    {g.thumbnail && <img src={g.thumbnail} alt="" style={{ width: 32, height: 32, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eg.game_name}</p>
-                      <p style={{ fontSize: 11, color: 'var(--text3)' }}>
-                        {g.maxPlayers > 0 && `👤 ${g.minPlayers}–${g.maxPlayers}`}
-                        {g.maxPlaytime > 0 && ` · ⏱ ${g.maxPlaytime}m`}
-                        {(wantCount > 0 || dontWantCount > 0) && ` · ❤️ ${wantCount} want · 👎 ${dontWantCount} don't`}
-                      </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {g.thumbnail && <img src={g.thumbnail} alt="" style={{ width: 32, height: 32, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eg.game_name}</p>
+                        <p style={{ fontSize: 11, color: 'var(--text3)' }}>
+                          {g.maxPlayers > 0 && `👤 ${g.minPlayers}–${g.maxPlayers}`}
+                          {g.maxPlaytime > 0 && ` · ⏱ ${g.maxPlaytime}m`}
+                          {g.rating > 0 && ` · ★ ${g.rating.toFixed(1)}`}
+                        </p>
+                      </div>
+                      {event.status === 'preferences' && (
+                        <Btn small danger onClick={() => handleRemoveGame(eg.game_id)}>Remove</Btn>
+                      )}
                     </div>
-                    {event.status === 'preferences' && (
-                      <Btn small danger onClick={() => handleRemoveGame(eg.game_id)}>Remove</Btn>
+                    {/* Per-participant preferences */}
+                    {participants.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                        {participants.map(p => {
+                          const pref = prefByParticipant[p.id]
+                          const display = pref ? PREF_DISPLAY[pref] : null
+                          return (
+                            <div key={p.id} title={display ? `${p.name}: ${display.text}` : `${p.name}: not rated`} style={{
+                              display: 'flex', alignItems: 'center', gap: 4,
+                              background: 'var(--bg4)', borderRadius: 5, padding: '3px 8px',
+                              border: `1px solid ${display ? display.color : 'var(--border)'}`,
+                              opacity: display ? 1 : 0.45,
+                            }}>
+                              <span style={{ fontSize: 10 }}>{display ? display.label : '·'}</span>
+                              <span style={{ fontSize: 11, color: display ? display.color : 'var(--text3)', fontWeight: display ? 500 : 400 }}>{p.name}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
                     )}
                   </div>
                 )
