@@ -71,6 +71,80 @@ function socialScore(group, socialMatrix) {
   return score
 }
 
+function getGroupSizeRange(unassignedCount, remainingGroups, minPlayers, maxPlayers) {
+  const minTotal = minPlayers * remainingGroups
+  const maxTotal = maxPlayers * remainingGroups
+  if (unassignedCount < minTotal || unassignedCount > maxTotal) return null
+  return {
+    minSize: Math.max(minPlayers, unassignedCount - (remainingGroups - 1) * maxPlayers),
+    maxSize: Math.min(maxPlayers, unassignedCount - (remainingGroups - 1) * minPlayers),
+  }
+}
+
+function getGameDuration(game, durationMultiplier) {
+  const baseDuration = (game.game_data?.maxPlaytime || 60)
+  return Math.ceil(baseDuration * durationMultiplier)
+}
+
+function getCapacityBounds(games) {
+  const minPlayers = Math.min(...games.map(game => game.game_data?.minPlayers || 2))
+  const maxPlayers = Math.max(...games.map(game => game.game_data?.maxPlayers || 6))
+  return { minPlayers, maxPlayers }
+}
+
+function canCoverWithGroups(totalPlayers, groups, minPlayers, maxPlayers) {
+  for (let k = 1; k <= groups; k++) {
+    if (totalPlayers >= k * minPlayers && totalPlayers <= k * maxPlayers) return true
+  }
+  return false
+}
+
+export function validateScheduleCoverage(event, participants, games, params) {
+  const {
+    minPlayersPerGame = 2,
+    maxParallelGames = 2,
+  } = params
+
+  const allSlots = getSlots(event.start_date, event.end_date)
+  const minPlayers = Math.max(minPlayersPerGame, getCapacityBounds(games).minPlayers)
+  const maxPlayers = getCapacityBounds(games).maxPlayers
+  const participantSlots = {}
+  for (const p of participants) {
+    participantSlots[p.id] = new Set(getParticipantSlots(p, allSlots).map(s => `${s.date}_${s.part}`))
+  }
+
+  const warnings = []
+  for (const slot of allSlots) {
+    const slotKey = `${slot.date}_${slot.part}`
+    const available = participants.filter(p => participantSlots[p.id].has(slotKey))
+    const count = available.length
+    if (count === 0) continue
+    if (count < minPlayers) {
+      warnings.push(`Slot ${slot.date} ${slot.part}: only ${count} participant${count === 1 ? '' : 's'} present, below the required ${minPlayers} to run a game.`)
+      continue
+    }
+    if (count > maxParallelGames * maxPlayers) {
+      warnings.push(`Slot ${slot.date} ${slot.part}: ${count} participants are present but the event can only support ${maxParallelGames} parallel games with at most ${maxPlayers} players each.`)
+      continue
+    }
+    if (!canCoverWithGroups(count, maxParallelGames, minPlayers, maxPlayers)) {
+      warnings.push(`Slot ${slot.date} ${slot.part}: ${count} participants present cannot be split into at most ${maxParallelGames} valid game groups.`)
+    }
+  }
+  return warnings
+}
+
+function buildScoredParticipants(unassigned, gameId, prefMap, playerGameCount) {
+  return unassigned.map(p => ({
+    p,
+    gameScore: prefMap[p.id]?.[gameId] === 'really_want' ? 10
+      : prefMap[p.id]?.[gameId] === 'want' ? 5
+      : prefMap[p.id]?.[gameId] === 'neutral' ? 1
+      : prefMap[p.id]?.[gameId] === 'dont_want' ? -8 : 1,
+    playsLeast: playerGameCount[p.id] || 0,
+  })).sort((a, b) => (b.gameScore - a.gameScore) || (a.playsLeast - b.playsLeast))
+}
+
 export function generateSchedule(event, participants, games, preferences, params) {
   const {
     hoursPerPart = 3,          // hours available per morning/afternoon/evening block
@@ -97,6 +171,7 @@ export function generateSchedule(event, participants, games, preferences, params
     prefMap[pid] = gamePrefs
   }
 
+  const maxGamePlayers = Math.max(6, ...games.map(game => (game.game_data?.maxPlayers || 6)))
   const schedule = []         // final schedule entries
   const playedGames = {}      // gameId -> times played
   const socialMatrix = {}     // "p1id-p2id" -> interactions count
@@ -114,7 +189,7 @@ export function generateSchedule(event, participants, games, preferences, params
     let remainingMinutes = minutesPerPart
     const assignedInSlot = new Set()
 
-    // Try to fill the slot with games
+    // Try to fill the slot with games while keeping every present participant assigned
     let iterations = 0
     while (remainingMinutes > 30 && iterations < 20) {
       iterations++
@@ -123,65 +198,58 @@ export function generateSchedule(event, participants, games, preferences, params
       const unassigned = availableNow.filter(p => !assignedInSlot.has(p.id))
       if (unassigned.length < minPlayersPerGame) break
 
-      // Try each game, pick the best scoring one that fits
+      const remainingGroups = maxParallelGames - slotGames.length
+      const sizeRange = getGroupSizeRange(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)
+      if (!sizeRange) break
+
       let bestGame = null
       let bestGroup = null
       let bestScore = -Infinity
+      let bestDuration = 0
 
       for (const game of games) {
         const gameData = game.game_data || {}
         const maxPlayers = gameData.maxPlayers || 6
         const minPlayers = gameData.minPlayers || 2
-        const baseDuration = gameData.maxPlaytime || 60
-        const duration = Math.ceil(baseDuration * durationMultiplier)
+        const duration = getGameDuration(game, durationMultiplier)
 
         if (duration > remainingMinutes) continue
         if (unassigned.length < minPlayers) continue
 
-        // Build optimal group for this game
-        const groupSize = Math.min(maxPlayers, unassigned.length)
-        if (groupSize < minPlayers) continue
+        const groupMin = Math.max(sizeRange.minSize, minPlayers)
+        const groupMax = Math.min(sizeRange.maxSize, maxPlayers, unassigned.length)
+        if (groupMin > groupMax) continue
 
-        // Score each participant for this game
-        const scored = unassigned.map(p => ({
-          p,
-          gameScore: (prefMap[p.id]?.[game.game_id] === 'really_want' ? 10
-            : prefMap[p.id]?.[game.game_id] === 'want' ? 5
-            : prefMap[p.id]?.[game.game_id] === 'neutral' ? 1
-            : prefMap[p.id]?.[game.game_id] === 'dont_want' ? -8 : 1),
-          playsLeast: playerGameCount[p.id] || 0,
-        }))
+        for (let groupSize = groupMax; groupSize >= groupMin; groupSize--) {
+          const scored = buildScoredParticipants(unassigned, game.game_id, prefMap, playerGameCount)
+          const group = scored.slice(0, groupSize).map(s => s.p)
 
-        // Sort: prefer those who want the game and have played least
-        scored.sort((a, b) => (b.gameScore - a.gameScore) || (a.playsLeast - b.playsLeast))
-        const group = scored.slice(0, groupSize).map(s => s.p)
+          const gameScore = scoreGame(game, group, prefMap, playedGames, { prioritizePreferences })
+          const social = socialScore(group, socialMatrix) * prioritizeSocial
+          const total = gameScore + social
 
-        const gameScore = scoreGame(game, group, prefMap, playedGames, { prioritizePreferences })
-        const social = socialScore(group.map(p => p), socialMatrix) * prioritizeSocial
-        const total = gameScore + social
-
-        if (total > bestScore) {
-          bestScore = total
-          bestGame = game
-          bestGroup = group
+          if (total > bestScore) {
+            bestScore = total
+            bestGame = game
+            bestGroup = group
+            bestDuration = duration
+          }
         }
       }
 
       if (!bestGame || !bestGroup) break
 
       // Commit this game to the slot
-      const gameData = bestGame.game_data || {}
-      const duration = Math.ceil((gameData.maxPlaytime || 60) * durationMultiplier)
-
+      const bestGameData = bestGame.game_data || {}
       slotGames.push({
         date: slot.date,
         part: slot.part,
         gameId: bestGame.game_id,
         gameName: bestGame.game_name,
-        gameDuration: duration,
+        gameDuration: bestDuration,
         players: bestGroup.map(p => ({ id: p.id, name: p.name })),
-        thumbnail: gameData.thumbnail || null,
-        rating: gameData.rating || null,
+        thumbnail: bestGameData.thumbnail || null,
+        rating: bestGameData.rating || null,
       })
 
       // Update tracking

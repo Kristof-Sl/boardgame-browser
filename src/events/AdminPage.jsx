@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { db } from './supabase'
-import { generateSchedule, scheduleStats } from './scheduler'
+import { generateSchedule, scheduleStats, validateScheduleCoverage } from './scheduler'
 // ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
 import DevTestingWorkflow from './DevTestingWorkflow'
 
@@ -303,10 +303,11 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
       }
       const schedule = generateSchedule(event, participants, eventGames, prefMap, schedParams)
       const stats = scheduleStats(schedule, participants, prefMap)
+      const warnings = validateScheduleCoverage(event, participants, eventGames, schedParams)
       await db.update('events', {
         status: 'scheduled',
         schedule,
-        schedule_params: { ...schedParams, generatedAt: new Date().toISOString(), stats },
+        schedule_params: { ...schedParams, generatedAt: new Date().toISOString(), stats, warnings },
       }, `id=eq.${event.id}`)
       await refreshEvent()
     } catch (e) { alert(e.message) }
@@ -604,6 +605,16 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
             <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>
               Current schedule ({event.schedule.length} slots · generated {new Date(event.schedule_params?.generatedAt).toLocaleString()})
             </p>
+            {event.schedule_params?.warnings?.length > 0 && (
+              <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: 'rgba(255, 229, 100, 0.16)', border: '1px solid rgba(255, 195, 0, 0.24)' }}>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>Schedule warnings</p>
+                <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: 'var(--text3)', fontSize: 12, lineHeight: 1.4 }}>
+                  {event.schedule_params.warnings.map((warning, idx) => (
+                    <li key={idx}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {event.schedule_params?.stats && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8, marginBottom: 14 }}>
                 {Object.values(event.schedule_params.stats.playerStats || {}).map(ps => (
