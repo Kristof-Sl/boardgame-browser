@@ -455,7 +455,7 @@ export default function App() {
               gap: 16,
             }}>
               {filteredGames.map(game => (
-                <GameCard key={game.id} game={game} onUpdateFiles={handleUpdateGameFiles} />
+                <GameCard key={game.id} game={game} />
               ))}
             </div>
           )}
