@@ -1471,6 +1471,7 @@ function ScheduleGameCard({ slot, gameData, me }) {
                 ))}
               </div>
             )}
+
             <a href={bggUrl} target="_blank" rel="noopener noreferrer"
               style={{ display: 'block', marginTop: 6, fontSize: 10, color: 'var(--accent)', textDecoration: 'none' }}>
               Open on BGG ↗
