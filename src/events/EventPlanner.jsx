@@ -724,7 +724,7 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
           ['all', 'All games'],
           ['voted', 'My votes only'],
           ['unvoted', 'Not yet voted'],
-          ['allvotes', 'All participants' votes'],
+          ['allvotes', 'All participants votes'],
         ].map(([f, label]) => (
           <Pill key={f} label={label} active={voteFilter === f} onClick={() => setVoteFilter(f)} />
         ))}
