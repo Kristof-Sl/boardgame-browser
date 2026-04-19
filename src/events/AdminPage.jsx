@@ -199,6 +199,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     hoursPerPart: 3, durationMultiplier: 1.5,
     prioritizePreferences: 1, prioritizeSocial: 1,
     minPlayersPerGame: 2, maxParallelGames: 2,
+    logSteps: false,
   })
 
   const mergedCollection = mergeCollections(event.collection || [], localCollection)
@@ -301,17 +302,31 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
         if (!prefMap[p.participant_id]) prefMap[p.participant_id] = {}
         prefMap[p.participant_id][p.game_id] = p.preference
       }
-      const schedule = generateSchedule(event, participants, eventGames, prefMap, schedParams)
+      const result = generateSchedule(event, participants, eventGames, prefMap, schedParams)
+      const schedule = Array.isArray(result) ? result : result.schedule
+      const scheduleLog = Array.isArray(result) ? [] : result.log || []
       const stats = scheduleStats(schedule, participants, prefMap)
       const warnings = validateScheduleCoverage(event, participants, eventGames, schedParams)
       await db.update('events', {
         status: 'scheduled',
         schedule,
-        schedule_params: { ...schedParams, generatedAt: new Date().toISOString(), stats, warnings },
+        schedule_params: { ...schedParams, generatedAt: new Date().toISOString(), stats, warnings, log: scheduleLog },
       }, `id=eq.${event.id}`)
       await refreshEvent()
     } catch (e) { alert(e.message) }
     finally { setBusy(false) }
+  }
+
+  const handleDownloadLog = () => {
+    const lines = event.schedule_params?.log || []
+    if (!lines.length) return
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `scheduler-log-${event.id}-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   // Vote tallies for display
@@ -403,6 +418,15 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
                   />
                 </div>
               ))}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text3)' }}>
+                  <input type="checkbox" checked={schedParams.logSteps}
+                    onChange={e => setSchedParams(p => ({ ...p, logSteps: e.target.checked }))}
+                    style={{ margin: 0 }}
+                  />
+                  Generate detailed scheduler log
+                </label>
+              </div>
               {[
                 ['prioritizePreferences', 'Weight: preferences'],
                 ['prioritizeSocial', 'Weight: social mixing'],
@@ -605,6 +629,23 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
             <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>
               Current schedule ({event.schedule.length} slots · generated {new Date(event.schedule_params?.generatedAt).toLocaleString()})
             </p>
+            {event.schedule_params?.log?.length > 0 && (
+              <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: 'rgba(220, 235, 255, 0.24)', border: '1px solid rgba(100, 150, 220, 0.32)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>Scheduler log</p>
+                    <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--text3)' }}>Detailed generation steps are stored here for debugging.</p>
+                  </div>
+                  <Btn onClick={handleDownloadLog} style={{ padding: '6px 10px', fontSize: 12 }}>Download log</Btn>
+                </div>
+                <details style={{ marginTop: 10, borderRadius: 8, background: 'var(--bg3)', padding: 10 }}>
+                  <summary style={{ cursor: 'pointer', fontSize: 12, color: 'var(--text3)' }}>Show log entries ({event.schedule_params.log.length})</summary>
+                  <pre style={{ marginTop: 10, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 11, color: 'var(--text3)' }}>
+                    {event.schedule_params.log.join('\n')}
+                  </pre>
+                </details>
+              </div>
+            )}
             {event.schedule_params?.warnings?.length > 0 && (
               <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: 'rgba(255, 229, 100, 0.16)', border: '1px solid rgba(255, 195, 0, 0.24)' }}>
                 <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>Schedule warnings</p>
