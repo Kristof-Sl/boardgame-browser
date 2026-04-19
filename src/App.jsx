@@ -6,6 +6,7 @@ import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
 import EventPlanner from './events/EventPlanner'
 import AdminPage from './events/AdminPage'
+import { db, isConfigured } from './events/supabase'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -42,6 +43,7 @@ export default function App() {
   const saved = useMemo(() => loadFromStorage(), [])
   const [accounts, setAccounts] = useState(saved?.accounts || [])
   const [collections, setCollections] = useState(saved?.collections || {})
+  const [gameFiles, setGameFiles] = useState({})
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
   const [tab, setTab] = useState('collection')
@@ -67,6 +69,17 @@ export default function App() {
     }
   }, [])
 
+  // Load game files from Supabase
+  useEffect(() => {
+    if (isConfigured()) {
+      db.select('game_files').then(files => {
+        const fileMap = {}
+        files.forEach(f => fileMap[f.game_id] = f.files)
+        setGameFiles(fileMap)
+      }).catch(err => console.warn('Failed to load game files:', err))
+    }
+  }, [])
+
   useEffect(() => {
     if (defaultLoaded) saveToStorage(accounts, collections)
   }, [accounts, collections, defaultLoaded])
@@ -76,7 +89,13 @@ export default function App() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  const allGames = useMemo(() => mergeCollections(collections), [collections])
+  const allGames = useMemo(() => {
+    const merged = mergeCollections(collections)
+    return merged.map(game => ({
+      ...game,
+      files: gameFiles[game.id] || game.files || []
+    }))
+  }, [collections, gameFiles])
 
   const filteredGames = useMemo(() => {
     let games = [...allGames]
@@ -194,7 +213,8 @@ export default function App() {
     }
   }, [])
 
-  const handleUpdateGameFiles = useCallback((gameId, files) => {
+  const handleUpdateGameFiles = useCallback(async (gameId, files) => {
+    // Update local state
     setCollections(prev => {
       const next = {}
       for (const owner in prev) {
@@ -202,6 +222,28 @@ export default function App() {
       }
       return next
     })
+
+    // Save to Supabase if configured
+    if (isConfigured()) {
+      try {
+        if (files.length === 0) {
+          // Delete if no files
+          await db.delete('game_files', `game_id=eq.${gameId}`)
+          setGameFiles(prev => {
+            const next = { ...prev }
+            delete next[gameId]
+            return next
+          })
+        } else {
+          // Upsert
+          await db.upsert('game_files', { game_id: gameId, files, updated_at: new Date().toISOString() })
+          setGameFiles(prev => ({ ...prev, [gameId]: files }))
+        }
+      } catch (err) {
+        console.warn('Failed to save game files:', err)
+        showToast('Failed to save file links', 'err')
+      }
+    }
   }, [])
 
   // Export current state as downloadable JSON
