@@ -110,6 +110,17 @@ function canCoverWithGroups(totalPlayers, groups, minPlayers, maxPlayers) {
   return false
 }
 
+function sizeBalanceScore(groupSize, unassignedCount, remainingGroups, existingSizes, weight) {
+  if (!weight) return 0
+  const idealSize = remainingGroups > 0 ? Math.max(1, Math.round(unassignedCount / remainingGroups)) : groupSize
+  let score = -Math.abs(groupSize - idealSize) * 2
+  if (existingSizes.length > 0) {
+    const avgExisting = Math.round(existingSizes.reduce((sum, size) => sum + size, 0) / existingSizes.length)
+    score -= Math.abs(groupSize - avgExisting)
+  }
+  return score * weight
+}
+
 export function validateScheduleCoverage(event, participants, games, params) {
   const {
     minPlayersPerGame = 2,
@@ -162,6 +173,7 @@ export function generateSchedule(event, participants, games, preferences, params
     durationMultiplier = 1.5,  // multiply BGG duration by this (experience factor)
     prioritizePreferences = 1, // 0-2 weight
     prioritizeSocial = 1,      // 0-2 weight
+    balanceGroupWeight = 1,    // higher prefers more even parallel group sizes
     minPlayersPerGame = 2,
     maxParallelGames = 2,
   } = params
@@ -254,14 +266,15 @@ export function generateSchedule(event, participants, games, preferences, params
 
           const gameScore = scoreGame(game, group, prefMap, playedGames, { prioritizePreferences })
           const social = socialScore(group, socialMatrix) * prioritizeSocial
-          const total = gameScore + social
+          const balance = sizeBalanceScore(groupSize, unassigned.length, remainingGroups, slotGames.map(s => s.players.length), balanceGroupWeight)
+          const total = gameScore + social + balance
 
           if (total > bestScore) {
             bestScore = total
             bestGame = game
             bestGroup = group
             bestDuration = duration
-            logger.log(`Candidate best: ${game.game_name} with ${groupSize} players, score ${total}`)
+            logger.log(`Candidate best: ${game.game_name} with ${groupSize} players, score ${total} (balance ${balance})`)
           }
         }
       }
