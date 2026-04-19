@@ -7,12 +7,39 @@ const STATUS_INFO = {
   prevOwned:  { label: 'Previously owned',  color: 'var(--text3)',  bg: 'rgba(255,255,255,0.06)' },
 }
 
-export default function GameCard({ game }) {
+export default function GameCard({ game, onUpdateFiles }) {
   const [imgErr, setImgErr] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [popupPos, setPopupPos] = useState({ top: false, left: false })
+  const [newFileName, setNewFileName] = useState('')
+  const [newFileUrl, setNewFileUrl] = useState('')
+  const [fileError, setFileError] = useState(null)
   const cardRef = useRef()
+
+  const fileLinks = Array.isArray(game.files) ? game.files : []
+
+  const handleAddFile = () => {
+    const url = newFileUrl.trim()
+    if (!url) {
+      setFileError('Enter a URL for the file link.')
+      return
+    }
+    if (!/^https?:\/\//i.test(url)) {
+      setFileError('File links must start with http:// or https://')
+      return
+    }
+
+    const nextFiles = [...fileLinks, { name: newFileName.trim() || 'Document', url }]
+    onUpdateFiles?.(game.id, nextFiles)
+    setNewFileName('')
+    setNewFileUrl('')
+    setFileError(null)
+  }
+
+  const handleRemoveFile = (index) => {
+    onUpdateFiles?.(game.id, fileLinks.filter((_, i) => i !== index))
+  }
 
   const playerStr = !game.minPlayers && !game.maxPlayers ? null
     : game.minPlayers === game.maxPlayers ? `${game.minPlayers}`
@@ -98,6 +125,22 @@ export default function GameCard({ game }) {
             })}
           </div>
         </>
+      )}
+      {fileLinks.length > 0 && (
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)' }}>Files</span>
+          {fileLinks.map((file, index) => (
+            <a
+              key={index}
+              href={file.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all' }}
+            >
+              {file.name || file.url}
+            </a>
+          ))}
+        </div>
       )}
       <a
         href={game.bggUrl} target="_blank" rel="noopener noreferrer"
@@ -206,6 +249,59 @@ export default function GameCard({ game }) {
               padding: '10px 12px',
             }}>
               {popupContent}
+              {onUpdateFiles && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)' }}>Game files</span>
+                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>{fileLinks.length} saved</span>
+                  </div>
+                  {fileLinks.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {fileLinks.map((file, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all', flex: 1 }}
+                          >
+                            {file.name || file.url}
+                          </a>
+                          <button
+                            onClick={() => handleRemoveFile(index)}
+                            style={{
+                              fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <input
+                      value={newFileName}
+                      onChange={e => setNewFileName(e.target.value)}
+                      placeholder="Label (optional)"
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)' }}
+                    />
+                    <input
+                      value={newFileUrl}
+                      onChange={e => { setNewFileUrl(e.target.value); setFileError(null) }}
+                      placeholder="https://drive.google.com/..."
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)' }}
+                    />
+                    {fileError && <div style={{ fontSize: 11, color: 'var(--red)' }}>{fileError}</div>}
+                    <button
+                      onClick={handleAddFile}
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--accent)', background: 'var(--accent-bg)', color: 'var(--accent)', cursor: 'pointer' }}
+                    >
+                      Add file link
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -651,11 +651,196 @@ function mergeCollections(eventCol, localCol) {
   return Array.from(map.values())
 }
 
+// ─── Admin game files manager ─────────────────────────────────────────────────
+
+function AdminGameFiles({ onBack }) {
+  const [files, setFiles] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(null) // {game_id, game_name, files}
+  const [newFileName, setNewFileName] = useState('')
+  const [newFileUrl, setNewFileUrl] = useState('')
+  const [fileError, setFileError] = useState('')
+
+  const reload = useCallback(async () => {
+    try {
+      const f = await db.select('game_files', { order: 'updated_at.desc' })
+      setFiles(f)
+    } catch (e) { console.error(e) }
+    finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { reload() }, [reload])
+
+  const handleEdit = (file) => {
+    setEditing({ game_id: file.game_id, game_name: file.game_name || `Game ${file.game_id}`, files: [...file.files] })
+    setNewFileName('')
+    setNewFileUrl('')
+    setFileError('')
+  }
+
+  const handleSave = async () => {
+    if (!editing) return
+    try {
+      if (editing.files.length === 0) {
+        await db.delete('game_files', `game_id=eq.${editing.game_id}`)
+      } else {
+        await db.upsert('game_files', {
+          game_id: editing.game_id,
+          files: editing.files,
+          updated_at: new Date().toISOString()
+        })
+      }
+      setEditing(null)
+      await reload()
+    } catch (e) { alert(e.message) }
+  }
+
+  const handleAddFile = () => {
+    const url = newFileUrl.trim()
+    if (!url) {
+      setFileError('Enter a URL for the file link.')
+      return
+    }
+    if (!/^https?:\/\//i.test(url)) {
+      setFileError('File links must start with http:// or https://')
+      return
+    }
+    editing.files.push({ name: newFileName.trim() || 'Document', url })
+    setNewFileName('')
+    setNewFileUrl('')
+    setFileError('')
+  }
+
+  const handleRemoveFile = (index) => {
+    editing.files.splice(index, 1)
+    setEditing({ ...editing })
+  }
+
+  if (loading) return <p style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading…</p>
+
+  return (
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <button onClick={onBack} style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+        <div style={{ fontSize: 24 }}>📁</div>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>
+          Game Files
+        </h2>
+        <span style={{ fontSize: 12, color: 'var(--text3)', marginLeft: 'auto' }}>{files.length} games with files</span>
+      </div>
+
+      {files.length === 0 ? (
+        <Card><p style={{ color: 'var(--text3)', fontSize: 14 }}>No game files yet.</p></Card>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {files.map(f => (
+            <div key={f.game_id} style={{
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 12, padding: '14px 18px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 500, color: 'var(--text)' }}>
+                    {f.game_name || `Game ${f.game_id}`}
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text3)' }}>
+                    ID: {f.game_id} · {f.files.length} file{f.files.length !== 1 ? 's' : ''} · updated {new Date(f.updated_at).toLocaleString()}
+                  </p>
+                </div>
+                <Btn small onClick={() => handleEdit(f)}>Edit</Btn>
+              </div>
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {f.files.map((file, i) => (
+                  <a
+                    key={i}
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all' }}
+                  >
+                    {file.name || file.url}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Edit modal */}
+      {editing && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }}>
+          <div style={{
+            background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12,
+            maxWidth: 500, width: '100%', maxHeight: '80vh', overflowY: 'auto', padding: 20,
+          }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
+              Edit files for {editing.game_name}
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {editing.files.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {editing.files.map((file, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all', flex: 1 }}
+                      >
+                        {file.name || file.url}
+                      </a>
+                      <button
+                        onClick={() => handleRemoveFile(i)}
+                        style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: 'grid', gap: 8 }}>
+                <input
+                  value={newFileName}
+                  onChange={e => setNewFileName(e.target.value)}
+                  placeholder="Label (optional)"
+                  style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)' }}
+                />
+                <input
+                  value={newFileUrl}
+                  onChange={e => { setNewFileUrl(e.target.value); setFileError('') }}
+                  placeholder="https://drive.google.com/..."
+                  style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)' }}
+                />
+                {fileError && <div style={{ fontSize: 11, color: 'var(--red)' }}>{fileError}</div>}
+                <button
+                  onClick={handleAddFile}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--accent)', background: 'var(--accent-bg)', color: 'var(--accent)', cursor: 'pointer' }}
+                >
+                  Add file link
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <Btn onClick={handleSave} accent>Save</Btn>
+                <Btn onClick={() => setEditing(null)}>Cancel</Btn>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export default function AdminPage({ localCollection, onAuthChange }) {
   const [authed, setAuthed] = useState(sessionStorage.getItem('admin_auth') === '1')
-  const [view, setView] = useState('list')  // list | event
+  const [view, setView] = useState('events')  // events | files
   const [currentEvent, setCurrentEvent] = useState(null)
 
   const handleLogin = () => {
@@ -676,12 +861,54 @@ export default function AdminPage({ localCollection, onAuthChange }) {
       <AdminEventManager
         initialEvent={currentEvent}
         localCollection={localCollection}
-        onBack={() => { setView('list'); setCurrentEvent(null) }}
+        onBack={() => { setView('events'); setCurrentEvent(null) }}
       />
     )
   }
 
+  if (view === 'files') {
+    return <AdminGameFiles onBack={() => setView('events')} />
+  }
+
   return (
-    <AdminEventList onOpen={ev => { setCurrentEvent(ev); setView('event') }} />
+    <div>
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <div style={{ fontSize: 24 }}>🔧</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>
+            Admin Panel
+          </h2>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setView('events')}
+              style={{
+                padding: '6px 12px', borderRadius: 6, fontSize: 13,
+                border: `1px solid ${view === 'events' ? 'var(--accent)' : 'var(--border)'}`,
+                background: view === 'events' ? 'var(--accent-bg)' : 'transparent',
+                color: view === 'events' ? 'var(--accent)' : 'var(--text3)',
+                cursor: 'pointer',
+              }}
+            >
+              Events
+            </button>
+            <button
+              onClick={() => setView('files')}
+              style={{
+                padding: '6px 12px', borderRadius: 6, fontSize: 13,
+                border: `1px solid ${view === 'files' ? 'var(--accent)' : 'var(--border)'}`,
+                background: view === 'files' ? 'var(--accent-bg)' : 'transparent',
+                color: view === 'files' ? 'var(--accent)' : 'var(--text3)',
+                cursor: 'pointer',
+              }}
+            >
+              Game Files
+            </button>
+          </div>
+        </div>
+      </div>
+      {view === 'events' && (
+        <AdminEventList onOpen={ev => { setCurrentEvent(ev); setView('event') }} />
+      )}
+    </div>
   )
 }

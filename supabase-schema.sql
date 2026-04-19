@@ -61,12 +61,22 @@ create table if not exists event_games (
   unique(event_id, game_id)
 );
 
+-- Game files (global, not per event)
+create table if not exists game_files (
+  id uuid primary key default gen_random_uuid(),
+  game_id text not null unique,
+  files jsonb default '[]',  -- array of {name: string, url: string}
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- Enable real-time for all tables
 alter publication supabase_realtime add table events;
 alter publication supabase_realtime add table participants;
 alter publication supabase_realtime add table game_votes;
 alter publication supabase_realtime add table game_preferences;
 alter publication supabase_realtime add table event_games;
+alter publication supabase_realtime add table game_files;
 
 -- Allow public access (no auth required — event code acts as the key)
 alter table events enable row level security;
@@ -98,3 +108,8 @@ create policy "public delete prefs" on game_preferences for delete using (true);
 create policy "public read event_games" on event_games for select using (true);
 create policy "public insert event_games" on event_games for insert with check (true);
 create policy "public delete event_games" on event_games for delete using (true);
+
+create policy "public read game_files" on game_files for select using (true);
+create policy "public insert game_files" on game_files for insert with check (true);
+create policy "public update game_files" on game_files for update using (true);
+create policy "public delete game_files" on game_files for delete using (true);

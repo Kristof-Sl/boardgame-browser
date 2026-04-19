@@ -398,19 +398,24 @@ function EventDashboard({ initialEvent, localCollection }) {
   const [votes, setVotes] = useState([])
   const [eventGames, setEventGames] = useState([])
   const [prefs, setPrefs] = useState([])
+  const [gameFiles, setGameFiles] = useState({})
   const [me, setMe] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const reload = useCallback(async () => {
     try {
-      const [p, v, eg, pr] = await Promise.all([
+      const [p, v, eg, pr, gf] = await Promise.all([
         db.select('participants', { filter: `event_id=eq.${event.id}`, order: 'created_at.asc' }),
         db.select('game_votes', { filter: `event_id=eq.${event.id}` }),
         db.select('event_games', { filter: `event_id=eq.${event.id}` }),
         db.select('game_preferences', { filter: `event_id=eq.${event.id}` }),
+        db.select('game_files'),
       ])
       setParticipants(p); setVotes(v); setEventGames(eg); setPrefs(pr)
+      const fileMap = {}
+      gf.forEach(f => fileMap[f.game_id] = f.files)
+      setGameFiles(fileMap)
     } catch (e) { setError(e.message) }
     finally { setLoading(false) }
   }, [event.id])
@@ -433,7 +438,7 @@ function EventDashboard({ initialEvent, localCollection }) {
   }
 
   const mergedCollection = mergeCollections(event.collection || [], localCollection)
-  const commonProps = { event, participants, me, votes, eventGames, prefs, reload, refreshEvent, mergedCollection }
+  const commonProps = { event, participants, me, votes, eventGames, prefs, gameFiles, reload, refreshEvent, mergedCollection }
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
@@ -573,7 +578,7 @@ function parseBggInput(input) {
   return null
 }
 
-function VotingPhase({ event, participants, me, votes, mergedCollection, reload }) {
+function VotingPhase({ event, participants, me, votes, gameFiles, mergedCollection, reload }) {
   const [voteFilter, setVoteFilter] = useState('all') // all | voted | unvoted | allvotes
   const [gameFilters, setGameFilters] = useState(EMPTY_GAME_FILTERS)
   const [saving, setSaving] = useState(false)
@@ -661,7 +666,7 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
   // Build the "all participant votes" list: games voted on by anyone, including those not in collection
   const allVotedGames = Object.entries(tallies).map(([gid, t]) => {
     const inCollection = mergedCollection.find(g => g.id === gid)
-    if (inCollection) return inCollection
+    if (inCollection) return { ...inCollection, files: gameFiles[gid] || [] }
     // Game is not in collection: reconstruct a minimal game object from vote data
     const gd = t.game_data || {}
     return {
@@ -672,6 +677,7 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
       yearPublished: gd.yearPublished || null,
       bggUrl: `https://boardgamegeek.com/boardgame/${gid}`,
       owners: [], actualOwners: [], ownerStatuses: {},
+      files: gameFiles[gid] || [],
     }
   })
 
@@ -680,7 +686,7 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
   if (voteFilter === 'allvotes') {
     games = allVotedGames // show all games with any vote; no collection filter
   } else {
-    games = applyGameFilters(mergedCollection, gameFilters)
+    games = applyGameFilters(mergedCollection, gameFilters).map(g => ({ ...g, files: gameFiles[g.id] || [] }))
     if (voteFilter === 'voted') games = games.filter(g => myVotes[g.id])
     else if (voteFilter === 'unvoted') games = games.filter(g => !myVotes[g.id])
   }
@@ -1054,7 +1060,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }
 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
-function SchedulePhase({ event, participants, me, eventGames, prefs, mergedCollection }) {
+function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, mergedCollection }) {
   const schedule = event.schedule || []
   const params = event.schedule_params || {}
   const [myGamesOnly, setMyGamesOnly] = useState(false)
@@ -1100,6 +1106,7 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, mergedColle
       rating: eg.game_data?.rating || localGame?.rating || 0,
       numRatings: localGame?.numRatings || 0,
       bggRank: localGame?.bggRank || null,
+      files: gameFiles[eg.game_id] || [],
     }
   }
 
@@ -1333,6 +1340,7 @@ function ScheduleGameCard({ slot, gameData, me }) {
 
   const ownerStatuses = gameData.ownerStatuses || {}
   const actualOwners = gameData.actualOwners || []
+  const fileLinks = Array.isArray(gameData.files) ? gameData.files : []
 
   return (
     <div style={{
@@ -1447,6 +1455,22 @@ function ScheduleGameCard({ slot, gameData, me }) {
               </>
             )}
 
+            {fileLinks.length > 0 && (
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)' }}>Files</span>
+                {fileLinks.map((file, index) => (
+                  <a
+                    key={index}
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all' }}
+                  >
+                    {file.name || file.url}
+                  </a>
+                ))}
+              </div>
+            )}
             <a href={bggUrl} target="_blank" rel="noopener noreferrer"
               style={{ display: 'block', marginTop: 6, fontSize: 10, color: 'var(--accent)', textDecoration: 'none' }}>
               Open on BGG ↗
