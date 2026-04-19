@@ -198,6 +198,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
   const [schedParams, setSchedParams] = useState({
     hoursPerPart: 3, durationMultiplier: 1.5,
     prioritizePreferences: 1, prioritizeSocial: 1,
+    balanceGroupWeight: 1,
     minPlayersPerGame: 2, maxParallelGames: 2,
     logSteps: false,
   })
@@ -430,6 +431,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
               {[
                 ['prioritizePreferences', 'Weight: preferences'],
                 ['prioritizeSocial', 'Weight: social mixing'],
+                ['balanceGroupWeight', 'Weight: group balance'],
               ].map(([key, label]) => (
                 <div key={key}>
                   <label style={{ fontSize: 11, color: 'var(--text3)' }}>{label} ({schedParams[key]})</label>
