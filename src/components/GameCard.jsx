@@ -284,13 +284,13 @@ export default function GameCard({ game, onUpdateFiles }) {
                       value={newFileName}
                       onChange={e => setNewFileName(e.target.value)}
                       placeholder="Label (optional)"
-                      style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)' }}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)', color: 'var(--text)' }}
                     />
                     <input
                       value={newFileUrl}
                       onChange={e => { setNewFileUrl(e.target.value); setFileError(null) }}
                       placeholder="https://drive.google.com/..."
-                      style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)' }}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)', color: 'var(--text)' }}
                     />
                     {fileError && <div style={{ fontSize: 11, color: 'var(--red)' }}>{fileError}</div>}
                     <button

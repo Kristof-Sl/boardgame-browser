@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { db } from './supabase'
 import { generateSchedule, scheduleStats } from './scheduler'
 // ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
@@ -653,13 +653,14 @@ function mergeCollections(eventCol, localCol) {
 
 // ─── Admin game files manager ─────────────────────────────────────────────────
 
-function AdminGameFiles({ onBack }) {
+function AdminGameFiles({ localCollection, onBack }) {
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(null) // {game_id, game_name, files}
+  const [editing, setEditing] = useState(null) // {mode: 'edit'|'create', game_id, game_name, files}
   const [newFileName, setNewFileName] = useState('')
   const [newFileUrl, setNewFileUrl] = useState('')
   const [fileError, setFileError] = useState('')
+  const [search, setSearch] = useState('')
 
   const reload = useCallback(async () => {
     try {
@@ -671,8 +672,42 @@ function AdminGameFiles({ onBack }) {
 
   useEffect(() => { reload() }, [reload])
 
+  const gamesById = useMemo(() => {
+    const map = {}
+    for (const game of (localCollection || [])) map[game.id] = game
+    return map
+  }, [localCollection])
+
+  const displayRows = files.map(f => ({
+    ...f,
+    game_name: gamesById[f.game_id]?.name || `Game ${f.game_id}`,
+    fileCount: Array.isArray(f.files) ? f.files.length : 0,
+  }))
+  const filteredRows = displayRows.filter(row =>
+    row.game_name.toLowerCase().includes(search.toLowerCase()) ||
+    row.game_id.toLowerCase().includes(search.toLowerCase())
+  )
+
   const handleEdit = (file) => {
-    setEditing({ game_id: file.game_id, game_name: file.game_name || `Game ${file.game_id}`, files: [...file.files] })
+    setEditing({
+      mode: 'edit',
+      game_id: file.game_id,
+      game_name: gamesById[file.game_id]?.name || `Game ${file.game_id}`,
+      files: Array.isArray(file.files) ? [...file.files] : [],
+    })
+    setNewFileName('')
+    setNewFileUrl('')
+    setFileError('')
+  }
+
+  const handleCreate = () => {
+    const firstGame = (localCollection || [])[0]
+    setEditing({
+      mode: 'create',
+      game_id: firstGame?.id || '',
+      game_name: firstGame?.name || '',
+      files: [],
+    })
     setNewFileName('')
     setNewFileUrl('')
     setFileError('')
@@ -680,14 +715,18 @@ function AdminGameFiles({ onBack }) {
 
   const handleSave = async () => {
     if (!editing) return
+    if (!editing.game_id) {
+      setFileError('Select a game first.')
+      return
+    }
     try {
-      if (editing.files.length === 0) {
+      if (!editing.files.length) {
         await db.delete('game_files', `game_id=eq.${editing.game_id}`)
       } else {
         await db.upsert('game_files', {
           game_id: editing.game_id,
           files: editing.files,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
       }
       setEditing(null)
@@ -695,7 +734,8 @@ function AdminGameFiles({ onBack }) {
     } catch (e) { alert(e.message) }
   }
 
-  const handleAddFile = () => {
+  const handleAddLink = () => {
+    if (!editing) return
     const url = newFileUrl.trim()
     if (!url) {
       setFileError('Enter a URL for the file link.')
@@ -705,129 +745,160 @@ function AdminGameFiles({ onBack }) {
       setFileError('File links must start with http:// or https://')
       return
     }
-    editing.files.push({ name: newFileName.trim() || 'Document', url })
+    const nextFiles = [...editing.files, { name: newFileName.trim() || 'Document', url }]
+    setEditing({ ...editing, files: nextFiles })
     setNewFileName('')
     setNewFileUrl('')
     setFileError('')
   }
 
-  const handleRemoveFile = (index) => {
-    editing.files.splice(index, 1)
-    setEditing({ ...editing })
+  const handleRemoveLink = (index) => {
+    if (!editing) return
+    const nextFiles = editing.files.filter((_, i) => i !== index)
+    setEditing({ ...editing, files: nextFiles })
+  }
+
+  const handleSelectGame = (gameId) => {
+    const game = gamesById[gameId]
+    setEditing({ ...editing, game_id: gameId, game_name: game?.name || `Game ${gameId}` })
   }
 
   if (loading) return <p style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading…</p>
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+    <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <button onClick={onBack} style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
         <div style={{ fontSize: 24 }}>📁</div>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>
-          Game Files
-        </h2>
-        <span style={{ fontSize: 12, color: 'var(--text3)', marginLeft: 'auto' }}>{files.length} games with files</span>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>Game Files</h2>
+        <span style={{ fontSize: 12, color: 'var(--text3)' }}>{files.length} game rows</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}> 
+          <Btn accent onClick={handleCreate}>+ Add file</Btn>
+        </div>
       </div>
 
-      {files.length === 0 ? (
-        <Card><p style={{ color: 'var(--text3)', fontSize: 14 }}>No game files yet.</p></Card>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {files.map(f => (
-            <div key={f.game_id} style={{
-              background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 12, padding: '14px 18px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 500, color: 'var(--text)' }}>
-                    {f.game_name || `Game ${f.game_id}`}
-                  </p>
-                  <p style={{ fontSize: 12, color: 'var(--text3)' }}>
-                    ID: {f.game_id} · {f.files.length} file{f.files.length !== 1 ? 's' : ''} · updated {new Date(f.updated_at).toLocaleString()}
-                  </p>
-                </div>
-                <Btn small onClick={() => handleEdit(f)}>Edit</Btn>
-              </div>
-              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {f.files.map((file, i) => (
-                  <a
-                    key={i}
-                    href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all' }}
-                  >
-                    {file.name || file.url}
-                  </a>
-                ))}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search games or IDs…"
+          style={{ flex: '1 1 240px', minWidth: 200, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg3)', padding: '10px 14px', color: 'var(--text)' }}
+        />
+      </div>
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left', padding: '12px 14px', color: 'var(--text3)', fontSize: 12, borderBottom: '1px solid var(--border)' }}>Game</th>
+              <th style={{ textAlign: 'left', padding: '12px 14px', color: 'var(--text3)', fontSize: 12, borderBottom: '1px solid var(--border)' }}>Files</th>
+              <th style={{ textAlign: 'left', padding: '12px 14px', color: 'var(--text3)', fontSize: 12, borderBottom: '1px solid var(--border)' }}>Updated</th>
+              <th style={{ padding: '12px 14px', color: 'var(--text3)', fontSize: 12, borderBottom: '1px solid var(--border)' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRows.length === 0 ? (
+              <tr>
+                <td colSpan={4} style={{ padding: '20px 14px', color: 'var(--text3)', textAlign: 'center' }}>No matching games.</td>
+              </tr>
+            ) : filteredRows.map(row => (
+              <tr key={row.game_id} style={{ background: 'var(--surface)' }}>
+                <td style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', verticalAlign: 'top' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text)' }}>{row.game_name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{row.game_id}</div>
+                </td>
+                <td style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', verticalAlign: 'top' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, color: 'var(--text)' }}>{row.fileCount}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>link{row.fileCount !== 1 ? 's' : ''}</span>
+                  </div>
+                </td>
+                <td style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', verticalAlign: 'top' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text3)' }}>{row.updated_at ? new Date(row.updated_at).toLocaleString() : '—'}</span>
+                </td>
+                <td style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', verticalAlign: 'top', textAlign: 'right' }}>
+                  <Btn small onClick={() => handleEdit(row)}>Edit</Btn>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {editing && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 22 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+              <div style={{ fontSize: 22 }}>✏️</div>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--text)', margin: 0 }}>Add file links</h3>
+                <p style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>Select a game and attach one or more external file links.</p>
               </div>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* Edit modal */}
-      {editing && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-        }}>
-          <div style={{
-            background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12,
-            maxWidth: 500, width: '100%', maxHeight: '80vh', overflowY: 'auto', padding: 20,
-          }}>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
-              Edit files for {editing.game_name}
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {editing.files.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {editing.files.map((file, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all', flex: 1 }}
-                      >
-                        {file.name || file.url}
-                      </a>
-                      <button
-                        onClick={() => handleRemoveFile(i)}
-                        style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'grid', gap: 8 }}>
-                <input
-                  value={newFileName}
-                  onChange={e => setNewFileName(e.target.value)}
-                  placeholder="Label (optional)"
-                  style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)' }}
-                />
-                <input
-                  value={newFileUrl}
-                  onChange={e => { setNewFileUrl(e.target.value); setFileError('') }}
-                  placeholder="https://drive.google.com/..."
-                  style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 10px', background: 'var(--bg)' }}
-                />
-                {fileError && <div style={{ fontSize: 11, color: 'var(--red)' }}>{fileError}</div>}
-                <button
-                  onClick={handleAddFile}
-                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--accent)', background: 'var(--accent-bg)', color: 'var(--accent)', cursor: 'pointer' }}
+            <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text3)' }}>
+                Game
+                <select
+                  value={editing.game_id}
+                  onChange={e => handleSelectGame(e.target.value)}
+                  style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg3)', padding: '10px 12px', color: 'var(--text)' }}
                 >
-                  Add file link
-                </button>
+                  {(localCollection || []).map(game => (
+                    <option key={game.id} value={game.id}>{game.name}</option>
+                  ))}
+                </select>
+              </label>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 220px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text3)' }}>
+                    Link label
+                    <input
+                      value={newFileName}
+                      onChange={e => setNewFileName(e.target.value)}
+                      placeholder="Optional label"
+                      style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg3)', padding: '10px 12px', color: 'var(--text)' }}
+                    />
+                  </label>
+                </div>
+                <div style={{ flex: '1 1 260px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text3)' }}>
+                    File URL
+                    <input
+                      value={newFileUrl}
+                      onChange={e => { setNewFileUrl(e.target.value); setFileError('') }}
+                      placeholder="https://drive.google.com/..."
+                      style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg3)', padding: '10px 12px', color: 'var(--text)' }}
+                    />
+                  </label>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                <Btn onClick={handleSave} accent>Save</Btn>
-                <Btn onClick={() => setEditing(null)}>Cancel</Btn>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Btn accent onClick={handleAddLink}>Add link</Btn>
+                <span style={{ fontSize: 12, color: 'var(--text3)' }}>{editing.files.length} link{editing.files.length !== 1 ? 's' : ''} added</span>
               </div>
+              {fileError && <div style={{ fontSize: 12, color: 'var(--red)' }}>{fileError}</div>}
+            </div>
+
+            {editing.files.length > 0 && (
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 14, marginBottom: 16 }}>
+                {editing.files.map((file, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all' }}>{file.name || file.url}</a>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{file.url}</div>
+                    </div>
+                    <button onClick={() => handleRemoveLink(idx)} style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              <Btn onClick={handleSave} accent>Save</Btn>
+              <Btn onClick={() => setEditing(null)}>Cancel</Btn>
             </div>
           </div>
         </div>
@@ -867,7 +938,7 @@ export default function AdminPage({ localCollection, onAuthChange }) {
   }
 
   if (view === 'files') {
-    return <AdminGameFiles onBack={() => setView('events')} />
+    return <AdminGameFiles localCollection={localCollection} onBack={() => setView('events')} />
   }
 
   return (
