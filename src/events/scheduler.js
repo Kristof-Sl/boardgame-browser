@@ -265,7 +265,7 @@ export function generateSchedule(event, participants, games, preferences, params
         }
       }
 
-      remainingMinutes -= duration
+      remainingMinutes -= bestDuration
 
       // Stop if we've hit max parallel games
       if (slotGames.length >= maxParallelGames) break
