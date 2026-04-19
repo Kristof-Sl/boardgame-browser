@@ -293,28 +293,109 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     } catch (e) { alert(e.message) }
   }
 
+  // ─── [DEBUG_LOG] Temporary debug helper — remove this block when no longer needed ───
+  const downloadDebugLog = (debugLines) => {
+    try {
+      const blob = new Blob([debugLines.join('\n')], { type: 'text/plain;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const ts = new Date().toISOString().replace(/[:.]/g, '-')
+      link.download = `schedule-debug-${event.id}-${ts}.txt`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (dlErr) {
+      console.warn('[DEBUG_LOG] Could not download debug log:', dlErr)
+    }
+  }
+  // ─── [DEBUG_LOG] End of debug helper ─────────────────────────────────────────
+
   // Generate schedule
   const handleGenerate = async () => {
     if (!confirm('Generate schedule? The existing schedule (if any) will be replaced.')) return
     setBusy(true)
+
+    // [DEBUG_LOG] Capture everything for the debug log
+    const debugLines = []
+    const dbg = (msg) => { debugLines.push(`[${new Date().toISOString()}] ${msg}`) }
+    dbg('=== SCHEDULE DEBUG LOG ===')
+    dbg(`Event ID: ${event.id}`)
+    dbg(`Event name: ${event.name}`)
+    dbg(`Event dates: ${event.start_date} → ${event.end_date}`)
+    dbg(`Event status before generate: ${event.status}`)
+    dbg(`Participants (${participants.length}): ${participants.map(p => `${p.name} (${p.id}) arrive=${p.arrive_date}/${p.arrive_part} depart=${p.depart_date}/${p.depart_part}`).join(', ')}`)
+    dbg(`Event games (${eventGames.length}): ${eventGames.map(eg => `${eg.game_name} [${eg.game_id}] min=${eg.game_data?.minPlayers} max=${eg.game_data?.maxPlayers} time=${eg.game_data?.maxPlaytime}m`).join(', ')}`)
+    dbg(`Preferences rows: ${prefs.length}`)
+    dbg(`Schedule params: ${JSON.stringify(schedParams)}`)
+    // [DEBUG_LOG] End capture preamble
+
     try {
       const prefMap = {}
       for (const p of prefs) {
         if (!prefMap[p.participant_id]) prefMap[p.participant_id] = {}
         prefMap[p.participant_id][p.game_id] = p.preference
       }
-      const result = generateSchedule(event, participants, eventGames, prefMap, schedParams)
+
+      // [DEBUG_LOG] Log the full prefMap before passing to scheduler
+      dbg(`Preference map: ${JSON.stringify(prefMap)}`)
+      dbg('Calling generateSchedule...')
+      // [DEBUG_LOG] End prefMap logging
+
+      const result = generateSchedule(event, participants, eventGames, prefMap, {
+        ...schedParams,
+        logSteps: true, // [DEBUG_LOG] Always enable scheduler steps for debug log
+      })
       const schedule = Array.isArray(result) ? result : result.schedule
       const scheduleLog = Array.isArray(result) ? [] : result.log || []
+
+      // [DEBUG_LOG] Append scheduler's own step log and output summary
+      dbg(`generateSchedule returned ${schedule.length} slot(s)`)
+      if (scheduleLog.length) {
+        dbg('--- Scheduler internal steps ---')
+        scheduleLog.forEach(line => debugLines.push(line))
+        dbg('--- End scheduler steps ---')
+      }
+      dbg(`Schedule slots: ${JSON.stringify(schedule)}`)
+      // [DEBUG_LOG] End scheduler output logging
+
       const stats = scheduleStats(schedule, participants, prefMap)
       const warnings = validateScheduleCoverage(event, participants, eventGames, schedParams)
+
+      // [DEBUG_LOG] Log stats and warnings
+      dbg(`Stats: ${JSON.stringify(stats)}`)
+      dbg(`Warnings (${warnings.length}): ${warnings.join(' | ')}`)
+      dbg('Saving to database...')
+      // [DEBUG_LOG] End stats/warnings logging
+
       await db.update('events', {
         status: 'scheduled',
         schedule,
-        schedule_params: { ...schedParams, generatedAt: new Date().toISOString(), stats, warnings, log: scheduleLog },
+        schedule_params: {
+          ...schedParams,
+          generatedAt: new Date().toISOString(),
+          stats,
+          warnings,
+          log: schedParams.logSteps ? scheduleLog : [],
+        },
       }, `id=eq.${event.id}`)
+
+      // [DEBUG_LOG] Final success line then trigger download
+      dbg('Database save successful.')
+      dbg('=== END DEBUG LOG ===')
+      downloadDebugLog(debugLines)
+      // [DEBUG_LOG] End success logging
+
       await refreshEvent()
-    } catch (e) { alert(e.message) }
+    } catch (e) {
+      // [DEBUG_LOG] Capture error details before alerting
+      dbg(`ERROR: ${e.message}`)
+      dbg(`Stack: ${e.stack || '(no stack)'}`)
+      dbg('=== END DEBUG LOG (with error) ===')
+      downloadDebugLog(debugLines)
+      // [DEBUG_LOG] End error logging
+
+      alert(e.message)
+    }
     finally { setBusy(false) }
   }
 
