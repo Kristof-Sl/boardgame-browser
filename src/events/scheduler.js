@@ -35,6 +35,17 @@ export function getParticipantSlots(participant, allSlots) {
   })
 }
 
+function createLogger(enabled) {
+  const entries = []
+  return {
+    log: (message) => {
+      if (!enabled) return
+      entries.push(`[${new Date().toISOString()}] ${message}`)
+    },
+    entries,
+  }
+}
+
 // Score a game for a group of participants given their preferences
 function scoreGame(game, participants, preferences, playedGames, params) {
   let score = 0
@@ -157,6 +168,8 @@ export function generateSchedule(event, participants, games, preferences, params
 
   const minutesPerPart = hoursPerPart * 60
   const allSlots = getSlots(event.start_date, event.end_date)
+  const logger = createLogger(params.logSteps)
+  logger.log(`Starting schedule generation for event ${event.id} from ${event.start_date} to ${event.end_date}`)
 
   // Map: participantId -> Set of slot keys they're available
   const participantSlots = {}
@@ -183,11 +196,16 @@ export function generateSchedule(event, participants, games, preferences, params
   for (const slot of allSlots) {
     const slotKey = `${slot.date}_${slot.part}`
     const availableNow = participants.filter(p => participantSlots[p.id]?.has(slotKey))
-    if (availableNow.length < minPlayersPerGame) continue
+    logger.log(`Processing slot ${slot.date} ${slot.part}: ${availableNow.length} available participants`)
+    if (availableNow.length < minPlayersPerGame) {
+      logger.log(`Skipping slot ${slot.date} ${slot.part}: fewer than ${minPlayersPerGame} participants available`)
+      continue
+    }
 
     const slotGames = []
     let remainingMinutes = minutesPerPart
     const assignedInSlot = new Set()
+    const usedGameIds = new Set()
 
     // Try to fill the slot with games while keeping every present participant assigned
     let iterations = 0
@@ -196,9 +214,12 @@ export function generateSchedule(event, participants, games, preferences, params
 
       // Who's still unassigned in this slot?
       const unassigned = availableNow.filter(p => !assignedInSlot.has(p.id))
+      if (unassigned.length === 0) break
       if (unassigned.length < minPlayersPerGame) break
 
       const remainingGroups = maxParallelGames - slotGames.length
+      if (!canCoverWithGroups(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)) break
+
       const sizeRange = getGroupSizeRange(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)
       if (!sizeRange) break
 
@@ -208,6 +229,7 @@ export function generateSchedule(event, participants, games, preferences, params
       let bestDuration = 0
 
       for (const game of games) {
+        if (usedGameIds.has(game.game_id)) continue
         const gameData = game.game_data || {}
         const maxPlayers = gameData.maxPlayers || 6
         const minPlayers = gameData.minPlayers || 2
@@ -221,6 +243,12 @@ export function generateSchedule(event, participants, games, preferences, params
         if (groupMin > groupMax) continue
 
         for (let groupSize = groupMax; groupSize >= groupMin; groupSize--) {
+          const remainder = unassigned.length - groupSize
+          if (remainder > 0 && !canCoverWithGroups(remainder, remainingGroups - 1, minPlayersPerGame, maxGamePlayers)) {
+            logger.log(`Skipping group size ${groupSize} for ${game.game_name}: leaves ${remainder} players impossible to cover`)
+            continue
+          }
+
           const scored = buildScoredParticipants(unassigned, game.game_id, prefMap, playerGameCount)
           const group = scored.slice(0, groupSize).map(s => s.p)
 
@@ -233,11 +261,15 @@ export function generateSchedule(event, participants, games, preferences, params
             bestGame = game
             bestGroup = group
             bestDuration = duration
+            logger.log(`Candidate best: ${game.game_name} with ${groupSize} players, score ${total}`)
           }
         }
       }
 
-      if (!bestGame || !bestGroup) break
+      if (!bestGame || !bestGroup) {
+        logger.log(`No feasible game could be assigned for slot ${slot.date} ${slot.part}`)
+        break
+      }
 
       // Commit this game to the slot
       const bestGameData = bestGame.game_data || {}
@@ -251,6 +283,8 @@ export function generateSchedule(event, participants, games, preferences, params
         thumbnail: bestGameData.thumbnail || null,
         rating: bestGameData.rating || null,
       })
+      usedGameIds.add(bestGame.game_id)
+      logger.log(`Assigned ${bestGroup.map(p => p.name).join(', ')} to ${bestGame.game_name} for ${slot.date} ${slot.part}`)
 
       // Update tracking
       playedGames[bestGame.game_id] = (playedGames[bestGame.game_id] || 0) + 1
@@ -274,6 +308,8 @@ export function generateSchedule(event, participants, games, preferences, params
     schedule.push(...slotGames)
   }
 
+  logger.log(`Schedule generation complete: ${schedule.length} game sessions scheduled`)
+  if (params.logSteps) return { schedule, log: logger.entries }
   return schedule
 }
 
