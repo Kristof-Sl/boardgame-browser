@@ -300,18 +300,20 @@ export function generateSchedule(event, participants, games, preferences, params
       for (const partition of partitions) {
         const assignments = []
         let partitionValid = true
+        const usedInPartition = new Set(usedGameIds)  // Track games used in this partition
 
         for (let i = 0; i < partition.length; i++) {
           const groupSize = partition[i]
           const groupStart = partition.slice(0, i).reduce((a, b) => a + b, 0)
           const unassignedSubset = unassigned.slice(groupStart, groupStart + groupSize)
 
-          const assignment = findBestGameForGroup(groupSize, unassignedSubset, games, usedGameIds, prefMap, playedGames, durationMultiplier, remainingMinutes, prioritizePreferences)
+          const assignment = findBestGameForGroup(groupSize, unassignedSubset, games, usedInPartition, prefMap, playedGames, durationMultiplier, remainingMinutes, prioritizePreferences)
           if (!assignment.game) {
             partitionValid = false
             break
           }
           assignments.push(assignment)
+          usedInPartition.add(assignment.game.game_id)  // Mark this game as used in partition
         }
 
         if (!partitionValid) continue
