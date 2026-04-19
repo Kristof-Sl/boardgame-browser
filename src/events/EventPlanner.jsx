@@ -518,10 +518,70 @@ function ParticipantPicker({ event, participants, onSelect }) {
 
 // ─── Phase 1: Voting ──────────────────────────────────────────────────────────
 
+// Fetch a single game from BGG by its numeric ID via the existing /api/bgg proxy
+async function fetchBggGame(gameId) {
+  const query = new URLSearchParams({ path: 'thing', id: gameId, stats: '1' }).toString()
+  const res = await fetch('/api/bgg?' + query)
+  const text = await res.text()
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(text, 'text/xml')
+  if (doc.querySelector('parsererror') || !doc.querySelector('item')) {
+    throw new Error('Game not found on BGG.')
+  }
+  const item = doc.querySelector('item')
+  const getText = (sel) => item.querySelector(sel)?.textContent?.trim() || ''
+  const getAttr = (sel, attr) => item.querySelector(sel)?.getAttribute(attr) || ''
+
+  // Name: prefer primary, fall back to first
+  const primaryName = item.querySelector('name[type="primary"]')
+  const name = primaryName ? primaryName.getAttribute('value') : getAttr('name', 'value')
+  const yearPublished = parseInt(getAttr('yearpublished', 'value')) || null
+  const minPlayers = parseInt(getAttr('minplayers', 'value')) || 0
+  const maxPlayers = parseInt(getAttr('maxplayers', 'value')) || 0
+  const minPlaytime = parseInt(getAttr('minplaytime', 'value')) || 0
+  const maxPlaytime = parseInt(getAttr('maxplaytime', 'value')) || 0
+  const minAge = parseInt(getAttr('minage', 'value')) || 0
+  const rating = Math.round((parseFloat(getAttr('statistics ratings average', 'value')) || 0) * 10) / 10
+  const numRatings = parseInt(getAttr('statistics ratings usersrated', 'value')) || 0
+  const rankEl = item.querySelector('statistics ratings ranks rank[name="boardgame"]')
+  const bggRankRaw = rankEl?.getAttribute('value')
+  const bggRank = bggRankRaw && bggRankRaw !== 'Not Ranked' ? parseInt(bggRankRaw) : null
+  const thumbnailRaw = getText('thumbnail')
+  const fixUrl = u => !u ? null : u.startsWith('//') ? 'https:' + u : u.startsWith('http') ? u : null
+  const thumbnail = fixUrl(thumbnailRaw)
+
+  return {
+    id: gameId,
+    name,
+    yearPublished,
+    minPlayers, maxPlayers, minPlaytime, maxPlaytime, minAge,
+    rating, numRatings, bggRank,
+    thumbnail,
+    bggUrl: `https://boardgamegeek.com/boardgame/${gameId}`,
+    owners: [], actualOwners: [], ownerStatuses: {},
+  }
+}
+
+// Extract a BGG game ID from a BGG URL or a raw numeric ID
+function parseBggInput(input) {
+  const trimmed = input.trim()
+  // Match URLs like boardgamegeek.com/boardgame/12345 or /boardgame/12345/game-name
+  const urlMatch = trimmed.match(/boardgamegeek\.com\/boardgame\/(\d+)/)
+  if (urlMatch) return urlMatch[1]
+  // Raw numeric ID
+  if (/^\d+$/.test(trimmed)) return trimmed
+  return null
+}
+
 function VotingPhase({ event, participants, me, votes, mergedCollection, reload }) {
-  const [voteFilter, setVoteFilter] = useState('all') // all | voted | unvoted
+  const [voteFilter, setVoteFilter] = useState('all') // all | voted | unvoted | allvotes
   const [gameFilters, setGameFilters] = useState(EMPTY_GAME_FILTERS)
   const [saving, setSaving] = useState(false)
+
+  // BGG URL lookup state
+  const [bggInput, setBggInput] = useState('')
+  const [bggLookup, setBggLookup] = useState(null)   // null | 'loading' | { game } | { error }
+  const [bggAdding, setBggAdding] = useState(false)
 
   // My votes: gameId -> vote value
   const myVotes = {}
@@ -529,10 +589,10 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
     if (v.participant_id === me.id) myVotes[v.game_id] = v.vote
   }
 
-  // Vote tallies
+  // Vote tallies: gameId -> counts + game_name
   const tallies = {}
   for (const v of votes) {
-    if (!tallies[v.game_id]) tallies[v.game_id] = { want: 0, neutral: 0, dont_want: 0, name: v.game_name }
+    if (!tallies[v.game_id]) tallies[v.game_id] = { want: 0, neutral: 0, dont_want: 0, name: v.game_name, game_data: v.game_data }
     tallies[v.game_id][v.vote] = (tallies[v.game_id][v.vote] || 0) + 1
   }
 
@@ -555,13 +615,82 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
     finally { setSaving(false) }
   }
 
-  // Apply game filters first, then vote filter
-  let games = applyGameFilters(mergedCollection, gameFilters)
-  if (voteFilter === 'voted') games = games.filter(g => myVotes[g.id])
-  else if (voteFilter === 'unvoted') games = games.filter(g => !myVotes[g.id])
+  // Look up a game from BGG by URL/ID
+  const handleBggLookup = async () => {
+    const gameId = parseBggInput(bggInput)
+    if (!gameId) {
+      setBggLookup({ error: 'Please paste a valid BGG game URL (e.g. https://boardgamegeek.com/boardgame/12345) or a numeric game ID.' })
+      return
+    }
+    // Check if already in collection
+    if (mergedCollection.find(g => g.id === gameId)) {
+      setBggLookup({ error: 'This game is already in the collection. Search for it above.' })
+      return
+    }
+    setBggLookup('loading')
+    try {
+      const game = await fetchBggGame(gameId)
+      setBggLookup({ game })
+    } catch (e) {
+      setBggLookup({ error: e.message })
+    }
+  }
+
+  // Cast a vote for a game not in our collection (adds it temporarily via the vote itself)
+  const handleVoteBggGame = async (game, vote) => {
+    setBggAdding(true)
+    try {
+      await db.upsert('game_votes', {
+        event_id: event.id, participant_id: me.id,
+        game_id: game.id, game_name: game.name,
+        game_data: {
+          thumbnail: game.thumbnail, rating: game.rating,
+          minPlayers: game.minPlayers, maxPlayers: game.maxPlayers,
+          minPlaytime: game.minPlaytime, maxPlaytime: game.maxPlaytime,
+          yearPublished: game.yearPublished,
+        },
+        vote,
+      }, 'event_id,participant_id,game_id')
+      await reload()
+      setBggLookup(null)
+      setBggInput('')
+    } catch (e) { alert(e.message) }
+    finally { setBggAdding(false) }
+  }
+
+  // Build the "all participant votes" list: games voted on by anyone, including those not in collection
+  const allVotedGames = Object.entries(tallies).map(([gid, t]) => {
+    const inCollection = mergedCollection.find(g => g.id === gid)
+    if (inCollection) return inCollection
+    // Game is not in collection: reconstruct a minimal game object from vote data
+    const gd = t.game_data || {}
+    return {
+      id: gid, name: t.name,
+      thumbnail: gd.thumbnail || null, rating: gd.rating || 0,
+      minPlayers: gd.minPlayers || 0, maxPlayers: gd.maxPlayers || 0,
+      minPlaytime: gd.minPlaytime || 0, maxPlaytime: gd.maxPlaytime || 0,
+      yearPublished: gd.yearPublished || null,
+      bggUrl: `https://boardgamegeek.com/boardgame/${gid}`,
+      owners: [], actualOwners: [], ownerStatuses: {},
+    }
+  })
+
+  // Apply game filters then vote-filter
+  let games
+  if (voteFilter === 'allvotes') {
+    games = allVotedGames // show all games with any vote; no collection filter
+  } else {
+    games = applyGameFilters(mergedCollection, gameFilters)
+    if (voteFilter === 'voted') games = games.filter(g => myVotes[g.id])
+    else if (voteFilter === 'unvoted') games = games.filter(g => !myVotes[g.id])
+  }
 
   const totalVoters = participants.length
   const myVoteCount = Object.keys(myVotes).length
+
+  const VOTE_TOOLTIP = 'After voting closes, the admin will select the final game list. ' +
+    'Games with at least one 👍 Want vote are automatically included. ' +
+    'The admin can also manually add or remove games before moving to the preferences phase.'
 
   return (
     <div>
@@ -584,8 +713,10 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
         </div>
       </div>
 
-      {/* Game filters */}
-      <GameFilterBar games={mergedCollection} filters={gameFilters} onChange={setGameFilters} />
+      {/* Game filters (hidden when showing all-votes filter) */}
+      {voteFilter !== 'allvotes' && (
+        <GameFilterBar games={mergedCollection} filters={gameFilters} onChange={setGameFilters} />
+      )}
 
       {/* Vote filter tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -593,13 +724,88 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
           ['all', 'All games'],
           ['voted', 'My votes only'],
           ['unvoted', 'Not yet voted'],
+          ['allvotes', 'All participants votes'],
         ].map(([f, label]) => (
           <Pill key={f} label={label} active={voteFilter === f} onClick={() => setVoteFilter(f)} />
         ))}
         <span style={{ fontSize: 12, color: 'var(--text3)', marginLeft: 'auto' }}>
-          {mergedCollection.length} games · showing {games.length}
+          {voteFilter === 'allvotes' ? `${allVotedGames.length} games voted on` : `${mergedCollection.length} games · showing ${games.length}`}
         </span>
       </div>
+
+      {/* Add game from BGG */}
+      <details style={{ marginBottom: 14 }}>
+        <summary style={{
+          fontSize: 12, color: 'var(--text3)', cursor: 'pointer', userSelect: 'none',
+          padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8,
+          border: '1px solid var(--border)', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          <span>+</span> Add a game from BGG that's not in our collection
+        </summary>
+        <div style={{ marginTop: 8, background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px' }}>
+          <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10, lineHeight: 1.6 }}>
+            Paste the BGG page link for the game (e.g. <span style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>https://boardgamegeek.com/boardgame/12345</span>) or just the numeric ID.
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              value={bggInput} onChange={e => { setBggInput(e.target.value); setBggLookup(null) }}
+              onKeyDown={e => e.key === 'Enter' && handleBggLookup()}
+              placeholder="https://boardgamegeek.com/boardgame/..."
+              style={{
+                flex: 1, background: 'var(--bg)', border: '1px solid var(--border)',
+                borderRadius: 8, padding: '8px 12px', color: 'var(--text)', fontSize: 13, outline: 'none',
+              }}
+            />
+            <Btn onClick={handleBggLookup} accent disabled={!bggInput.trim() || bggLookup === 'loading'}>
+              {bggLookup === 'loading' ? 'Looking up…' : 'Look up'}
+            </Btn>
+          </div>
+
+          {/* Error */}
+          {bggLookup && bggLookup.error && (
+            <p style={{ fontSize: 12, color: 'var(--red)', marginTop: 8 }}>{bggLookup.error}</p>
+          )}
+
+          {/* Found game preview */}
+          {bggLookup && bggLookup.game && (() => {
+            const g = bggLookup.game
+            const myVote = myVotes[g.id]
+            return (
+              <div style={{ marginTop: 12, background: 'var(--surface)', border: '1px solid var(--accent)', borderRadius: 8, padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  {g.thumbnail && <img src={g.thumbnail} alt="" style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />}
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{g.name}</p>
+                    <div style={{ display: 'flex', gap: 10, fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>
+                      {g.yearPublished && <span>{g.yearPublished}</span>}
+                      {g.rating > 0 && <span>★ {g.rating.toFixed(1)}</span>}
+                      {g.maxPlayers > 0 && <span>👤 {g.minPlayers}–{g.maxPlayers}</span>}
+                      {g.maxPlaytime > 0 && <span>⏱ {g.maxPlaytime}m</span>}
+                    </div>
+                  </div>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>
+                  Vote on this game to add it to the event's voting pool:
+                </p>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {VOTE_OPTS.map(opt => (
+                    <button key={opt.value} onClick={() => handleVoteBggGame(g, opt.value)} disabled={bggAdding}
+                      style={{
+                        padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+                        border: `1px solid ${myVote === opt.value ? opt.color : 'var(--border)'}`,
+                        background: myVote === opt.value ? `${opt.color}22` : 'transparent',
+                        color: myVote === opt.value ? opt.color : 'var(--text2)',
+                        cursor: 'pointer', transition: 'all 120ms',
+                      }}
+                    >{opt.label}</button>
+                  ))}
+                </div>
+                {myVote && <p style={{ fontSize: 11, color: 'var(--green)', marginTop: 6 }}>✓ Your vote has been recorded. The game now appears in "All participants' votes".</p>}
+              </div>
+            )
+          })()}
+        </div>
+      </details>
 
       {/* Game list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -628,9 +834,11 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
                 {tally.neutral > 0 && <span>😐 {tally.neutral}</span>}
                 {tally.dont_want > 0 && <span style={{ color: 'var(--red)' }}>👎 {tally.dont_want}</span>}
               </div>
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+              {/* Vote buttons with tooltip */}
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0, position: 'relative' }}>
                 {VOTE_OPTS.map(opt => (
                   <button key={opt.value} onClick={() => handleVote(game, opt.value)} disabled={saving}
+                    title={VOTE_TOOLTIP}
                     style={{
                       padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 500,
                       border: `1px solid ${myVote === opt.value ? opt.color : 'var(--border)'}`,
@@ -646,7 +854,9 @@ function VotingPhase({ event, participants, me, votes, mergedCollection, reload 
         })}
         {games.length === 0 && (
           <p style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)', fontSize: 14 }}>
-            No games found. {mergedCollection.length === 0 ? 'Load a collection in the main app first.' : 'Try different filters.'}
+            {voteFilter === 'allvotes'
+              ? 'No votes cast yet by any participant.'
+              : mergedCollection.length === 0 ? 'Load a collection in the main app first.' : 'No games match your filters.'}
           </p>
         )}
       </div>
