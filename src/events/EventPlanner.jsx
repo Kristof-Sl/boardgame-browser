@@ -1333,6 +1333,7 @@ function ScheduleGameCard({ slot, gameData, me }) {
 
   const ownerStatuses = gameData.ownerStatuses || {}
   const actualOwners = gameData.actualOwners || []
+  const fileLinks = Array.isArray(gameData.files) ? gameData.files : []
 
   return (
     <div style={{
@@ -1447,6 +1448,22 @@ function ScheduleGameCard({ slot, gameData, me }) {
               </>
             )}
 
+            {fileLinks.length > 0 && (
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)' }}>Files</span>
+                {fileLinks.map((file, index) => (
+                  <a
+                    key={index}
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all' }}
+                  >
+                    {file.name || file.url}
+                  </a>
+                ))}
+              </div>
+            )}
             <a href={bggUrl} target="_blank" rel="noopener noreferrer"
               style={{ display: 'block', marginTop: 6, fontSize: 10, color: 'var(--accent)', textDecoration: 'none' }}>
               Open on BGG ↗

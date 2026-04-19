@@ -194,6 +194,16 @@ export default function App() {
     }
   }, [])
 
+  const handleUpdateGameFiles = useCallback((gameId, files) => {
+    setCollections(prev => {
+      const next = {}
+      for (const owner in prev) {
+        next[owner] = prev[owner].map(game => game.id === gameId ? { ...game, files } : game)
+      }
+      return next
+    })
+  }, [])
+
   // Export current state as downloadable JSON
   const handleExport = useCallback(() => {
     if (allGames.length === 0) return
@@ -403,7 +413,7 @@ export default function App() {
               gap: 16,
             }}>
               {filteredGames.map(game => (
-                <GameCard key={game.id} game={game} />
+                <GameCard key={game.id} game={game} onUpdateFiles={handleUpdateGameFiles} />
               ))}
             </div>
           )}
