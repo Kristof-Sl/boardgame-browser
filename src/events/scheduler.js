@@ -287,20 +287,28 @@ export function generateSchedule(event, participants, games, preferences, params
       const remainingGroups = maxParallelGames - slotGames.length
       if (!canCoverWithGroups(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)) break
 
-      // Generate all feasible partitions of unassigned players
-      const partitions = generatePartitions(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)
-      if (partitions.length === 0) break
-
-      logger.log(`Found ${partitions.length} feasible partitions for ${unassigned.length} players into ${remainingGroups} groups`)
+      // Generate all feasible partitions of unassigned players using up to the remaining group slots
+      const feasibleGroupCounts = []
+      for (let groups = 1; groups <= remainingGroups; groups++) {
+        if (canCoverWithGroups(unassigned.length, groups, minPlayersPerGame, maxGamePlayers)) {
+          feasibleGroupCounts.push(groups)
+        }
+      }
+      if (feasibleGroupCounts.length === 0) break
 
       let bestPartitionScore = -Infinity
       let bestPartitionAssignments = null
       let bestPartitionGroupSizes = null
 
-      for (const partition of partitions) {
-        const assignments = []
-        let partitionValid = true
-        const usedInPartition = new Set(usedGameIds)  // Track games used in this partition
+      for (const groups of feasibleGroupCounts) {
+        const partitions = generatePartitions(unassigned.length, groups, minPlayersPerGame, maxGamePlayers)
+        if (partitions.length === 0) continue
+        logger.log(`Found ${partitions.length} feasible partitions for ${unassigned.length} players into ${groups} groups`)
+
+        for (const partition of partitions) {
+          const assignments = []
+          let partitionValid = true
+          const usedInPartition = new Set(usedGameIds)  // Track games used in this partition
 
         for (let i = 0; i < partition.length; i++) {
           const groupSize = partition[i]
