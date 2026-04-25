@@ -287,45 +287,53 @@ export function generateSchedule(event, participants, games, preferences, params
       const remainingGroups = maxParallelGames - slotGames.length
       if (!canCoverWithGroups(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)) break
 
-      // Generate all feasible partitions of unassigned players
-      const partitions = generatePartitions(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)
-      if (partitions.length === 0) break
-
-      logger.log(`Found ${partitions.length} feasible partitions for ${unassigned.length} players into ${remainingGroups} groups`)
+      const feasibleGroupCounts = []
+      for (let groups = 1; groups <= remainingGroups; groups++) {
+        if (canCoverWithGroups(unassigned.length, groups, minPlayersPerGame, maxGamePlayers)) {
+          feasibleGroupCounts.push(groups)
+        }
+      }
+      if (feasibleGroupCounts.length === 0) break
 
       let bestPartitionScore = -Infinity
       let bestPartitionAssignments = null
       let bestPartitionGroupSizes = null
 
-      for (const partition of partitions) {
-        const assignments = []
-        let partitionValid = true
-        const usedInPartition = new Set(usedGameIds)  // Track games used in this partition
+      for (const groups of feasibleGroupCounts) {
+        const partitions = generatePartitions(unassigned.length, groups, minPlayersPerGame, maxGamePlayers)
+        if (partitions.length === 0) continue
+        logger.log(`Found ${partitions.length} feasible partitions for ${unassigned.length} players into ${groups} groups`)
 
-        for (let i = 0; i < partition.length; i++) {
-          const groupSize = partition[i]
-          const groupStart = partition.slice(0, i).reduce((a, b) => a + b, 0)
-          const unassignedSubset = unassigned.slice(groupStart, groupStart + groupSize)
+        for (const partition of partitions) {
+          const assignments = []
+          let partitionValid = true
+          const usedInPartition = new Set(usedGameIds)  // Track games used in this partition
 
-          const assignment = findBestGameForGroup(groupSize, unassignedSubset, games, usedInPartition, prefMap, playedGames, durationMultiplier, remainingMinutes, prioritizePreferences)
-          if (!assignment.game) {
-            partitionValid = false
-            break
+          for (let i = 0; i < partition.length; i++) {
+            const groupSize = partition[i]
+            const groupStart = partition.slice(0, i).reduce((a, b) => a + b, 0)
+            const unassignedSubset = unassigned.slice(groupStart, groupStart + groupSize)
+
+            const assignment = findBestGameForGroup(groupSize, unassignedSubset, games, usedInPartition, prefMap, playedGames, durationMultiplier, remainingMinutes, prioritizePreferences)
+            if (!assignment.game) {
+              partitionValid = false
+              break
+            }
+            assignments.push(assignment)
+            usedInPartition.add(assignment.game.game_id)  // Mark this game as used in partition
           }
-          assignments.push(assignment)
-          usedInPartition.add(assignment.game.game_id)  // Mark this game as used in partition
-        }
 
-        if (!partitionValid) continue
+          if (!partitionValid) continue
 
-        const existingSlotSizes = slotGames.map(s => s.players.length)
-        const partitionScore = scorePartitionAssignment(partition, assignments, existingSlotSizes, balanceGroupWeight)
+          const existingSlotSizes = slotGames.map(s => s.players.length)
+          const partitionScore = scorePartitionAssignment(partition, assignments, existingSlotSizes, balanceGroupWeight)
 
-        if (partitionScore > bestPartitionScore) {
-          bestPartitionScore = partitionScore
-          bestPartitionAssignments = assignments
-          bestPartitionGroupSizes = partition
-          logger.log(`Partition [${partition.join('+')}] scores ${partitionScore}`)
+          if (partitionScore > bestPartitionScore) {
+            bestPartitionScore = partitionScore
+            bestPartitionAssignments = assignments
+            bestPartitionGroupSizes = partition
+            logger.log(`Partition [${partition.join('+')}] scores ${partitionScore}`)
+          }
         }
       }
 
