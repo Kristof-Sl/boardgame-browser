@@ -275,11 +275,7 @@ export function generateSchedule(event, participants, games, preferences, params
     const usedGameIds = new Set()
 
     // Try to fill the slot with games while keeping every present participant assigned
-    let iterations = 0
-    while (remainingMinutes > 30 && iterations < 20) {
-      iterations++
-
-      // Who's still unassigned in this slot?
+    while (remainingMinutes > 30 && slotGames.length < maxParallelGames) {
       const unassigned = availableNow.filter(p => !assignedInSlot.has(p.id))
       if (unassigned.length === 0) break
       if (unassigned.length < minPlayersPerGame) break
@@ -287,99 +283,73 @@ export function generateSchedule(event, participants, games, preferences, params
       const remainingGroups = maxParallelGames - slotGames.length
       if (!canCoverWithGroups(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)) break
 
-      const feasibleGroupCounts = []
-      for (let groups = 1; groups <= remainingGroups; groups++) {
-        if (canCoverWithGroups(unassigned.length, groups, minPlayersPerGame, maxGamePlayers)) {
-          feasibleGroupCounts.push(groups)
-        }
-      }
-      if (feasibleGroupCounts.length === 0) break
+      let bestCandidate = null
+      let bestCandidateScore = -Infinity
 
-      let bestPartitionScore = -Infinity
-      let bestPartitionAssignments = null
-      let bestPartitionGroupSizes = null
+      const existingSlotSizes = slotGames.map(s => s.players.length)
+      const maxGroupSize = Math.min(maxGamePlayers, unassigned.length)
 
-      for (const groups of feasibleGroupCounts) {
-        const partitions = generatePartitions(unassigned.length, groups, minPlayersPerGame, maxGamePlayers)
-        if (partitions.length === 0) continue
-        logger.log(`Found ${partitions.length} feasible partitions for ${unassigned.length} players into ${groups} groups`)
+      for (let groupSize = minPlayersPerGame; groupSize <= maxGroupSize; groupSize++) {
+        const remainingPlayers = unassigned.length - groupSize
+        const nextGroups = remainingGroups - 1
+        if (remainingPlayers > 0 && nextGroups > 0 && !canCoverWithGroups(remainingPlayers, nextGroups, minPlayersPerGame, maxGamePlayers)) continue
+        if (remainingPlayers > 0 && nextGroups === 0) continue
 
-        for (const partition of partitions) {
-          const assignments = []
-          let partitionValid = true
-          const usedInPartition = new Set(usedGameIds)  // Track games used in this partition
+        for (const game of games) {
+          if (usedGameIds.has(game.game_id)) continue
+          const gameData = game.game_data || {}
+          const minPlayers = gameData.minPlayers || 2
+          const maxPlayers = gameData.maxPlayers || 6
+          const duration = getGameDuration(game, durationMultiplier)
 
-          for (let i = 0; i < partition.length; i++) {
-            const groupSize = partition[i]
-            const groupStart = partition.slice(0, i).reduce((a, b) => a + b, 0)
-            const unassignedSubset = unassigned.slice(groupStart, groupStart + groupSize)
+          if (duration > remainingMinutes || groupSize < minPlayers || groupSize > maxPlayers) continue
 
-            const assignment = findBestGameForGroup(groupSize, unassignedSubset, games, usedInPartition, prefMap, playedGames, durationMultiplier, remainingMinutes, prioritizePreferences)
-            if (!assignment.game) {
-              partitionValid = false
-              break
-            }
-            assignments.push(assignment)
-            usedInPartition.add(assignment.game.game_id)  // Mark this game as used in partition
-          }
+          const scored = buildScoredParticipants(unassigned, game.game_id, prefMap, playerGameCount)
+          const group = scored.slice(0, groupSize).map(s => s.p)
+          const preferenceScore = scoreGame(game, group, prefMap, playedGames, { prioritizePreferences })
+          const balanceScore = sizeBalanceScore(groupSize, unassigned.length, remainingGroups, existingSlotSizes, balanceGroupWeight)
+          const candidateScore = preferenceScore + balanceScore
 
-          if (!partitionValid) continue
-
-          const existingSlotSizes = slotGames.map(s => s.players.length)
-          const partitionScore = scorePartitionAssignment(partition, assignments, existingSlotSizes, balanceGroupWeight)
-
-          if (partitionScore > bestPartitionScore) {
-            bestPartitionScore = partitionScore
-            bestPartitionAssignments = assignments
-            bestPartitionGroupSizes = partition
-            logger.log(`Partition [${partition.join('+')}] scores ${partitionScore}`)
+          if (candidateScore > bestCandidateScore) {
+            bestCandidateScore = candidateScore
+            bestCandidate = { game, group, groupSize, score: candidateScore, duration }
           }
         }
       }
 
-      if (!bestPartitionAssignments) {
-        logger.log(`No feasible game assignment found for slot ${slot.date} ${slot.part}`)
+      if (!bestCandidate) {
+        logger.log(`No feasible game candidate found for slot ${slot.date} ${slot.part}`)
         break
       }
 
-      // Commit the best partition
-      for (let i = 0; i < bestPartitionAssignments.length; i++) {
-        const assignment = bestPartitionAssignments[i]
-        const bestGameData = assignment.game.game_data || {}
+      const bestGameData = bestCandidate.game.game_data || {}
+      slotGames.push({
+        date: slot.date,
+        part: slot.part,
+        gameId: bestCandidate.game.game_id,
+        gameName: bestCandidate.game.game_name,
+        gameDuration: bestCandidate.duration,
+        players: bestCandidate.group.map(p => ({ id: p.id, name: p.name })),
+        thumbnail: bestGameData.thumbnail || null,
+        rating: bestGameData.rating || null,
+      })
+      usedGameIds.add(bestCandidate.game.game_id)
 
-        slotGames.push({
-          date: slot.date,
-          part: slot.part,
-          gameId: assignment.game.game_id,
-          gameName: assignment.game.game_name,
-          gameDuration: getGameDuration(assignment.game, durationMultiplier),
-          players: assignment.group.map(p => ({ id: p.id, name: p.name })),
-          thumbnail: bestGameData.thumbnail || null,
-          rating: bestGameData.rating || null,
-        })
-        usedGameIds.add(assignment.game.game_id)
+      logger.log(`Assigned ${bestCandidate.group.map(p => p.name).join(', ')} to ${bestCandidate.game.game_name} for ${slot.date} ${slot.part}`)
 
-        logger.log(`Assigned ${assignment.group.map(p => p.name).join(', ')} to ${assignment.game.game_name} for ${slot.date} ${slot.part}`)
-
-        // Update tracking
-        playedGames[assignment.game.game_id] = (playedGames[assignment.game.game_id] || 0) + 1
-        for (const p of assignment.group) {
-          assignedInSlot.add(p.id)
-          playerGameCount[p.id] = (playerGameCount[p.id] || 0) + 1
-          for (const p2 of assignment.group) {
-            if (p.id !== p2.id) {
-              const key = [p.id, p2.id].sort().join('-')
-              socialMatrix[key] = (socialMatrix[key] || 0) + 1
-            }
+      playedGames[bestCandidate.game.game_id] = (playedGames[bestCandidate.game.game_id] || 0) + 1
+      for (const p of bestCandidate.group) {
+        assignedInSlot.add(p.id)
+        playerGameCount[p.id] = (playerGameCount[p.id] || 0) + 1
+        for (const p2 of bestCandidate.group) {
+          if (p.id !== p2.id) {
+            const key = [p.id, p2.id].sort().join('-')
+            socialMatrix[key] = (socialMatrix[key] || 0) + 1
           }
         }
       }
 
-      const maxGameDuration = bestPartitionAssignments.reduce((max, a) => Math.max(max, getGameDuration(a.game, durationMultiplier)), 0)
-      remainingMinutes -= maxGameDuration
-
-      // Stop if we've hit max parallel games
-      if (slotGames.length >= maxParallelGames) break
+      remainingMinutes -= bestCandidate.duration
     }
 
     schedule.push(...slotGames)
