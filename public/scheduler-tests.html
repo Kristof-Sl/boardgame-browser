@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scheduler Tests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0e0c; --bg2: #1a1915; --bg3: #242320; --bg4: #2e2d29;
+    --surface: #1e1d1a; --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+    --text: #f0ede6; --text2: #9e9a90; --text3: #635f58;
+    --accent: #e8c84a; --accent-bg: rgba(232,200,74,0.12);
+    --green: #4caf7d; --green-bg: rgba(76,175,125,0.12);
+    --red: #e05a5a; --red-bg: rgba(224,90,90,0.1);
+    --blue: #5a9ae0; --blue-bg: rgba(90,154,224,0.12);
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'DM Mono', 'Courier New', monospace;
+    --radius: 10px; --radius-lg: 16px;
+  }
+  html { font-size: 15px; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body);
+    line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  /* ── Layout ── */
+  .page { max-width: 860px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  /* ── Header ── */
+  .header { margin-bottom: 28px; }
+  .header h1 { font-family: var(--font-display); font-size: 26px; font-weight: 300;
+    color: var(--accent); letter-spacing: -0.3px; }
+  .header p { font-size: 13px; color: var(--text3); margin-top: 4px; }
+  .header-row { display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+  a.back { font-size: 12px; color: var(--text3); text-decoration: none; }
+  a.back:hover { color: var(--text2); }
+
+  /* ── Summary bar ── */
+  #summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px; margin-bottom: 24px; }
+  .summary-pill { display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 500; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-green { background: var(--green); }
+  .dot-red   { background: var(--red); }
+  .dot-grey  { background: var(--text3); }
+  .summary-divider { width: 1px; height: 16px; background: var(--border2); }
+  #summary-status { font-size: 13px; color: var(--text3); flex: 1; text-align: right; }
+  #run-btn {
+    background: var(--accent); color: #0f0e0c; border: none;
+    padding: 7px 18px; border-radius: 6px; font-family: var(--font-body);
+    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: opacity 140ms;
+  }
+  #run-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* ── Suite block ── */
+  .suite { margin-bottom: 20px; }
+  .suite-header { display: flex; align-items: center; gap: 10px;
+    padding: 0 4px; margin-bottom: 8px; }
+  .suite-name { font-size: 12px; font-weight: 500; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.06em; }
+  .suite-count { font-size: 11px; color: var(--text3); }
+  .suite-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Test row ── */
+  .test-row { border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 6px; }
+  .test-row-head { display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer; user-select: none;
+    transition: background 100ms; }
+  .test-row-head:hover { background: var(--bg2); }
+  .test-icon { font-size: 13px; width: 16px; flex-shrink: 0; }
+  .test-name { font-size: 13px; color: var(--text); flex: 1; }
+  .test-badge { font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 4px; flex-shrink: 0; }
+  .badge-pass { background: var(--green-bg); color: var(--green); }
+  .badge-fail { background: var(--red-bg); color: var(--red); }
+  .badge-idle { background: var(--bg3); color: var(--text3); }
+  .badge-running { background: var(--accent-bg); color: var(--accent); }
+
+  /* ── Error detail ── */
+  .test-detail { display: none; border-top: 1px solid var(--border);
+    background: #0a0a08; padding: 12px 14px; }
+  .test-detail.open { display: block; }
+  .test-detail pre { font-family: var(--font-mono); font-size: 11.5px;
+    color: #c0bdb5; white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
+  .detail-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text3); margin-bottom: 6px; }
+  .err-expected { color: var(--green); }
+  .err-received { color: var(--red); }
+
+  /* ── Loading skeleton ── */
+  .skeleton { background: var(--bg2); border-radius: 4px; height: 14px;
+    animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="header-row">
+      <h1>⚙ Scheduler Tests</h1>
+      <a class="back" href="/">← Back to app</a>
+    </div>
+    <p>All tests run directly in this browser tab against the live scheduler code — no terminal needed.</p>
+  </div>
+
+  <div id="summary">
+    <span class="summary-pill"><span class="dot dot-green"></span><span id="count-pass">—</span> passed</span>
+    <div class="summary-divider"></div>
+    <span class="summary-pill"><span class="dot dot-red"></span><span id="count-fail">—</span> failed</span>
+    <div class="summary-divider"></div>
+    <span class="summary-pill"><span class="dot dot-grey"></span><span id="count-total">—</span> total</span>
+    <span id="summary-status">Click Run to start</span>
+    <button id="run-btn">▶ Run tests</button>
+  </div>
+
+  <div id="suites"></div>
+</div>
+
+<script type="module">
+import {
+  getSlots,
+  getParticipantSlots,
+  validateScheduleCoverage,
+  generateSchedule,
+  scheduleStats,
+} from '/src/events/scheduler.js'
+
+// ─── Tiny assertion library ───────────────────────────────────────────────────
+
+class AssertionError extends Error {
+  constructor(message, extra = {}) {
+    super(message)
+    this.name = 'AssertionError'
+    this.expected = extra.expected
+    this.received = extra.received
+  }
+}
+
+function assert(value, message = 'Expected truthy') {
+  if (!value) throw new AssertionError(message, { received: value })
+}
+
+const expect = (received) => ({
+  toBe(expected, msg) {
+    if (received !== expected)
+      throw new AssertionError(msg || `Expected ${JSON.stringify(expected)}, got ${JSON.stringify(received)}`,
+        { expected, received })
+  },
+  toEqual(expected, msg) {
+    const a = JSON.stringify(received), b = JSON.stringify(expected)
+    if (a !== b) throw new AssertionError(msg || `Expected ${b}\ngot ${a}`, { expected, received })
+  },
+  toHaveLength(n, msg) {
+    if (!received || received.length !== n)
+      throw new AssertionError(msg || `Expected length ${n}, got ${received?.length}`,
+        { expected: n, received: received?.length })
+  },
+  toContain(item, msg) {
+    if (!Array.isArray(received) || !received.includes(item))
+      throw new AssertionError(msg || `Expected array to contain ${JSON.stringify(item)}`,
+        { expected: `contains ${JSON.stringify(item)}`, received })
+  },
+  not: {
+    toContain(item, msg) {
+      if (Array.isArray(received) && received.includes(item))
+        throw new AssertionError(msg || `Expected array NOT to contain ${JSON.stringify(item)}`,
+          { expected: `not contain ${JSON.stringify(item)}`, received })
+    },
+    toThrow() { /* handled in toThrow wrapper */ }
+  },
+  toBeGreaterThan(n, msg) {
+    if (!(received > n)) throw new AssertionError(msg || `Expected ${received} > ${n}`, { expected: `> ${n}`, received })
+  },
+  toBeGreaterThanOrEqual(n, msg) {
+    if (!(received >= n)) throw new AssertionError(msg || `Expected ${received} >= ${n}`, { expected: `>= ${n}`, received })
+  },
+  toBeLessThanOrEqual(n, msg) {
+    if (!(received <= n)) throw new AssertionError(msg || `Expected ${received} <= ${n}`, { expected: `<= ${n}`, received })
+  },
+  toBe(expected, msg) {
+    if (received !== expected)
+      throw new AssertionError(msg || `Expected ${JSON.stringify(expected)}, got ${JSON.stringify(received)}`,
+        { expected, received })
+  },
+  toHaveProperty(key, msg) {
+    if (!(key in Object(received)))
+      throw new AssertionError(msg || `Expected object to have property "${key}"`, { expected: key, received: Object.keys(Object(received)) })
+  },
+})
+
+function safeExpectThrow(fn) {
+  try { fn(); return false } catch { return true }
+}
+
+// ─── Test-data factories ──────────────────────────────────────────────────────
+
+function makeParticipant(id, name, overrides = {}) {
+  return { id, name, arrive_date: null, arrive_part: null, depart_date: null, depart_part: null, ...overrides }
+}
+
+function makeGame(id, name, { minPlayers = 2, maxPlayers = 4, maxPlaytime = 60 } = {}) {
+  return { game_id: id, game_name: name, game_data: { minPlayers, maxPlayers, maxPlaytime, rating: 7 } }
+}
+
+function makeEvent(startDate, endDate, id = 'evt1') {
+  return { id, start_date: startDate, end_date: endDate }
+}
+
+function neutralPrefs(participants, games) {
+  const prefs = {}
+  for (const p of participants) {
+    prefs[p.id] = {}
+    for (const g of games) prefs[p.id][g.game_id] = 'neutral'
+  }
+  return prefs
+}
+
+const DEFAULT_PARAMS = {
+  hoursPerPart: 3, durationMultiplier: 1,
+  prioritizePreferences: 1, prioritizeSocial: 1,
+  balanceGroupWeight: 1, minPlayersPerGame: 2, maxParallelGames: 2,
+}
+
+// ─── Test suite definitions ───────────────────────────────────────────────────
+
+const SUITES = [
+  {
+    name: 'getSlots — date range generation',
+    tests: [
+      {
+        name: 'Returns 3 slots (morning/afternoon/evening) for a single-day event',
+        fn() {
+          const slots = getSlots('2025-01-01', '2025-01-01')
+          expect(slots).toHaveLength(3)
+          expect(slots.map(s => s.part)).toEqual(['morning', 'afternoon', 'evening'])
+          assert(slots.every(s => s.date === '2025-01-01'), 'All slots should be on 2025-01-01')
+        }
+      },
+      {
+        name: 'Returns 9 slots for a 3-day event',
+        fn() { expect(getSlots('2025-01-01', '2025-01-03')).toHaveLength(9) }
+      },
+      {
+        name: 'Every date in range appears exactly once per part',
+        fn() {
+          const slots = getSlots('2025-06-01', '2025-06-05')
+          const dates = [...new Set(slots.map(s => s.date))]
+          expect(dates).toHaveLength(5)
+          for (const date of dates) {
+            const parts = slots.filter(s => s.date === date).map(s => s.part).sort()
+            expect(parts).toEqual(['afternoon', 'evening', 'morning'])
+          }
+        }
+      },
+      {
+        name: 'Returns empty array when end date is before start date',
+        fn() { expect(getSlots('2025-01-05', '2025-01-01')).toHaveLength(0) }
+      },
+      {
+        name: 'Slots are in chronological order (date then morning → afternoon → evening)',
+        fn() {
+          const PART_ORDER = { morning: 0, afternoon: 1, evening: 2 }
+          const slots = getSlots('2025-03-01', '2025-03-02')
+          for (let i = 1; i < slots.length; i++) {
+            const prev = slots[i - 1], cur = slots[i]
+            const ok = cur.date > prev.date ||
+              (cur.date === prev.date && PART_ORDER[cur.part] > PART_ORDER[prev.part])
+            assert(ok, `Slot ${i} is not in order: ${JSON.stringify(prev)} → ${JSON.stringify(cur)}`)
+          }
+        }
+      },
+    ]
+  },
+
+  {
+    name: 'getParticipantSlots — availability filtering',
+    tests: [
+      {
+        name: 'Returns all slots when participant has no date restrictions',
+        fn() {
+          const allSlots = getSlots('2025-01-01', '2025-01-03')
+          expect(getParticipantSlots(makeParticipant('p1', 'Alice'), allSlots)).toHaveLength(9)
+        }
+      },
+      {
+        name: 'Excludes all slots before arrive_date',
+        fn() {
+          const allSlots = getSlots('2025-01-01', '2025-01-03')
+          const p = makeParticipant('p1', 'Alice', { arrive_date: '2025-01-02', arrive_part: 'morning' })
+          assert(getParticipantSlots(p, allSlots).every(s => s.date >= '2025-01-02'),
+            'Found slots before arrive_date')
+        }
+      },
+      {
+        name: 'Excludes all slots after depart_date',
+        fn() {
+          const allSlots = getSlots('2025-01-01', '2025-01-03')
+          const p = makeParticipant('p1', 'Alice', { depart_date: '2025-01-02', depart_part: 'evening' })
+          assert(getParticipantSlots(p, allSlots).every(s => s.date <= '2025-01-02'),
+            'Found slots after depart_date')
+        }
+      },
+      {
+        name: 'Afternoon arrival on day 1 correctly excludes that morning slot',
+        fn() {
+          const allSlots = getSlots('2025-01-01', '2025-01-03')
+          const p = makeParticipant('p1', 'Alice', { arrive_date: '2025-01-01', arrive_part: 'afternoon' })
+          const day1 = getParticipantSlots(p, allSlots).filter(s => s.date === '2025-01-01')
+          assert(!day1.some(s => s.part === 'morning'), 'Morning slot on arrival day should be excluded')
+          assert(day1.some(s => s.part === 'afternoon'), 'Afternoon slot on arrival day should be included')
+        }
+      },
+      {
+        name: 'Morning departure on last day excludes afternoon and evening',
+        fn() {
+          const allSlots = getSlots('2025-01-01', '2025-01-03')
+          const p = makeParticipant('p1', 'Alice', { depart_date: '2025-01-03', depart_part: 'morning' })
+          const day3 = getParticipantSlots(p, allSlots).filter(s => s.date === '2025-01-03')
+          expect(day3).toHaveLength(1)
+          expect(day3[0].part).toBe('morning')
+        }
+      },
+      {
+        name: 'Participant who arrives after the event ends gets zero slots',
+        fn() {
+          const allSlots = getSlots('2025-01-01', '2025-01-03')
+          const p = makeParticipant('p1', 'Alice', { arrive_date: '2025-01-10', arrive_part: 'morning' })
+          expect(getParticipantSlots(p, allSlots)).toHaveLength(0)
+        }
+      },
+    ]
+  },
+
+  {
+    name: 'validateScheduleCoverage — pre-flight warnings',
+    tests: [
+      {
+        name: 'No warnings when player count fits within game range',
+        fn() {
+          const event = makeEvent('2025-01-01', '2025-01-01')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1', 'Catan', { minPlayers: 2, maxPlayers: 4 })]
+          const warnings = validateScheduleCoverage(event, participants, games, { minPlayersPerGame: 2, maxParallelGames: 2 })
+          expect(warnings).toHaveLength(0)
+        }
+      },
+      {
+        name: 'Warns when fewer players are present than minPlayersPerGame',
+        fn() {
+          const event = makeEvent('2025-01-01', '2025-01-01')
+          const participants = [makeParticipant('p1', 'Solo')]
+          const games = [makeGame('g1', 'Catan', { minPlayers: 2, maxPlayers: 4 })]
+          const warnings = validateScheduleCoverage(event, participants, games, { minPlayersPerGame: 2, maxParallelGames: 2 })
+          expect(warnings).toHaveLength(3) // one warning per slot in the day
+          assert(warnings[0].toLowerCase().includes('below'), `Expected 'below' in: ${warnings[0]}`)
+        }
+      },
+      {
+        name: 'Warns when too many players cannot be split across maxParallelGames groups',
+        fn() {
+          const event = makeEvent('2025-01-01', '2025-01-01')
+          // 2 parallel games × max 4 = 8 max; 9 players cannot be covered
+          const participants = Array.from({ length: 9 }, (_, i) => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1', 'Catan', { minPlayers: 2, maxPlayers: 4 })]
+          const warnings = validateScheduleCoverage(event, participants, games, { minPlayersPerGame: 2, maxParallelGames: 2 })
+          assert(warnings.length > 0, 'Expected at least one warning for 9 players in 2×4 setup')
+        }
+      },
+      {
+        name: 'No warning for 5 players coverable as 2+3 groups (both in [2,4] range)',
+        fn() {
+          const event = makeEvent('2025-01-01', '2025-01-01')
+          const participants = Array.from({ length: 5 }, (_, i) => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1', 'Catan', { minPlayers: 2, maxPlayers: 4 })]
+          const warnings = validateScheduleCoverage(event, participants, games, { minPlayersPerGame: 2, maxParallelGames: 2 })
+          expect(warnings).toHaveLength(0)
+        }
+      },
+    ]
+  },
+
+  {
+    name: 'generateSchedule — hard invariants (must always hold)',
+    tests: [
+      {
+        name: 'I1 · No participant plays two games in the same slot',
+        fn() {
+          const event = makeEvent('2025-07-01', '2025-07-02')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [
+            makeGame('g1', 'Catan',    { minPlayers: 2, maxPlayers: 4, maxPlaytime: 60 }),
+            makeGame('g2', 'Pandemic', { minPlayers: 2, maxPlayers: 4, maxPlaytime: 60 }),
+            makeGame('g3', 'Wingspan', { minPlayers: 1, maxPlayers: 5, maxPlaytime: 90 }),
+          ]
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), DEFAULT_PARAMS)
+          const bySlot = {}
+          for (const sess of schedule) {
+            const key = `${sess.date}_${sess.part}`
+            if (!bySlot[key]) bySlot[key] = []
+            bySlot[key].push(...sess.players.map(p => p.id))
+          }
+          for (const [slot, ids] of Object.entries(bySlot)) {
+            expect(new Set(ids).size).toBe(ids.length, `Slot ${slot}: duplicate player detected`)
+          }
+        }
+      },
+      {
+        name: 'I2 · No game appears twice in the same slot',
+        fn() {
+          const event = makeEvent('2025-07-01', '2025-07-02')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1','A'), makeGame('g2','B'), makeGame('g3','C')]
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), DEFAULT_PARAMS)
+          const bySlot = {}
+          for (const sess of schedule) {
+            const key = `${sess.date}_${sess.part}`
+            if (!bySlot[key]) bySlot[key] = []
+            bySlot[key].push(sess.gameId)
+          }
+          for (const [slot, ids] of Object.entries(bySlot)) {
+            expect(new Set(ids).size).toBe(ids.length, `Slot ${slot}: same game used twice`)
+          }
+        }
+      },
+      {
+        name: 'I3 · Parallel games per slot never exceed maxParallelGames',
+        fn() {
+          const event = makeEvent('2025-07-01', '2025-07-02')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1','A'), makeGame('g2','B'), makeGame('g3','C'), makeGame('g4','D')]
+          const params = { ...DEFAULT_PARAMS, maxParallelGames: 2 }
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), params)
+          const bySlot = {}
+          for (const sess of schedule) {
+            const key = `${sess.date}_${sess.part}`
+            bySlot[key] = (bySlot[key] || 0) + 1
+          }
+          for (const [slot, count] of Object.entries(bySlot)) {
+            assert(count <= 2, `Slot ${slot} has ${count} parallel games — exceeds maxParallelGames=2`)
+          }
+        }
+      },
+      {
+        name: 'I4 · Every session\'s group size is within the game\'s [minPlayers, maxPlayers]',
+        fn() {
+          const event = makeEvent('2025-07-01', '2025-07-02')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [
+            makeGame('g1', 'Catan',   { minPlayers: 3, maxPlayers: 4, maxPlaytime: 60 }),
+            makeGame('g2', 'Hanabi',  { minPlayers: 2, maxPlayers: 5, maxPlaytime: 45 }),
+          ]
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), DEFAULT_PARAMS)
+          const gameMap = Object.fromEntries(games.map(g => [g.game_id, g.game_data]))
+          for (const sess of schedule) {
+            const { minPlayers, maxPlayers } = gameMap[sess.gameId] || {}
+            if (minPlayers != null)
+              assert(sess.players.length >= minPlayers,
+                `${sess.gameName}: ${sess.players.length} players < minPlayers ${minPlayers}`)
+            if (maxPlayers != null)
+              assert(sess.players.length <= maxPlayers,
+                `${sess.gameName}: ${sess.players.length} players > maxPlayers ${maxPlayers}`)
+          }
+        }
+      },
+      {
+        name: 'I5 · Every scheduled player was actually available for that slot',
+        fn() {
+          const event = makeEvent('2025-07-01', '2025-07-02')
+          const participants = [
+            makeParticipant('p1', 'Alice', { arrive_date: '2025-07-01', arrive_part: 'morning', depart_date: '2025-07-01', depart_part: 'afternoon' }),
+            makeParticipant('p2', 'Bob',   { arrive_date: '2025-07-01', arrive_part: 'morning', depart_date: '2025-07-02', depart_part: 'evening' }),
+            makeParticipant('p3', 'Carol', { arrive_date: '2025-07-01', arrive_part: 'morning', depart_date: '2025-07-02', depart_part: 'evening' }),
+            makeParticipant('p4', 'Dave',  { arrive_date: '2025-07-01', arrive_part: 'morning', depart_date: '2025-07-02', depart_part: 'evening' }),
+          ]
+          const games = [makeGame('g1','Catan',{ minPlayers:2, maxPlayers:4, maxPlaytime:60 })]
+          const allSlots = getSlots(event.start_date, event.end_date)
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), DEFAULT_PARAMS)
+          for (const sess of schedule) {
+            const slotKey = `${sess.date}_${sess.part}`
+            for (const player of sess.players) {
+              const p = participants.find(x => x.id === player.id)
+              const available = getParticipantSlots(p, allSlots).map(s => `${s.date}_${s.part}`)
+              assert(available.includes(slotKey),
+                `${player.name} scheduled in ${slotKey} but is unavailable`)
+            }
+          }
+        }
+      },
+      {
+        name: 'I6 · Session duration never exceeds the slot\'s time budget',
+        fn() {
+          const event = makeEvent('2025-07-01', '2025-07-01')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [
+            makeGame('g1', 'Short', { maxPlaytime: 45 }),
+            makeGame('g2', 'Med',   { maxPlaytime: 90 }),
+            makeGame('g3', 'Long',  { maxPlaytime: 150 }),
+          ]
+          const params = { ...DEFAULT_PARAMS, hoursPerPart: 3 }
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), params)
+          for (const sess of schedule) {
+            assert(sess.gameDuration <= 180, `${sess.gameName}: duration ${sess.gameDuration} exceeds 180 min slot`)
+          }
+        }
+      },
+      {
+        name: 'I7 · Every session object contains all required fields',
+        fn() {
+          const event = makeEvent('2025-07-01', '2025-07-01')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1','Catan',{ minPlayers:2, maxPlayers:4, maxPlaytime:60 })]
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), DEFAULT_PARAMS)
+          const REQUIRED = ['date', 'part', 'gameId', 'gameName', 'gameDuration', 'players']
+          for (const sess of schedule) {
+            for (const field of REQUIRED)
+              expect(sess).toHaveProperty(field, `Session missing required field "${field}"`)
+            assert(Array.isArray(sess.players), 'sess.players must be an array')
+          }
+        }
+      },
+    ]
+  },
+
+  {
+    name: 'generateSchedule — scoring signals',
+    tests: [
+      {
+        name: 'S1 · "really_want" game is chosen over "dont_want" game when only 1 slot is available',
+        fn() {
+          const event = makeEvent('2025-08-01', '2025-08-01')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [
+            makeGame('loved', 'Loved', { minPlayers:2, maxPlayers:6, maxPlaytime:60 }),
+            makeGame('hated', 'Hated', { minPlayers:2, maxPlayers:6, maxPlaytime:60 }),
+          ]
+          const prefs = {}
+          for (const p of participants) prefs[p.id] = { loved: 'really_want', hated: 'dont_want' }
+          const schedule = generateSchedule(event, participants, games, prefs, { ...DEFAULT_PARAMS, maxParallelGames: 1 })
+          const ids = schedule.map(s => s.gameId)
+          expect(ids).toContain('loved')
+          expect(ids).not.toContain('hated')
+        }
+      },
+      {
+        name: 'S2 · Games are diversified across slots — same game not repeated when alternatives exist',
+        fn() {
+          const event = makeEvent('2025-08-01', '2025-08-02')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [
+            makeGame('g1','Alpha', { minPlayers:2, maxPlayers:4, maxPlaytime:60 }),
+            makeGame('g2','Beta',  { minPlayers:2, maxPlayers:4, maxPlaytime:60 }),
+            makeGame('g3','Gamma', { minPlayers:2, maxPlayers:4, maxPlaytime:60 }),
+          ]
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), { ...DEFAULT_PARAMS, maxParallelGames: 1 })
+          const ids = schedule.map(s => s.gameId)
+          const unique = new Set(ids)
+          assert(unique.size > 1, `Only one game was scheduled across all ${schedule.length} slots — no variety`)
+        }
+      },
+      {
+        name: 'S3 · A game too long to fit in any slot is never scheduled',
+        fn() {
+          const event = makeEvent('2025-08-01', '2025-08-01')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [
+            makeGame('long',  'Epic',  { minPlayers:2, maxPlayers:4, maxPlaytime:200 }),
+            makeGame('short', 'Quick', { minPlayers:2, maxPlayers:4, maxPlaytime:60  }),
+          ]
+          // hoursPerPart=2 → 120 min; 200 min game won't fit
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games),
+            { ...DEFAULT_PARAMS, hoursPerPart: 2, durationMultiplier: 1, maxParallelGames: 1 })
+          assert(schedule.every(s => s.gameId !== 'long'), 'The too-long game was incorrectly scheduled')
+        }
+      },
+      {
+        name: 'S4 · durationMultiplier correctly inflates duration and can exclude games',
+        fn() {
+          const event = makeEvent('2025-08-01', '2025-08-01')
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1','Game',{ minPlayers:2, maxPlayers:4, maxPlaytime:60 })]
+          const prefs = neutralPrefs(participants, games)
+          // 60 min × 2 = 120; slot = 3h = 180 → fits
+          const fits  = generateSchedule(event, participants, games, prefs, { ...DEFAULT_PARAMS, durationMultiplier: 2, maxParallelGames: 1 })
+          // 60 min × 4 = 240; slot = 3h = 180 → does NOT fit
+          const noFit = generateSchedule(event, participants, games, prefs, { ...DEFAULT_PARAMS, durationMultiplier: 4, maxParallelGames: 1 })
+          assert(fits.length > 0, 'Expected at least one session with 2× multiplier')
+          expect(noFit.length).toBe(0, 'Expected zero sessions with 4× multiplier')
+        }
+      },
+    ]
+  },
+
+  {
+    name: 'generateSchedule — edge cases',
+    tests: [
+      {
+        name: 'E1 · Empty participants → empty schedule',
+        fn() {
+          const schedule = generateSchedule(makeEvent('2025-01-01','2025-01-01'), [],
+            [makeGame('g1','Catan')], {}, DEFAULT_PARAMS)
+          expect(schedule).toEqual([])
+        }
+      },
+      {
+        name: 'E2 · Empty games list → empty schedule',
+        fn() {
+          const participants = [1,2,3].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const schedule = generateSchedule(makeEvent('2025-01-01','2025-01-01'), participants, [], {}, DEFAULT_PARAMS)
+          expect(schedule).toEqual([])
+        }
+      },
+      {
+        name: 'E3 · Fewer players than minPlayersPerGame → empty schedule',
+        fn() {
+          const participants = [makeParticipant('p1','Solo')]
+          const games = [makeGame('g1','Catan',{ minPlayers:2, maxPlayers:4 })]
+          const schedule = generateSchedule(makeEvent('2025-01-01','2025-01-01'), participants,
+            games, neutralPrefs(participants, games), { ...DEFAULT_PARAMS, minPlayersPerGame: 2 })
+          expect(schedule).toEqual([])
+        }
+      },
+      {
+        name: 'E4 · All participants depart before the event starts → empty schedule',
+        fn() {
+          const event = makeEvent('2025-06-10','2025-06-11')
+          const participants = [1,2,3,4].map(i =>
+            makeParticipant(`p${i}`, `P${i}`, { arrive_date:'2025-06-01', depart_date:'2025-06-05' }))
+          const games = [makeGame('g1','Catan',{ minPlayers:2, maxPlayers:4, maxPlaytime:60 })]
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games), DEFAULT_PARAMS)
+          expect(schedule).toEqual([])
+        }
+      },
+      {
+        name: 'E5 · Missing preferences for some participants does not crash',
+        fn() {
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1','Catan',{ minPlayers:2, maxPlayers:4, maxPlaytime:60 })]
+          // Only p1 has prefs; p2/p3/p4 omitted
+          const prefs = { p1: { g1: 'want' } }
+          let threw = false
+          try { generateSchedule(makeEvent('2025-01-01','2025-01-01'), participants, games, prefs, DEFAULT_PARAMS) }
+          catch { threw = true }
+          assert(!threw, 'generateSchedule threw with partial preference data')
+        }
+      },
+      {
+        name: 'E6 · A game requiring more players than attend is never scheduled',
+        fn() {
+          const participants = [1,2].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [
+            makeGame('small','Small',{ minPlayers:2, maxPlayers:4, maxPlaytime:60 }),
+            makeGame('big',  'Big',  { minPlayers:8, maxPlayers:12, maxPlaytime:60 }),
+          ]
+          const schedule = generateSchedule(makeEvent('2025-01-01','2025-01-01'), participants,
+            games, neutralPrefs(participants, games), { ...DEFAULT_PARAMS, maxParallelGames:1 })
+          assert(schedule.every(s => s.gameId !== 'big'), 'Game requiring 8+ players was scheduled for 2 participants')
+        }
+      },
+      {
+        name: 'E7 · logSteps=true returns { schedule, log } shape with non-empty log',
+        fn() {
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [makeGame('g1','Catan',{ minPlayers:2, maxPlayers:4, maxPlaytime:60 })]
+          const result = generateSchedule(makeEvent('2025-01-01','2025-01-01'), participants,
+            games, neutralPrefs(participants, games), { ...DEFAULT_PARAMS, logSteps: true })
+          expect(result).toHaveProperty('schedule')
+          expect(result).toHaveProperty('log')
+          assert(Array.isArray(result.schedule), 'result.schedule should be an array')
+          assert(Array.isArray(result.log), 'result.log should be an array')
+          assert(result.log.length > 0, 'Log should contain at least one entry')
+        }
+      },
+      {
+        name: 'E8 · maxParallelGames=1 never produces two games in the same slot',
+        fn() {
+          const event = makeEvent('2025-01-01','2025-01-03')
+          const participants = [1,2,3,4,5,6].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const games = [1,2,3,4,5].map(i => makeGame(`g${i}`,`G${i}`,{ minPlayers:2, maxPlayers:6, maxPlaytime:45 }))
+          const schedule = generateSchedule(event, participants, games, neutralPrefs(participants, games),
+            { ...DEFAULT_PARAMS, maxParallelGames: 1 })
+          const bySlot = {}
+          for (const sess of schedule) {
+            const key = `${sess.date}_${sess.part}`
+            bySlot[key] = (bySlot[key] || 0) + 1
+          }
+          for (const [slot, count] of Object.entries(bySlot))
+            assert(count === 1, `Slot ${slot} has ${count} parallel games despite maxParallelGames=1`)
+        }
+      },
+    ]
+  },
+
+  {
+    name: 'scheduleStats — output tallies',
+    tests: [
+      {
+        name: 'totalGames matches number of sessions in the schedule',
+        fn() {
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const schedule = [
+            { date:'2025-01-01', part:'morning',   gameId:'g1', gameName:'Alpha', gameDuration:60, players:[{id:'p1',name:'P1'},{id:'p2',name:'P2'}] },
+            { date:'2025-01-01', part:'afternoon',  gameId:'g2', gameName:'Beta',  gameDuration:60, players:[{id:'p3',name:'P3'},{id:'p4',name:'P4'}] },
+          ]
+          const stats = scheduleStats(schedule, participants, neutralPrefs(participants, [makeGame('g1',''),makeGame('g2','')]))
+          expect(stats.totalGames).toBe(2)
+        }
+      },
+      {
+        name: 'uniqueGames counts distinct game IDs (not sessions)',
+        fn() {
+          const participants = [1,2].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const schedule = [
+            { date:'2025-01-01', part:'morning',   gameId:'g1', gameName:'Alpha', gameDuration:60, players:[{id:'p1',name:'P1'}] },
+            { date:'2025-01-01', part:'afternoon',  gameId:'g1', gameName:'Alpha', gameDuration:60, players:[{id:'p2',name:'P2'}] },
+          ]
+          const stats = scheduleStats(schedule, participants, {})
+          expect(stats.uniqueGames).toBe(1)
+        }
+      },
+      {
+        name: 'gamesPlayed per player equals number of sessions they appear in',
+        fn() {
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const schedule = [
+            { date:'2025-01-01', part:'morning',   gameId:'g1', gameName:'Alpha', gameDuration:60, players:[{id:'p1',name:'P1'},{id:'p2',name:'P2'}] },
+            { date:'2025-01-01', part:'afternoon',  gameId:'g2', gameName:'Beta',  gameDuration:60, players:[{id:'p3',name:'P3'},{id:'p4',name:'P4'}] },
+          ]
+          const stats = scheduleStats(schedule, participants, {})
+          expect(stats.playerStats['p1'].gamesPlayed).toBe(1)
+          expect(stats.playerStats['p3'].gamesPlayed).toBe(1)
+          expect(stats.playerStats['p2'].gamesPlayed).toBe(1)
+        }
+      },
+      {
+        name: 'preferenceScore is +2 for "really_want" and +1 for "want"',
+        fn() {
+          const participants = [makeParticipant('p1','P1'), makeParticipant('p2','P2')]
+          const schedule = [
+            { date:'2025-01-01', part:'morning', gameId:'g1', gameName:'Alpha', gameDuration:60,
+              players:[{id:'p1',name:'P1'},{id:'p2',name:'P2'}] }
+          ]
+          const prefs = { p1: { g1: 'really_want' }, p2: { g1: 'want' } }
+          const stats = scheduleStats(schedule, participants, prefs)
+          expect(stats.playerStats['p1'].preferenceScore).toBe(2)
+          expect(stats.playerStats['p2'].preferenceScore).toBe(1)
+        }
+      },
+      {
+        name: 'satisfactionScore equals the sum of all individual preferenceScores',
+        fn() {
+          const participants = [1,2,3,4].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const schedule = [
+            { date:'2025-01-01', part:'morning',   gameId:'g1', gameName:'Alpha', gameDuration:60, players:[{id:'p1',name:'P1'},{id:'p2',name:'P2'}] },
+            { date:'2025-01-01', part:'afternoon',  gameId:'g2', gameName:'Beta',  gameDuration:60, players:[{id:'p3',name:'P3'},{id:'p4',name:'P4'}] },
+          ]
+          const prefs = { p1:{g1:'really_want'}, p2:{g1:'want'}, p3:{g2:'dont_want'}, p4:{g2:'neutral'} }
+          const stats = scheduleStats(schedule, participants, prefs)
+          const sum = Object.values(stats.playerStats).reduce((a, ps) => a + ps.preferenceScore, 0)
+          expect(stats.satisfactionScore).toBe(sum)
+        }
+      },
+      {
+        name: 'Empty schedule returns zero totals without crashing',
+        fn() {
+          const participants = [makeParticipant('p1','Alice')]
+          const stats = scheduleStats([], participants, {})
+          expect(stats.totalGames).toBe(0)
+          expect(stats.uniqueGames).toBe(0)
+          expect(stats.satisfactionScore).toBe(0)
+        }
+      },
+      {
+        name: 'playerStats has an entry for every participant',
+        fn() {
+          const participants = [1,2,3].map(i => makeParticipant(`p${i}`, `P${i}`))
+          const stats = scheduleStats([], participants, {})
+          for (const p of participants)
+            expect(stats.playerStats).toHaveProperty(p.id, `Missing playerStats entry for ${p.id}`)
+        }
+      },
+    ]
+  },
+]
+
+// ─── Runner ───────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+function renderSuites(results) {
+  return results.map(suite => {
+    const tests = suite.tests.map(t => {
+      const icon  = t.status === 'pass' ? '✓' : t.status === 'fail' ? '✗' : '·'
+      const badge = t.status === 'pass' ? 'badge-pass' : t.status === 'fail' ? 'badge-fail' : t.status === 'running' ? 'badge-running' : 'badge-idle'
+      const label = t.status === 'pass' ? 'passed' : t.status === 'fail' ? 'failed' : t.status === 'running' ? 'running…' : 'idle'
+      const iconColor = t.status === 'pass' ? 'color:var(--green)' : t.status === 'fail' ? 'color:var(--red)' : 'color:var(--text3)'
+      let detail = ''
+      if (t.status === 'fail' && t.error) {
+        const err = t.error
+        detail = `
+          <div class="test-detail open">
+            <div class="detail-label">Error</div>
+            <pre>${esc(err.message || String(err))}${
+              err.expected !== undefined ? `\n\n<span class="err-expected">Expected: ${esc(JSON.stringify(err.expected, null, 2))}</span>` : ''
+            }${
+              err.received !== undefined ? `\n<span class="err-received">Received: ${esc(JSON.stringify(err.received, null, 2))}</span>` : ''
+            }</pre>
+          </div>`
+      }
+      return `
+        <div class="test-row">
+          <div class="test-row-head" onclick="this.nextElementSibling && this.nextElementSibling.classList.toggle('open')">
+            <span class="test-icon" style="${iconColor}">${icon}</span>
+            <span class="test-name">${esc(t.name)}</span>
+            <span class="test-badge ${badge}">${label}</span>
+          </div>
+          ${detail}
+        </div>`
+    }).join('')
+
+    const passed = suite.tests.filter(t => t.status === 'pass').length
+    const total  = suite.tests.length
+    return `
+      <div class="suite">
+        <div class="suite-header">
+          <span class="suite-name">${esc(suite.name)}</span>
+          <span class="suite-count">${passed}/${total}</span>
+          <div class="suite-line"></div>
+        </div>
+        ${tests}
+      </div>`
+  }).join('')
+}
+
+function updateSummary(results, running) {
+  const allTests = results.flatMap(s => s.tests)
+  const passed = allTests.filter(t => t.status === 'pass').length
+  const failed = allTests.filter(t => t.status === 'fail').length
+  const total  = allTests.length
+
+  document.getElementById('count-pass').textContent  = passed
+  document.getElementById('count-fail').textContent  = failed
+  document.getElementById('count-total').textContent = total
+
+  const statusEl = document.getElementById('summary-status')
+  if (running) {
+    statusEl.textContent = 'Running…'
+    statusEl.style.color = 'var(--accent)'
+  } else if (failed === 0 && total > 0) {
+    statusEl.textContent = 'All tests passed ✓'
+    statusEl.style.color = 'var(--green)'
+  } else if (failed > 0) {
+    statusEl.textContent = `${failed} test${failed > 1 ? 's' : ''} failed`
+    statusEl.style.color = 'var(--red)'
+  } else {
+    statusEl.textContent = 'Click Run to start'
+    statusEl.style.color = 'var(--text3)'
+  }
+}
+
+async function runAll() {
+  const btn = document.getElementById('run-btn')
+  btn.disabled = true
+
+  // Clone suite structure with idle status
+  const state = SUITES.map(suite => ({
+    ...suite,
+    tests: suite.tests.map(t => ({ ...t, status: 'idle', error: null }))
+  }))
+
+  document.getElementById('suites').innerHTML = renderSuites(state)
+  updateSummary(state, false)
+
+  // Run suite by suite, test by test, re-rendering after each
+  for (let si = 0; si < state.length; si++) {
+    for (let ti = 0; ti < state[si].tests.length; ti++) {
+      state[si].tests[ti].status = 'running'
+      document.getElementById('suites').innerHTML = renderSuites(state)
+      updateSummary(state, true)
+
+      // Yield to browser between tests so UI stays responsive
+      await new Promise(r => setTimeout(r, 0))
+
+      try {
+        await state[si].tests[ti].fn()
+        state[si].tests[ti].status = 'pass'
+      } catch (err) {
+        state[si].tests[ti].status = 'fail'
+        state[si].tests[ti].error = err
+      }
+    }
+  }
+
+  document.getElementById('suites').innerHTML = renderSuites(state)
+  updateSummary(state, false)
+  btn.disabled = false
+}
+
+// Auto-run on load and expose for button click
+window.runAll = runAll
+document.getElementById('run-btn').addEventListener('click', runAll)
+
+// Kick off automatically
+runAll()
+</script>
+</body>
+</html>
