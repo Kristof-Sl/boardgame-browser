@@ -287,7 +287,6 @@ export function generateSchedule(event, participants, games, preferences, params
       const remainingGroups = maxParallelGames - slotGames.length
       if (!canCoverWithGroups(unassigned.length, remainingGroups, minPlayersPerGame, maxGamePlayers)) break
 
-      // Generate all feasible partitions of unassigned players using up to the remaining group slots
       const feasibleGroupCounts = []
       for (let groups = 1; groups <= remainingGroups; groups++) {
         if (canCoverWithGroups(unassigned.length, groups, minPlayersPerGame, maxGamePlayers)) {
@@ -310,30 +309,31 @@ export function generateSchedule(event, participants, games, preferences, params
           let partitionValid = true
           const usedInPartition = new Set(usedGameIds)  // Track games used in this partition
 
-        for (let i = 0; i < partition.length; i++) {
-          const groupSize = partition[i]
-          const groupStart = partition.slice(0, i).reduce((a, b) => a + b, 0)
-          const unassignedSubset = unassigned.slice(groupStart, groupStart + groupSize)
+          for (let i = 0; i < partition.length; i++) {
+            const groupSize = partition[i]
+            const groupStart = partition.slice(0, i).reduce((a, b) => a + b, 0)
+            const unassignedSubset = unassigned.slice(groupStart, groupStart + groupSize)
 
-          const assignment = findBestGameForGroup(groupSize, unassignedSubset, games, usedInPartition, prefMap, playedGames, durationMultiplier, remainingMinutes, prioritizePreferences)
-          if (!assignment.game) {
-            partitionValid = false
-            break
+            const assignment = findBestGameForGroup(groupSize, unassignedSubset, games, usedInPartition, prefMap, playedGames, durationMultiplier, remainingMinutes, prioritizePreferences)
+            if (!assignment.game) {
+              partitionValid = false
+              break
+            }
+            assignments.push(assignment)
+            usedInPartition.add(assignment.game.game_id)  // Mark this game as used in partition
           }
-          assignments.push(assignment)
-          usedInPartition.add(assignment.game.game_id)  // Mark this game as used in partition
-        }
 
-        if (!partitionValid) continue
+          if (!partitionValid) continue
 
-        const existingSlotSizes = slotGames.map(s => s.players.length)
-        const partitionScore = scorePartitionAssignment(partition, assignments, existingSlotSizes, balanceGroupWeight)
+          const existingSlotSizes = slotGames.map(s => s.players.length)
+          const partitionScore = scorePartitionAssignment(partition, assignments, existingSlotSizes, balanceGroupWeight)
 
-        if (partitionScore > bestPartitionScore) {
-          bestPartitionScore = partitionScore
-          bestPartitionAssignments = assignments
-          bestPartitionGroupSizes = partition
-          logger.log(`Partition [${partition.join('+')}] scores ${partitionScore}`)
+          if (partitionScore > bestPartitionScore) {
+            bestPartitionScore = partitionScore
+            bestPartitionAssignments = assignments
+            bestPartitionGroupSizes = partition
+            logger.log(`Partition [${partition.join('+')}] scores ${partitionScore}`)
+          }
         }
       }
 
