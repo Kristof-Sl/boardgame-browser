@@ -236,7 +236,7 @@ export default function App() {
           })
         } else {
           // Upsert
-          await db.upsert('game_files', { game_id: gameId, files, updated_at: new Date().toISOString() })
+          await db.upsert('game_files', { game_id: gameId, files, updated_at: new Date().toISOString() }, 'game_id')
           setGameFiles(prev => ({ ...prev, [gameId]: files }))
         }
       } catch (err) {

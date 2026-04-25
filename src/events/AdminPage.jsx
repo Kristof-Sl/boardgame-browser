@@ -862,7 +862,7 @@ function AdminGameFiles({ localCollection, onBack }) {
           game_id: editing.game_id,
           files: editing.files,
           updated_at: new Date().toISOString(),
-        })
+        }, 'game_id')
       }
       setEditing(null)
       await reload()
