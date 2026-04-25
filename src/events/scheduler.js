@@ -113,18 +113,27 @@ function canCoverWithGroups(totalPlayers, groups, minPlayers, maxPlayers) {
 function sizeBalanceScore(groupSize, unassignedCount, remainingGroups, existingSizes, weight) {
   if (!weight) return 0
 
-  // Calculate variance of group sizes if we add this group
-  const allSizes = [...existingSizes, groupSize]
-  const totalPlayers = allSizes.reduce((sum, size) => sum + size, 0) + unassignedCount - groupSize
+  const totalPlayers = existingSizes.reduce((sum, size) => sum + size, 0) + unassignedCount
   const totalGroups = existingSizes.length + remainingGroups
   const idealSize = totalGroups > 0 ? totalPlayers / totalGroups : groupSize
 
-  // Calculate variance of current groups
-  const mean = allSizes.reduce((sum, size) => sum + size, 0) / allSizes.length
-  const variance = allSizes.reduce((sum, size) => sum + Math.pow(size - mean, 2), 0) / allSizes.length
+  // Project group sizes: existing + this group + remaining groups at ideal size
+  const projectedSizes = [...existingSizes, groupSize]
+  const remainingPlayers = unassignedCount - groupSize
+  const remainingIdealGroups = remainingGroups - 1
+  if (remainingIdealGroups > 0) {
+    const remainingIdealSize = remainingPlayers / remainingIdealGroups
+    for (let i = 0; i < remainingIdealGroups; i++) {
+      projectedSizes.push(remainingIdealSize)
+    }
+  }
+
+  // Calculate variance of projected sizes
+  const mean = projectedSizes.reduce((sum, size) => sum + size, 0) / projectedSizes.length
+  const variance = projectedSizes.reduce((sum, size) => sum + Math.pow(size - mean, 2), 0) / projectedSizes.length
 
   // Penalize variance heavily to prefer even splits
-  let score = -variance * 10
+  let score = -variance * 20
 
   // Also penalize deviation from ideal size
   score -= Math.abs(groupSize - idealSize) * 2
