@@ -112,12 +112,23 @@ function canCoverWithGroups(totalPlayers, groups, minPlayers, maxPlayers) {
 
 function sizeBalanceScore(groupSize, unassignedCount, remainingGroups, existingSizes, weight) {
   if (!weight) return 0
-  const idealSize = remainingGroups > 0 ? Math.max(1, Math.round(unassignedCount / remainingGroups)) : groupSize
-  let score = -Math.abs(groupSize - idealSize) * 2
-  if (existingSizes.length > 0) {
-    const avgExisting = Math.round(existingSizes.reduce((sum, size) => sum + size, 0) / existingSizes.length)
-    score -= Math.abs(groupSize - avgExisting)
-  }
+
+  // Calculate variance of group sizes if we add this group
+  const allSizes = [...existingSizes, groupSize]
+  const totalPlayers = allSizes.reduce((sum, size) => sum + size, 0) + unassignedCount - groupSize
+  const totalGroups = existingSizes.length + remainingGroups
+  const idealSize = totalGroups > 0 ? totalPlayers / totalGroups : groupSize
+
+  // Calculate variance of current groups
+  const mean = allSizes.reduce((sum, size) => sum + size, 0) / allSizes.length
+  const variance = allSizes.reduce((sum, size) => sum + Math.pow(size - mean, 2), 0) / allSizes.length
+
+  // Penalize variance heavily to prefer even splits
+  let score = -variance * 10
+
+  // Also penalize deviation from ideal size
+  score -= Math.abs(groupSize - idealSize) * 2
+
   return score * weight
 }
 
