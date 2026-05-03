@@ -1,11 +1,16 @@
 import React from 'react'
 
-export default function FilterBar({ filters, onChange, games }) {
+export default function FilterBar({ filters, onChange, games, availableAccounts }) {
   // Derive max players from data
   const maxPossiblePlayers = Math.min(
     Math.max(...games.map(g => g.maxPlayers).filter(Boolean), 10),
     20
   )
+
+  // Get all unique accounts from games if not provided
+  const allAccounts = availableAccounts || Array.from(
+    new Set(games.flatMap(g => g.owners || []))
+  ).sort()
 
   const pill = (label, active, onClick) => (
     <button
@@ -69,7 +74,57 @@ export default function FilterBar({ filters, onChange, games }) {
         </div>
       </Section>
 
-      {/* Player count */}
+      {/* BGG Account */}
+      {allAccounts.length > 0 && (
+        <Section label="BGG Account">
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {(() => {
+              const selected = filters.accounts || []
+              const toggle = (account) => {
+                const next = selected.includes(account)
+                  ? selected.filter(a => a !== account)
+                  : [...selected, account]
+                onChange('accounts', next)
+              }
+              const selectAll = () => onChange('accounts', allAccounts)
+              const isAllSelected = selected.length === allAccounts.length
+              
+              return [
+                <button
+                  key="all"
+                  onClick={selectAll}
+                  style={{
+                    padding: '5px 12px', borderRadius: 20, fontSize: 13,
+                    border: `1px solid ${isAllSelected ? 'var(--accent)' : 'var(--border)'}`,
+                    background: isAllSelected ? 'var(--accent-bg)' : 'transparent',
+                    color: isAllSelected ? 'var(--accent)' : 'var(--text2)',
+                    fontWeight: isAllSelected ? 500 : 400,
+                    cursor: 'pointer', transition: 'all 140ms ease', whiteSpace: 'nowrap',
+                  }}
+                >All</button>,
+                ...allAccounts.map(account => {
+                  const active = selected.includes(account)
+                  return (
+                    <button
+                      key={account}
+                      onClick={() => toggle(account)}
+                      style={{
+                        padding: '5px 12px', borderRadius: 20, fontSize: 13,
+                        border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                        background: active ? 'var(--accent-bg)' : 'transparent',
+                        color: active ? 'var(--accent)' : 'var(--text2)',
+                        fontWeight: active ? 500 : 400,
+                        cursor: 'pointer', transition: 'all 140ms ease', whiteSpace: 'nowrap',
+                      }}
+                    >{account}</button>
+                  )
+                })
+              ]
+            })()}
+          </div>
+        </Section>
+      )}
+
       <Section label="Player count">
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {pill('Any', !filters.players, () => onChange('players', null))}
