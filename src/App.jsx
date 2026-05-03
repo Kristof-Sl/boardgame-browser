@@ -6,6 +6,7 @@ import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
 import EventPlanner from './events/EventPlanner'
 import AdminPage from './events/AdminPage'
+import MobileLayout from './components/MobileLayout'
 import { db, isConfigured } from './events/supabase'
 
 const DEFAULT_FILTERS = {
@@ -51,6 +52,7 @@ export default function App() {
   const [defaultLoaded, setDefaultLoaded] = useState(false)
   const [toast, setToast] = useState(null)
   const [isAdmin, setIsAdmin] = useState(sessionStorage.getItem('admin_auth') === '1')
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const importRef = useRef()
 
   // On mount: if nothing in localStorage, try default-collection.json
@@ -68,6 +70,15 @@ export default function App() {
         setDefaultLoaded(true)
       })
     }
+  }, [])
+
+  // Handle window resize for mobile/desktop detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   // Load game files from Supabase
@@ -309,6 +320,36 @@ export default function App() {
 
   const anyLoading = accounts.some(a => a.loading)
 
+  // Mobile layout
+  if (isMobile) {
+    return (
+      <MobileLayout
+        accounts={accounts}
+        collections={collections}
+        allGames={allGames}
+        filteredGames={filteredGames}
+        filters={filters}
+        handleFilterChange={handleFilterChange}
+        handleAddAccount={handleAddAccount}
+        handleRemoveAccount={handleRemoveAccount}
+        handleUploadXml={handleUploadXml}
+        handleUploadCombinedXml={handleUploadCombinedXml}
+        handleExport={handleExport}
+        handleExportDefault={handleExportDefault}
+        handleImportFile={handleImportFile}
+        anyLoading={anyLoading}
+        tab={tab}
+        setTab={setTab}
+        importRef={importRef}
+        DEFAULT_FILTERS={DEFAULT_FILTERS}
+        EventPlanner={EventPlanner}
+        AdminPage={AdminPage}
+        handleAuthChange={setIsAdmin}
+      />
+    )
+  }
+
+  // Desktop layout
   return (
     <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
       {/* Header */}

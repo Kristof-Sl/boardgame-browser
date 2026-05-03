@@ -7,7 +7,7 @@ const STATUS_INFO = {
   prevOwned:  { label: 'Previously owned',  color: 'var(--text3)',  bg: 'rgba(255,255,255,0.06)' },
 }
 
-export default function GameCard({ game }) {
+export default function GameCard({ game, isMobile }) {
   const [imgErr, setImgErr] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
