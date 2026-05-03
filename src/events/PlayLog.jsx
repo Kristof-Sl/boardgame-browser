@@ -283,14 +283,32 @@ export default function PlayLog({ allGames, showToast }) {
 
                 <div style={{ display: 'grid', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
                   <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr', alignItems: 'end' }}>
-                    <Input label="Player name" value={playerName} onChange={setPlayerName} placeholder="Type or choose name" />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      <label style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Player name</label>
+                      <input
+                        list="player-name-options"
+                        value={playerName}
+                        onChange={e => setPlayerName(e.target.value)}
+                        placeholder="Type or choose name"
+                        style={{
+                          width: '100%', borderRadius: 10, padding: '10px 12px',
+                          border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)',
+                          fontSize: 14, outline: 'none', minWidth: 0,
+                        }}
+                      />
+                      <datalist id="player-name-options">
+                        {DEFAULT_PLAYER_NAMES.map(name => (
+                          <option key={name} value={name} />
+                        ))}
+                      </datalist>
+                    </div>
                     <Input label="Score" type="number" value={playerScore} onChange={setPlayerScore} placeholder="0" />
                   </div>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <button onClick={addPlayer} style={{ flex: '1 1 auto', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--accent)', background: 'var(--accent-bg)', color: 'var(--accent)', cursor: 'pointer' }}>Add player</button>
                     <button onClick={() => setPlayerName('')} style={{ flex: '1 1 auto', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', cursor: 'pointer' }}>Clear</button>
                   </div>
-                  <p style={{ margin: 0, fontSize: 11, color: 'var(--text3)' }}>Type a name or use the default list: {DEFAULT_PLAYER_NAMES.join(', ')}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--text3)' }}>Choose a default name or type a custom one.</p>
                 </div>
 
                 {draft.players.length > 0 && (
