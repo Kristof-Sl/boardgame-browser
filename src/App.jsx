@@ -5,6 +5,7 @@ import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
 import EventPlanner from './events/EventPlanner'
+import PlayLog from './events/PlayLog'
 import AdminPage from './events/AdminPage'
 import MobileLayout from './components/MobileLayout'
 import { db, isConfigured } from './events/supabase'
@@ -344,6 +345,8 @@ export default function App() {
         DEFAULT_FILTERS={DEFAULT_FILTERS}
         EventPlanner={EventPlanner}
         AdminPage={AdminPage}
+        PlayLog={PlayLog}
+        showToast={showToast}
         handleAuthChange={setIsAdmin}
       />
     )
@@ -376,8 +379,8 @@ export default function App() {
 		<span style={{ color: 'var(--text)' }}>Meeple</span><span style={{ color: 'var(--accent)' }}>Sync</span>
 	</h1>
           {/* Tab switcher */}
-          <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
-            {[['collection', 'Collection'], ['events', '🗓️ Events'], ['admin', '🔧 Admin']].map(([t, label]) => (
+          <div style={{ display: 'flex', gap: 4, marginLeft: 12, flexWrap: 'wrap' }}>
+            {[['collection', 'Collection'], ['events', '🗓️ Events'], ['playlog', '📝 PlayLog'], ['admin', '🔧 Admin']].map(([t, label]) => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '4px 12px', borderRadius: 6, fontSize: 13,
                 border: `1px solid ${tab === t ? 'var(--accent)' : 'var(--border)'}`,
@@ -446,6 +449,13 @@ export default function App() {
         {tab === 'events' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
             <EventPlanner collection={allGames} />
+          </div>
+        )}
+
+        {/* PlayLog tab */}
+        {tab === 'playlog' && (
+          <div style={{ flex: 1, overflowX: 'hidden' }}>
+            <PlayLog allGames={allGames} showToast={showToast} />
           </div>
         )}
 

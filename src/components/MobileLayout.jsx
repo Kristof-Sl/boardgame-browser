@@ -8,7 +8,7 @@ export default function MobileLayout({
   handleFilterChange, handleAddAccount, handleRemoveAccount, 
   handleUploadXml, handleUploadCombinedXml, handleExport, 
   handleExportDefault, handleImportFile, anyLoading, tab, setTab,
-  importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, handleAuthChange
+  importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, showToast, handleAuthChange
 }) {
   const [showFilters, setShowFilters] = useState(false)
   const [showAccounts, setShowAccounts] = useState(false)
@@ -270,6 +270,12 @@ export default function MobileLayout({
           </div>
         )}
 
+        {tab === 'playlog' && (
+          <div style={{ padding: '16px' }}>
+            <PlayLog allGames={allGames} showToast={showToast} />
+          </div>
+        )}
+
         {tab === 'admin' && (
           <div style={{ padding: '16px' }}>
             <AdminPage localCollection={allGames} onAuthChange={handleAuthChange} />
@@ -290,6 +296,7 @@ export default function MobileLayout({
         {[
           ['collection', '📚 Collection'],
           ['events', '🗓️ Events'],
+          ['playlog', '📝 PlayLog'],
           ['admin', '⚙️ Admin'],
         ].map(([t, label]) => (
           <button
