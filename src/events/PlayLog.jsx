@@ -283,24 +283,27 @@ export default function PlayLog({ allGames, showToast }) {
 
                 <div style={{ display: 'grid', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
                   <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr', alignItems: 'end' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    <div style={{ display: 'grid', gap: 5 }}>
                       <label style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Player name</label>
-                      <input
-                        list="player-name-options"
-                        value={playerName}
-                        onChange={e => setPlayerName(e.target.value)}
-                        placeholder="Type or choose name"
-                        style={{
-                          width: '100%', borderRadius: 10, padding: '10px 12px',
-                          border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)',
-                          fontSize: 14, outline: 'none', minWidth: 0,
-                        }}
-                      />
-                      <datalist id="player-name-options">
-                        {DEFAULT_PLAYER_NAMES.map(name => (
-                          <option key={name} value={name} />
-                        ))}
-                      </datalist>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto' }}>
+                        <select value={playerName} onChange={e => setPlayerName(e.target.value)} style={{ borderRadius: '10px 0 0 10px', padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)', fontSize: 14 }}>
+                          <option value="">— Choose a player —</option>
+                          {DEFAULT_PLAYER_NAMES.map(name => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          value={playerName}
+                          onChange={e => setPlayerName(e.target.value)}
+                          placeholder="or type"
+                          style={{
+                            borderRadius: '0 10px 10px 0', padding: '10px 12px', marginLeft: -1,
+                            border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)',
+                            fontSize: 14, outline: 'none', minWidth: 0, flex: 0.6,
+                          }}
+                        />
+                      </div>
                     </div>
                     <Input label="Score" type="number" value={playerScore} onChange={setPlayerScore} placeholder="0" />
                   </div>
