@@ -89,37 +89,39 @@ export default function FilterBar({ filters, onChange, games, availableAccounts 
               const selectAll = () => onChange('accounts', allAccounts)
               const isAllSelected = selected.length === allAccounts.length
               
-              return [
-                <button
-                  key="all"
-                  onClick={selectAll}
-                  style={{
-                    padding: '5px 12px', borderRadius: 20, fontSize: 13,
-                    border: `1px solid ${isAllSelected ? 'var(--accent)' : 'var(--border)'}`,
-                    background: isAllSelected ? 'var(--accent-bg)' : 'transparent',
-                    color: isAllSelected ? 'var(--accent)' : 'var(--text2)',
-                    fontWeight: isAllSelected ? 500 : 400,
-                    cursor: 'pointer', transition: 'all 140ms ease', whiteSpace: 'nowrap',
-                  }}
-                >All</button>,
-                ...allAccounts.map(account => {
-                  const active = selected.includes(account)
-                  return (
-                    <button
-                      key={account}
-                      onClick={() => toggle(account)}
-                      style={{
-                        padding: '5px 12px', borderRadius: 20, fontSize: 13,
-                        border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-                        background: active ? 'var(--accent-bg)' : 'transparent',
-                        color: active ? 'var(--accent)' : 'var(--text2)',
-                        fontWeight: active ? 500 : 400,
-                        cursor: 'pointer', transition: 'all 140ms ease', whiteSpace: 'nowrap',
-                      }}
-                    >{account}</button>
-                  )
-                })
-              ]
+              return (
+                <>
+                  <button
+                    key="all"
+                    onClick={selectAll}
+                    style={{
+                      padding: '5px 12px', borderRadius: 20, fontSize: 13,
+                      border: `1px solid ${isAllSelected ? 'var(--accent)' : 'var(--border)'}`,
+                      background: isAllSelected ? 'var(--accent-bg)' : 'transparent',
+                      color: isAllSelected ? 'var(--accent)' : 'var(--text2)',
+                      fontWeight: isAllSelected ? 500 : 400,
+                      cursor: 'pointer', transition: 'all 140ms ease', whiteSpace: 'nowrap',
+                    }}
+                  >All</button>
+                  {allAccounts.map(account => {
+                    const active = selected.includes(account)
+                    return (
+                      <button
+                        key={account}
+                        onClick={() => toggle(account)}
+                        style={{
+                          padding: '5px 12px', borderRadius: 20, fontSize: 13,
+                          border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                          background: active ? 'var(--accent-bg)' : 'transparent',
+                          color: active ? 'var(--accent)' : 'var(--text2)',
+                          fontWeight: active ? 500 : 400,
+                          cursor: 'pointer', transition: 'all 140ms ease', whiteSpace: 'nowrap',
+                        }}
+                      >{account}</button>
+                    )
+                  })}
+                </>
+              )
             })()}
           </div>
         </Section>

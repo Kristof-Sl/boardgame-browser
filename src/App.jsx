@@ -85,15 +85,25 @@ export default function App() {
     if (defaultLoaded) saveToStorage(accounts, collections)
   }, [accounts, collections, defaultLoaded])
 
-  // Initialize accounts filter with all available accounts when games load
+  // Initialize accounts filter with all available accounts when accounts are added
+  // Only set on initial load (when no accounts are selected yet)
+  const prevAccountsRef = useRef(null)
   useEffect(() => {
-    if (allGames.length > 0 && filters.accounts.length === 0) {
-      const allAccounts = Array.from(new Set(allGames.flatMap(g => g.owners || []))).sort()
-      if (allAccounts.length > 0) {
-        setFilters(prev => ({ ...prev, accounts: allAccounts }))
-      }
+    const activeAccounts = accounts.filter(a => !a.loading && !a.error)
+    const accountNames = activeAccounts.map(a => a.username).sort()
+    
+    // Track if we've initialized already
+    if (accountNames.length > 0 && prevAccountsRef.current === null) {
+      prevAccountsRef.current = accountNames
+      setFilters(prev => {
+        // Only initialize if filter is still empty
+        if (!prev.accounts || prev.accounts.length === 0) {
+          return { ...prev, accounts: accountNames }
+        }
+        return prev
+      })
     }
-  }, [allGames.length])
+  }, [accounts])
 
   const showToast = (message, type = 'ok') => {
     setToast({ message, type })
