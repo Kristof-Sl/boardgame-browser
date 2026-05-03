@@ -15,6 +15,7 @@ const DEFAULT_FILTERS = {
   minRating: null,
   maxTime: null,
   decades: [],
+  accounts: [],
   sort: 'rating',
 }
 
@@ -84,6 +85,16 @@ export default function App() {
     if (defaultLoaded) saveToStorage(accounts, collections)
   }, [accounts, collections, defaultLoaded])
 
+  // Initialize accounts filter with all available accounts when games load
+  useEffect(() => {
+    if (allGames.length > 0 && filters.accounts.length === 0) {
+      const allAccounts = Array.from(new Set(allGames.flatMap(g => g.owners || []))).sort()
+      if (allAccounts.length > 0) {
+        setFilters(prev => ({ ...prev, accounts: allAccounts }))
+      }
+    }
+  }, [allGames.length])
+
   const showToast = (message, type = 'ok') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
@@ -129,6 +140,10 @@ export default function App() {
 
     if (filters.decades && filters.decades.length > 0) {
       games = games.filter(g => g.yearPublished && filters.decades.some(d => g.yearPublished >= d && g.yearPublished < d + 10))
+    }
+
+    if (filters.accounts && filters.accounts.length > 0) {
+      games = games.filter(g => g.owners && g.owners.some(owner => filters.accounts.includes(owner)))
     }
 
     games.sort((a, b) => {
