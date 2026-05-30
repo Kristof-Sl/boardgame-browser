@@ -4,23 +4,6 @@ import { db, isConfigured } from './supabase'
 const DEFAULT_PLAYER_NAMES = [
   'Fre', 'Geert', 'Jan', 'Jelle', 'Kristof', 'Mark', 'Tom', 'Robby'
 ]
-const STORAGE_KEY = 'bgg-browser-playlogs'
-
-function loadPlayLogs() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    return JSON.parse(raw)
-  } catch {
-    return []
-  }
-}
-
-function savePlayLogs(logs) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs))
-  } catch {}
-}
 
 function createId() {
   return 'log_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
@@ -48,19 +31,21 @@ export default function PlayLog({ allGames, showToast }) {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    setPlayLogs(loadPlayLogs())
-  }, [])
+    if (!isConfigured()) {
+      setPlayLogs([])
+      return
+    }
 
-  useEffect(() => {
-    savePlayLogs(playLogs)
-  }, [playLogs])
-
-  useEffect(() => {
-    if (!isConfigured()) return
     setLoadingEvents(true)
-    db.select('events', { order: 'start_date.desc' })
-      .then(setEvents)
-      .catch(err => console.warn('Failed to load events:', err))
+    Promise.all([
+      db.select('play_logs', { order: 'played_at.desc' }),
+      db.select('events', { order: 'start_date.desc' }),
+    ])
+      .then(([logs, evs]) => {
+        setPlayLogs(logs)
+        setEvents(evs)
+      })
+      .catch(err => console.warn('Failed to load play logs or events:', err))
       .finally(() => setLoadingEvents(false))
   }, [])
 
@@ -185,12 +170,10 @@ export default function PlayLog({ allGames, showToast }) {
     setView('logs')
     showToast(editing ? 'Play log updated' : 'Play logged', 'ok')
 
-    if (isConfigured()) {
-      try {
-        await db.upsert('play_logs', savedLog, 'id')
-      } catch (err) {
-        console.warn('Failed to save play log to Supabase:', err)
-      }
+    try {
+      await db.upsert('play_logs', savedLog, 'id')
+    } catch (err) {
+      console.warn('Failed to save play log to Supabase:', err)
     }
     setSaving(false)
   }
