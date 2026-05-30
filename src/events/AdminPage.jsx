@@ -1048,6 +1048,8 @@ export default function AdminPage({ localCollection, onAuthChange }) {
   const [authed, setAuthed] = useState(sessionStorage.getItem('admin_auth') === '1')
   const [view, setView] = useState('events')  // events | files
   const [currentEvent, setCurrentEvent] = useState(null)
+  const [keepAliveStatus, setKeepAliveStatus] = useState('')
+  const [keepAliveBusy, setKeepAliveBusy] = useState(false)
 
   const handleLogin = () => {
     setAuthed(true)
@@ -1058,6 +1060,53 @@ export default function AdminPage({ localCollection, onAuthChange }) {
     sessionStorage.removeItem('admin_auth')
     setAuthed(false)
     onAuthChange?.(false)
+  }
+
+  const handleKeepAlive = async () => {
+    setKeepAliveBusy(true)
+    setKeepAliveStatus('Sending keep-alive activity...')
+
+    const timestamp = new Date().toISOString()
+    const shortId = Math.random().toString(36).slice(2, 10)
+    const eventId = `keepalive${shortId}`
+    const logId = `keeplog${shortId}`
+    const today = timestamp.slice(0, 10)
+
+    try {
+      const [event] = await db.insert('events', {
+        id: eventId,
+        name: `Keepalive activity ${today}`,
+        start_date: today,
+        end_date: today,
+      })
+
+      await db.insert('play_logs', {
+        id: logId,
+        game_id: 'keepalive',
+        game_name: 'Keepalive activity',
+        game_data: {},
+        played_at: today,
+        duration_minutes: 1,
+        event_id: event.id,
+        players: [],
+      })
+
+      await db.delete('play_logs', `id=eq.${logId}`)
+      await db.delete('events', `id=eq.${eventId}`)
+
+      setKeepAliveStatus(`Keep-alive completed at ${new Date().toLocaleTimeString()}`)
+    } catch (err) {
+      console.error(err)
+      setKeepAliveStatus(`Keep-alive failed: ${err.message || err}`)
+      try {
+        await db.delete('play_logs', `id=eq.${logId}`)
+      } catch (_e) {}
+      try {
+        await db.delete('events', `id=eq.${eventId}`)
+      } catch (_e) {}
+    } finally {
+      setKeepAliveBusy(false)
+    }
   }
 
   if (!authed) return <AdminLogin onLogin={handleLogin} />
@@ -1084,7 +1133,7 @@ export default function AdminPage({ localCollection, onAuthChange }) {
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>
             Admin Panel
           </h2>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <button
               onClick={() => setView('events')}
               style={{
@@ -1109,9 +1158,27 @@ export default function AdminPage({ localCollection, onAuthChange }) {
             >
               Game Files
             </button>
+            <button
+              onClick={handleKeepAlive}
+              disabled={keepAliveBusy}
+              style={{
+                padding: '6px 12px', borderRadius: 6, fontSize: 13,
+                border: `1px solid var(--accent)`,
+                background: keepAliveBusy ? 'var(--border)' : 'var(--accent-bg)',
+                color: keepAliveBusy ? 'var(--text3)' : 'var(--accent)',
+                cursor: keepAliveBusy ? 'default' : 'pointer',
+              }}
+            >
+              {keepAliveBusy ? 'Keeping alive…' : 'Keep Supabase active'}
+            </button>
           </div>
         </div>
       </div>
+      {keepAliveStatus && (
+        <div style={{ maxWidth: 800, margin: '0 auto 16px', padding: '0 16px', color: keepAliveStatus.startsWith('Keep-alive failed') ? 'var(--red)' : 'var(--text3)' }}>
+          {keepAliveStatus}
+        </div>
+      )}
       {view === 'events' && (
         <AdminEventList onOpen={ev => { setCurrentEvent(ev); setView('event') }} />
       )}
