@@ -147,7 +147,7 @@ function parsePlayerCountPollsFromDoc(doc) {
   return map
 }
 
-async function enrichGamesWithPlayerCountPolls(games) {
+export async function enrichGamesWithPlayerCountPolls(games) {
   if (!games.length) return games
 
   const ids = Array.from(new Set(games.map(game => String(game.id))))

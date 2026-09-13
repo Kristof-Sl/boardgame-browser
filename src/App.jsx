@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
-import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml } from './bggApi'
+import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml, enrichGamesWithPlayerCountPolls } from './bggApi'
 import { exportState, parseStateFile, loadDefaultCollection } from './stateManager'
 import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
@@ -56,22 +56,34 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const importRef = useRef()
 
+  const hydrateCollections = useCallback(async (collectionMap) => {
+    const next = {}
+    for (const owner of Object.keys(collectionMap || {})) {
+      next[owner] = await enrichGamesWithPlayerCountPolls(collectionMap[owner] || [])
+    }
+    return next
+  }, [])
+
   // On mount: if nothing in localStorage, try default-collection.json
   useEffect(() => {
     const stored = loadFromStorage()
     if (stored?.accounts?.length > 0) {
-      setDefaultLoaded(true)
+      hydrateCollections(stored.collections).then(hydrated => {
+        setCollections(hydrated)
+        setDefaultLoaded(true)
+      }).catch(() => setDefaultLoaded(true))
     } else {
-      loadDefaultCollection().then(state => {
+      loadDefaultCollection().then(async state => {
         if (state) {
+          const hydratedCollections = await hydrateCollections(state.collections)
           setAccounts(state.accounts)
-          setCollections(state.collections)
+          setCollections(hydratedCollections)
           showToast('Default collection loaded', 'ok')
         }
         setDefaultLoaded(true)
       })
     }
-  }, [])
+  }, [hydrateCollections])
 
   // Handle window resize for mobile/desktop detection
   useEffect(() => {
@@ -219,6 +231,7 @@ export default function App() {
   const handleUploadXml = useCallback(async (username, xmlText) => {
     try {
       const games = parseCollectionXml(xmlText, username)
+      await enrichGamesWithPlayerCountPolls(games)
       setCollections(prev => ({ ...prev, [username]: games }))
       setAccounts(prev => [...prev, { username, loading: false, error: null, count: games.length, fromFile: true }])
       return null
@@ -230,6 +243,9 @@ export default function App() {
   const handleUploadCombinedXml = useCallback(async (xmlText) => {
     try {
       const gamesByOwner = parseCombinedXml(xmlText)
+      for (const owner of Object.keys(gamesByOwner)) {
+        await enrichGamesWithPlayerCountPolls(gamesByOwner[owner])
+      }
       const newOwners = Object.keys(gamesByOwner)
       setCollections(prev => ({ ...prev, ...gamesByOwner }))
       setAccounts(prev => {
