@@ -42,6 +42,62 @@ function wait(ms) {
   return new Promise(function(r) { setTimeout(r, ms) })
 }
 
+export async function fetchGameDetailsForIds(ids) {
+  const uniqueIds = Array.from(new Set((ids || []).map(String).filter(Boolean)))
+  if (!uniqueIds.length) return {}
+
+  const map = {}
+  const chunks = []
+  for (let i = 0; i < uniqueIds.length; i += 50) {
+    chunks.push(uniqueIds.slice(i, i + 50))
+  }
+
+  for (const chunk of chunks) {
+    try {
+      const doc = await fetchXML('thing', { id: chunk.join(','), stats: '1', type: 'boardgame' })
+      const pollMap = parsePlayerCountPollsFromDoc(doc)
+      Object.entries(pollMap).forEach(([id, polls]) => {
+        map[id] = { playerCountPolls: polls }
+      })
+    } catch (err) {
+      console.warn('Failed to fetch game details batch:', err)
+    }
+  }
+
+  return map
+}
+
+export async function loadGameDetailsFromStaticFile() {
+  try {
+    const res = await fetch('/default-game-details.json')
+    if (!res.ok) return {}
+    const json = await res.json()
+    return json.games || {}
+  } catch {
+    return {}
+  }
+}
+
+export async function saveGameDetailsToStaticFile(detailsMap, filename = 'default-game-details.json') {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    games: detailsMap,
+  }
+
+  try {
+    const res = await fetch(filename, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload, null, 2),
+    })
+    if (!res.ok) throw new Error('Failed to write game details JSON')
+    return true
+  } catch {
+    return false
+  }
+}
+
 function makePlayerRange(players) {
   if (!players || players.length === 0) return null
   const sorted = players.slice().sort((a, b) => a - b)

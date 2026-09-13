@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { db } from './supabase'
+import { fetchGameDetailsForIds } from '../bggApi'
 import { generateSchedule, scheduleStats, validateScheduleCoverage } from './scheduler'
 // ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
 import DevTestingWorkflow from './DevTestingWorkflow'
@@ -1050,6 +1051,42 @@ export default function AdminPage({ localCollection, onAuthChange }) {
   const [currentEvent, setCurrentEvent] = useState(null)
   const [keepAliveStatus, setKeepAliveStatus] = useState('')
   const [keepAliveBusy, setKeepAliveBusy] = useState(false)
+  const [detailsBusy, setDetailsBusy] = useState(false)
+
+  const handleDownloadGameDetails = useCallback(async () => {
+    if (!localCollection || localCollection.length === 0) {
+      setKeepAliveStatus('No local games to enrich.')
+      return
+    }
+
+    try {
+      setDetailsBusy(true)
+      const ids = localCollection.map(game => String(game.id))
+      const map = await fetchGameDetailsForIds(ids)
+      const payload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        games: map,
+      }
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'default-game-details.json'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      setKeepAliveStatus(`Wrote ${Object.keys(map).length} game detail rows.`)
+    } catch (err) {
+      console.error(err)
+      setKeepAliveStatus(`BGG details export failed: ${err.message || err}`)
+    } finally {
+      setDetailsBusy(false)
+    }
+  }, [localCollection])
 
   const handleLogin = () => {
     setAuthed(true)
@@ -1157,6 +1194,19 @@ export default function AdminPage({ localCollection, onAuthChange }) {
               }}
             >
               Game Files
+            </button>
+            <button
+              onClick={handleDownloadGameDetails}
+              disabled={detailsBusy}
+              style={{
+                padding: '6px 12px', borderRadius: 6, fontSize: 13,
+                border: `1px solid var(--accent)`,
+                background: detailsBusy ? 'var(--border)' : 'var(--accent-bg)',
+                color: detailsBusy ? 'var(--text3)' : 'var(--accent)',
+                cursor: detailsBusy ? 'default' : 'pointer',
+              }}
+            >
+              {detailsBusy ? 'Fetching BGG…' : 'Download BGG details'}
             </button>
             <button
               onClick={handleKeepAlive}

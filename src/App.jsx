@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
-import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml, enrichGamesWithPlayerCountPolls } from './bggApi'
+import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml, enrichGamesWithPlayerCountPolls, loadGameDetailsFromStaticFile } from './bggApi'
 import { exportState, parseStateFile, loadDefaultCollection } from './stateManager'
 import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
@@ -57,9 +57,18 @@ export default function App() {
   const importRef = useRef()
 
   const hydrateCollections = useCallback(async (collectionMap) => {
+    const detailsMap = await loadGameDetailsFromStaticFile()
     const next = {}
     for (const owner of Object.keys(collectionMap || {})) {
-      next[owner] = await enrichGamesWithPlayerCountPolls(collectionMap[owner] || [])
+      const games = collectionMap[owner] || []
+      games.forEach(game => {
+        const detail = detailsMap[game.id]
+        if (detail) {
+          game.playerCountPolls = detail.playerCountPolls || null
+          game.gameDetails = detail
+        }
+      })
+      next[owner] = games
     }
     return next
   }, [])
