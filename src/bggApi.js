@@ -42,6 +42,137 @@ function wait(ms) {
   return new Promise(function(r) { setTimeout(r, ms) })
 }
 
+function makePlayerRange(players) {
+  if (!players || players.length === 0) return null
+  const sorted = players.slice().sort((a, b) => a - b)
+  return { min: sorted[0], max: sorted[sorted.length - 1] }
+}
+
+function buildPlayerPollRangeMap(resultsByPlayer) {
+  const good = []
+  const recommended = []
+  const best = []
+
+  Object.keys(resultsByPlayer).map(Number).sort((a, b) => a - b).forEach(player => {
+    const votes = resultsByPlayer[player]
+    if ((votes.recommended || 0) > 0 || (votes.best || 0) > 0) good.push(player)
+    if ((votes.recommended || 0) > 0) recommended.push(player)
+    if ((votes.best || 0) > 0) best.push(player)
+  })
+
+  return {
+    good: makePlayerRange(good),
+    recommended: makePlayerRange(recommended),
+    best: makePlayerRange(best),
+  }
+}
+
+export function parsePlayerCountPollsFromXmlText(xmlText) {
+  const itemRegex = /<item\s+[^>]*id="(\d+)"[^>]*>([\s\S]*?)<\/item>/g
+  const polls = {}
+
+  for (const match of xmlText.matchAll(itemRegex)) {
+    const id = match[1]
+    const itemXml = match[2]
+    const pollRegex = /<poll\s+name="suggested_numplayers"[^>]*>([\s\S]*?)<\/poll>/g
+    const pollMatch = itemXml.match(pollRegex)
+    if (!pollMatch) continue
+
+    const pollXml = pollMatch.join('')
+    const resultsByPlayer = {}
+    const resultsRegex = /<results\s+numplayers="(\d+)"[^>]*>([\s\S]*?)<\/results>/g
+
+    for (const resultMatch of pollXml.matchAll(resultsRegex)) {
+      const player = parseInt(resultMatch[1], 10)
+      if (!player) continue
+
+      const resultXml = resultMatch[2]
+      const votes = {}
+      const voteRegex = /<result\s+value="([^"]+)"\s+numvotes="(\d+)"\s*\/>/g
+
+      for (const voteMatch of resultXml.matchAll(voteRegex)) {
+        const value = voteMatch[1].trim().toLowerCase()
+        const numvotes = parseInt(voteMatch[2], 10)
+        if (value === 'recommended' || value === 'best' || value === 'not recommended') {
+          votes[value] = numvotes
+        }
+      }
+
+      if (Object.keys(votes).length > 0) {
+        resultsByPlayer[player] = votes
+      }
+    }
+
+    if (Object.keys(resultsByPlayer).length === 0) continue
+    polls[id] = buildPlayerPollRangeMap(resultsByPlayer)
+  }
+
+  return polls
+}
+
+function parsePlayerCountPollsFromDoc(doc) {
+  const map = {}
+  const items = Array.from(doc.querySelectorAll('item'))
+
+  items.forEach(item => {
+    const id = item.getAttribute('id') || item.getAttribute('objectid')
+    if (!id) return
+
+    const poll = item.querySelector('poll[name="suggested_numplayers"]')
+    if (!poll) return
+
+    const resultsByPlayer = {}
+    Array.from(poll.querySelectorAll('results')).forEach(results => {
+      const player = parseInt(results.getAttribute('numplayers') || '0', 10)
+      if (!player) return
+
+      const votes = {}
+      Array.from(results.querySelectorAll('result')).forEach(result => {
+        const value = (result.getAttribute('value') || '').trim().toLowerCase()
+        const votesValue = parseInt(result.getAttribute('numvotes') || '0', 10)
+        if (value === 'recommended' || value === 'best' || value === 'not recommended') {
+          votes[value] = votesValue
+        }
+      })
+
+      if (Object.keys(votes).length > 0) {
+        resultsByPlayer[player] = votes
+      }
+    })
+
+    if (Object.keys(resultsByPlayer).length === 0) return
+    map[id] = buildPlayerPollRangeMap(resultsByPlayer)
+  })
+
+  return map
+}
+
+async function enrichGamesWithPlayerCountPolls(games) {
+  if (!games.length) return games
+
+  const ids = Array.from(new Set(games.map(game => String(game.id))))
+  const chunks = []
+  for (let i = 0; i < ids.length; i += 50) {
+    chunks.push(ids.slice(i, i + 50))
+  }
+
+  for (const chunk of chunks) {
+    try {
+      const doc = await fetchXML('thing', { id: chunk.join(','), stats: '1', type: 'boardgame' })
+      const polls = parsePlayerCountPollsFromDoc(doc)
+      games.forEach(game => {
+        if (polls[game.id]) {
+          game.playerCountPolls = polls[game.id]
+        }
+      })
+    } catch (err) {
+      console.warn('Failed to enrich player count polls:', err)
+    }
+  }
+
+  return games
+}
+
 export async function fetchCollection(username) {
   const params = {
     username: username,
@@ -74,7 +205,8 @@ export async function fetchCollection(username) {
     const items = doc.querySelectorAll('item')
     if (items.length === 0 && attempt < 5) { await wait(2000); continue }
 
-    return Array.from(items).map(function(item) { return parseCollectionItem(item, username) })
+    const games = Array.from(items).map(function(item) { return parseCollectionItem(item, username) })
+    return await enrichGamesWithPlayerCountPolls(games)
   }
 
   throw new Error('Could not load collection for "' + username + '" after several attempts. Try again shortly.')
@@ -159,6 +291,7 @@ function parseCollectionItem(item, username) {
     numPlays: numPlays,
     owners: [username],
     bggUrl: 'https://boardgamegeek.com/boardgame/' + id,
+    playerCountPolls: null,
   }
 }
 

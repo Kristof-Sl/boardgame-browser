@@ -20,6 +20,11 @@ export default function GameCard({ game, isMobile }) {
     : game.minPlayers === game.maxPlayers ? `${game.minPlayers}`
     : `${game.minPlayers}–${game.maxPlayers}`
 
+  const playerRangeDetail = game.playerCountPolls || null
+  const playerDetailStr = playerRangeDetail
+    ? `${playerRangeDetail.best?.min || game.minPlayers || ''}–${playerRangeDetail.best?.max || game.maxPlayers || ''} best`
+    : null
+
   const timeStr = game.minPlaytime && game.maxPlaytime
     ? game.minPlaytime === game.maxPlaytime ? `${game.minPlaytime} min`
       : `${game.minPlaytime}–${game.maxPlaytime} min`
@@ -60,6 +65,13 @@ export default function GameCard({ game, isMobile }) {
         )}
         {game.bggRank && <PopupRow label="BGG rank">#{game.bggRank.toLocaleString()}</PopupRow>}
         {playerStr && <PopupRow label="Players">{playerStr}</PopupRow>}
+        {playerRangeDetail && (
+          <>
+            <PopupRow label="Good">{playerRangeDetail.good?.min || game.minPlayers}–{playerRangeDetail.good?.max || game.maxPlayers}</PopupRow>
+            <PopupRow label="Recommended">{playerRangeDetail.recommended?.min || game.minPlayers}–{playerRangeDetail.recommended?.max || game.maxPlayers}</PopupRow>
+            <PopupRow label="Best">{playerRangeDetail.best?.min || game.minPlayers}–{playerRangeDetail.best?.max || game.maxPlayers}</PopupRow>
+          </>
+        )}
         {timeStr && <PopupRow label="Playtime">{timeStr}</PopupRow>}
         {game.minAge > 0 && <PopupRow label="Min. age">{game.minAge}+</PopupRow>}
       </div>
