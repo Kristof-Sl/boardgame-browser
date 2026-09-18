@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react'
 const BGG_COLLECTION_URL = (username) =>
   `https://boardgamegeek.com/xmlapi2/collection?username=${encodeURIComponent(username)}&stats=1&excludesubtype=boardgameexpansion`
 
-export default function AccountManager({ accounts, onAdd, onRemove, onUploadXml, onUploadCombinedXml, loading }) {
+export default function AccountManager({ accounts, onAdd, onRefresh, onRemove, onUploadXml, onUploadCombinedXml, loading }) {
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
   const [mode, setMode] = useState('api') // 'api' | 'upload' | 'combined'
@@ -70,13 +70,28 @@ export default function AccountManager({ accounts, onAdd, onRemove, onUploadXml,
       borderRadius: 'var(--radius-lg)',
       padding: '20px',
     }}>
-      <p style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: 18, fontWeight: 500,
-        marginBottom: 14, color: 'var(--text)',
-      }}>
-        BGG Accounts
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+        <p style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 18, fontWeight: 500,
+          margin: 0, color: 'var(--text)',
+        }}>
+          BGG Accounts
+        </p>
+        <button
+          onClick={onRefresh}
+          disabled={loading || !accounts.some(account => !account.fromFile)}
+          title="Reload collections for accounts connected through the BGG API"
+          style={{
+            padding: '5px 9px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+            border: '1px solid var(--border)',
+            background: 'transparent', color: 'var(--text2)',
+            cursor: loading || !accounts.some(account => !account.fromFile) ? 'default' : 'pointer',
+            opacity: loading || !accounts.some(account => !account.fromFile) ? 0.5 : 1,
+            whiteSpace: 'nowrap',
+          }}
+        >↻ Refresh</button>
+      </div>
 
       {/* Existing accounts */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>

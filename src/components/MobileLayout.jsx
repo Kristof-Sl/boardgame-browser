@@ -5,7 +5,7 @@ import GameCard from './GameCard'
 
 export default function MobileLayout({
   accounts, collections, allGames, filteredGames, filters, 
-  handleFilterChange, handleAddAccount, handleRemoveAccount, 
+  handleFilterChange, handleAddAccount, handleRefreshAccounts, handleRemoveAccount, 
   handleUploadXml, handleUploadCombinedXml, handleExport, 
   handleExportDefault, handleImportFile, anyLoading, tab, setTab,
   importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, showToast, handleAuthChange
@@ -162,6 +162,7 @@ export default function MobileLayout({
           <AccountManager
             accounts={accounts}
             onAdd={handleAddAccount}
+            onRefresh={handleRefreshAccounts}
             onRemove={handleRemoveAccount}
             onUploadXml={handleUploadXml}
             onUploadCombinedXml={handleUploadCombinedXml}
