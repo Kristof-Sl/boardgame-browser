@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { db } from './supabase'
+import { fetchGameDetails } from '../bggApi'
 import { generateSchedule, scheduleStats, validateScheduleCoverage } from './scheduler'
 // ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
 import DevTestingWorkflow from './DevTestingWorkflow'
@@ -1042,11 +1043,74 @@ function AdminGameFiles({ localCollection, onBack }) {
   )
 }
 
+function AdminBggDetails({ localCollection, onBack }) {
+  const [status, setStatus] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const handleExport = async () => {
+    const games = localCollection || []
+    if (games.length === 0) {
+      setStatus('There are no games in the current collection.')
+      return
+    }
+
+    setBusy(true)
+    setStatus(`Loading details for ${games.length} games…`)
+    try {
+      const details = await fetchGameDetails(games.map(game => game.id))
+      const exportedAt = new Date().toISOString()
+      const payload = {
+        version: 1,
+        exportedAt: exportedAt,
+        source: 'BoardGameGeek XML API v2',
+        games: details.map(detail => ({
+          ...detail,
+          collectionName: games.find(game => game.id === detail.id)?.name || detail.name,
+        })),
+      }
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `bgg-game-details-${exportedAt.slice(0, 10)}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+      setStatus(`Downloaded details for ${details.length} of ${games.length} games.`)
+    } catch (error) {
+      setStatus(`Export failed: ${error.message || error}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <button onClick={onBack} style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+        <div style={{ fontSize: 24 }}>📊</div>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>BGG Game Details</h2>
+      </div>
+      <Card>
+        <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 8 }}>
+          Export detailed BGG data for the {localCollection?.length || 0} games currently in the collection.
+        </p>
+        <p style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 16 }}>
+          The export includes ratings, images, descriptions, player counts, and BGG poll results for best, recommended, and not recommended player counts.
+        </p>
+        <Btn onClick={handleExport} accent disabled={busy || !localCollection?.length}>
+          {busy ? 'Fetching BGG details…' : 'Download JSON'}
+        </Btn>
+        {status && <p style={{ fontSize: 12, color: status.startsWith('Export failed') ? 'var(--red)' : 'var(--text3)', marginTop: 14 }}>{status}</p>}
+      </Card>
+    </div>
+  )
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export default function AdminPage({ localCollection, onAuthChange }) {
   const [authed, setAuthed] = useState(sessionStorage.getItem('admin_auth') === '1')
-  const [view, setView] = useState('events')  // events | files
+  const [view, setView] = useState('events')  // events | files | bggDetails
   const [currentEvent, setCurrentEvent] = useState(null)
   const [keepAliveStatus, setKeepAliveStatus] = useState('')
   const [keepAliveBusy, setKeepAliveBusy] = useState(false)
@@ -1125,6 +1189,10 @@ export default function AdminPage({ localCollection, onAuthChange }) {
     return <AdminGameFiles localCollection={localCollection} onBack={() => setView('events')} />
   }
 
+  if (view === 'bggDetails') {
+    return <AdminBggDetails localCollection={localCollection} onBack={() => setView('events')} />
+  }
+
   return (
     <div>
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
@@ -1157,6 +1225,18 @@ export default function AdminPage({ localCollection, onAuthChange }) {
               }}
             >
               Game Files
+            </button>
+            <button
+              onClick={() => setView('bggDetails')}
+              style={{
+                padding: '6px 12px', borderRadius: 6, fontSize: 13,
+                border: `1px solid ${view === 'bggDetails' ? 'var(--accent)' : 'var(--border)'}`,
+                background: view === 'bggDetails' ? 'var(--accent-bg)' : 'transparent',
+                color: view === 'bggDetails' ? 'var(--accent)' : 'var(--text3)',
+                cursor: 'pointer',
+              }}
+            >
+              BGG Details
             </button>
             <button
               onClick={handleKeepAlive}
