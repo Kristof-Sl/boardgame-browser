@@ -137,6 +137,26 @@ export default function FilterBar({ filters, onChange, games, availableAccounts 
         </div>
       </Section>
 
+      <Section label="Best with">
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {pill('Any', !filters.bestWith, () => onChange('bestWith', null))}
+          {[1, 2, 3, 4, 5, 6].map(n =>
+            pill(`${n}`, filters.bestWith === n, () => onChange('bestWith', filters.bestWith === n ? null : n))
+          )}
+          {pill('7+', filters.bestWith === 7, () => onChange('bestWith', filters.bestWith === 7 ? null : 7))}
+        </div>
+      </Section>
+
+      <Section label="Recommended with">
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {pill('Any', !filters.recommendedWith, () => onChange('recommendedWith', null))}
+          {[1, 2, 3, 4, 5, 6].map(n =>
+            pill(`${n}`, filters.recommendedWith === n, () => onChange('recommendedWith', filters.recommendedWith === n ? null : n))
+          )}
+          {pill('7+', filters.recommendedWith === 7, () => onChange('recommendedWith', filters.recommendedWith === 7 ? null : 7))}
+        </div>
+      </Section>
+
       {/* Rating */}
       <Section label="Min. BGG rating">
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

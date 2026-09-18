@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml } from './bggApi'
-import { exportState, parseStateFile, loadDefaultCollection } from './stateManager'
+import { exportState, parseStateFile, loadDefaultCollection, loadGameDetails } from './stateManager'
 import GameCard from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
@@ -16,6 +16,8 @@ const DEFAULT_FILTERS = {
   players: null,
   minRating: null,
   maxTime: null,
+  bestWith: null,
+  recommendedWith: null,
   decades: [],
   accounts: [],
   sort: 'rating',
@@ -46,6 +48,7 @@ export default function App() {
   const saved = useMemo(() => loadFromStorage(), [])
   const [accounts, setAccounts] = useState(saved?.accounts || [])
   const [collections, setCollections] = useState(saved?.collections || {})
+  const [gameDetails, setGameDetails] = useState({})
   const [gameFiles, setGameFiles] = useState({})
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
@@ -71,6 +74,10 @@ export default function App() {
         setDefaultLoaded(true)
       })
     }
+  }, [])
+
+  useEffect(() => {
+    loadGameDetails().then(setGameDetails)
   }, [])
 
   // Handle window resize for mobile/desktop detection
@@ -126,9 +133,10 @@ export default function App() {
     const merged = mergeCollections(collections)
     return merged.map(game => ({
       ...game,
+      details: gameDetails[String(game.id)] || null,
       files: gameFiles[game.id] || game.files || []
     }))
-  }, [collections, gameFiles])
+  }, [collections, gameDetails, gameFiles])
 
   const filteredGames = useMemo(() => {
     let games = [...allGames]
@@ -158,6 +166,23 @@ export default function App() {
       } else {
         games = games.filter(g => g.minPlayers <= filters.players && g.maxPlayers >= filters.players)
       }
+    }
+
+    const hasPlayerCount = (game, category, playerCount) => {
+      const entries = game.details?.suggestedPlayerCounts?.[category] || []
+      return entries.some(entry => {
+        const players = String(entry.players || '')
+        if (playerCount === 7) return players === '7+' || players.split('-').some(value => parseInt(value, 10) >= 7)
+        return players === String(playerCount) || players.split('-').some(value => parseInt(value, 10) === playerCount)
+      })
+    }
+
+    if (filters.bestWith) {
+      games = games.filter(g => hasPlayerCount(g, 'best', filters.bestWith))
+    }
+
+    if (filters.recommendedWith) {
+      games = games.filter(g => hasPlayerCount(g, 'recommended', filters.recommendedWith))
     }
 
     if (filters.minRating) {
