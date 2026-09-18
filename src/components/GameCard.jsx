@@ -224,6 +224,7 @@ export default function GameCard({ game, isMobile }) {
               padding: '10px 12px',
             }}>
               {popupContent}
+              <PlayerRecommendations details={game.details} />
             </div>
           )}
         </div>
@@ -247,6 +248,26 @@ export default function GameCard({ game, isMobile }) {
           {popupContent}
         </div>
       )}
+    </div>
+  )
+}
+
+function PlayerRecommendations({ details }) {
+  const recommendations = details?.suggestedPlayerCounts
+  if (!recommendations) return null
+
+  const formatPlayers = entries => entries.map(entry => entry.players).join(', ')
+  const hasRecommendations = recommendations.best?.length || recommendations.recommended?.length || recommendations.notRecommended?.length
+  if (!hasRecommendations) return null
+
+  return (
+    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)' }}>BGG player recommendations</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 5 }}>
+        {recommendations.best?.length > 0 && <PopupRow label="Best with">{formatPlayers(recommendations.best)}</PopupRow>}
+        {recommendations.recommended?.length > 0 && <PopupRow label="Recommended with">{formatPlayers(recommendations.recommended)}</PopupRow>}
+        {recommendations.notRecommended?.length > 0 && <PopupRow label="Not recommended">{formatPlayers(recommendations.notRecommended)}</PopupRow>}
+      </div>
     </div>
   )
 }

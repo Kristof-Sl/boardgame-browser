@@ -51,3 +51,20 @@ export async function loadDefaultCollection() {
     return null
   }
 }
+
+// Try to fetch optional detailed BGG game data from public/bgg-game-details.json
+export async function loadGameDetails() {
+  try {
+    const res = await fetch('/bgg-game-details.json')
+    if (!res.ok) return {}
+    const payload = await res.json()
+    const details = Array.isArray(payload) ? payload : payload.games
+    if (!Array.isArray(details)) return {}
+    return details.reduce((byId, game) => {
+      if (game && game.id != null) byId[String(game.id)] = game
+      return byId
+    }, {})
+  } catch {
+    return {}
+  }
+}
