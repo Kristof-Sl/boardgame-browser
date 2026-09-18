@@ -207,6 +207,47 @@ export default function App() {
     }
   }, [])
 
+  const handleRefreshAccounts = useCallback(async () => {
+    const apiAccounts = accounts.filter(account => !account.fromFile)
+    if (apiAccounts.length === 0) return
+
+    setAccounts(prev => prev.map(account =>
+      !account.fromFile ? { ...account, loading: true, error: null } : account
+    ))
+
+    const results = await Promise.allSettled(
+      apiAccounts.map(async account => ({
+        username: account.username,
+        games: await fetchCollection(account.username),
+      }))
+    )
+
+    results.forEach(result => {
+      if (result.status === 'fulfilled') {
+        setCollections(prev => ({ ...prev, [result.value.username]: result.value.games }))
+      }
+    })
+
+    setAccounts(prev => prev.map(account => {
+      if (account.fromFile) return account
+      const result = results.find(item =>
+        item.status === 'fulfilled'
+          ? item.value.username === account.username
+          : false
+      )
+      if (result?.status === 'fulfilled') {
+        return { ...account, loading: false, error: null, count: result.value.games.length }
+      }
+      const failedIndex = apiAccounts.findIndex(item => item.username === account.username)
+      const failed = results[failedIndex]
+      return {
+        ...account,
+        loading: false,
+        error: failed?.reason?.message || 'Failed to refresh collection',
+      }
+    }))
+  }, [accounts])
+
   const handleRemoveAccount = useCallback((username) => {
     setAccounts(prev => prev.filter(a => a.username !== username))
     setCollections(prev => {
@@ -332,6 +373,7 @@ export default function App() {
         filters={filters}
         handleFilterChange={handleFilterChange}
         handleAddAccount={handleAddAccount}
+        handleRefreshAccounts={handleRefreshAccounts}
         handleRemoveAccount={handleRemoveAccount}
         handleUploadXml={handleUploadXml}
         handleUploadCombinedXml={handleUploadCombinedXml}
@@ -483,6 +525,7 @@ export default function App() {
             <AccountManager
               accounts={accounts}
               onAdd={handleAddAccount}
+              onRefresh={handleRefreshAccounts}
               onRemove={handleRemoveAccount}
               onUploadXml={handleUploadXml}
               onUploadCombinedXml={handleUploadCombinedXml}
