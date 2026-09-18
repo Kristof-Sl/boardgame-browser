@@ -80,6 +80,85 @@ export async function fetchCollection(username) {
   throw new Error('Could not load collection for "' + username + '" after several attempts. Try again shortly.')
 }
 
+function parseThingItem(item) {
+  function getText(selector) {
+    var el = item.querySelector(selector)
+    return el ? el.textContent.trim() : ''
+  }
+
+  function getAttr(el, attr) {
+    return el ? (el.getAttribute(attr) || '') : ''
+  }
+
+  var id = item.getAttribute('id')
+  var names = Array.from(item.querySelectorAll('name[type="primary"]'))
+  var primaryName = names[0] ? getAttr(names[0], 'value') : getText('name')
+  var stats = item.querySelector('statistics ratings')
+  var rating = stats ? parseFloat(getAttr(stats.querySelector('average'), 'value')) || 0 : 0
+  var rank = stats ? stats.querySelector('ranks rank[name="boardgame"]') : null
+  var suggested = { best: [], recommended: [], notRecommended: [] }
+  var poll = item.querySelector('poll[name="suggested_numplayers"]')
+
+  if (poll) {
+    Array.from(poll.querySelectorAll('results')).forEach(function(results) {
+      var players = getAttr(results, 'numplayers')
+      if (!players) return
+
+      var counts = {}
+      Array.from(results.querySelectorAll('result')).forEach(function(result) {
+        counts[getAttr(result, 'value').toLowerCase().replace(/\s+/g, '')] = parseInt(getAttr(result, 'numvotes')) || 0
+      })
+
+      var entry = {
+        players: players,
+        bestVotes: counts.best || 0,
+        recommendedVotes: counts.recommended || 0,
+        notRecommendedVotes: counts.notrecommended || 0,
+      }
+      if (entry.bestVotes > 0) suggested.best.push(entry)
+      if (entry.recommendedVotes > 0) suggested.recommended.push(entry)
+      if (entry.notRecommendedVotes > 0) suggested.notRecommended.push(entry)
+    })
+  }
+
+  return {
+    id: id,
+    name: primaryName,
+    yearPublished: parseInt(getText('yearpublished')) || null,
+    description: getText('description'),
+    thumbnail: getText('thumbnail') || null,
+    image: getText('image') || null,
+    minPlayers: parseInt(getText('minplayers')) || 0,
+    maxPlayers: parseInt(getText('maxplayers')) || 0,
+    minPlaytime: parseInt(getText('minplaytime')) || 0,
+    maxPlaytime: parseInt(getText('maxplaytime')) || 0,
+    minAge: parseInt(getText('minage')) || 0,
+    rating: Math.round(rating * 10) / 10,
+    bggRank: rank && getAttr(rank, 'value') !== 'Not Ranked' ? parseInt(getAttr(rank, 'value')) : null,
+    suggestedPlayerCounts: suggested,
+    bggUrl: 'https://boardgamegeek.com/boardgame/' + id,
+  }
+}
+
+export async function fetchGameDetails(gameIds) {
+  var uniqueIds = Array.from(new Set(gameIds.map(String).filter(Boolean)))
+  var details = []
+  var batchSize = 20
+
+  for (var start = 0; start < uniqueIds.length; start += batchSize) {
+    var batch = uniqueIds.slice(start, start + batchSize)
+    var doc = await fetchXML('thing', { id: batch.join(','), stats: '1' })
+    var errorEl = doc.querySelector('error')
+    if (errorEl) {
+      var message = errorEl.querySelector('message')
+      throw new Error(message ? message.textContent.trim() : 'BGG returned an error while loading game details.')
+    }
+    details = details.concat(Array.from(doc.querySelectorAll('item')).map(parseThingItem))
+  }
+
+  return details
+}
+
 function parseCollectionItem(item, username) {
 
   function getAttrFrom(el, attr) {
