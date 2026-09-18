@@ -138,9 +138,19 @@ export default function App() {
       games = games.filter(g => g.name.toLowerCase().includes(q))
     }
 
-    if (filters.status === 'owned') games = games.filter(g => g.owned)
-    else if (filters.status === 'wishlist') games = games.filter(g => g.wishlist)
-    else if (filters.status === 'wantToPlay') games = games.filter(g => g.wantToPlay)
+    if (filters.status) {
+      games = games.filter(g => {
+        const selectedOwners = filters.accounts && filters.accounts.length > 0
+          ? filters.accounts
+          : g.owners || []
+
+        if (g.ownerStatuses) {
+          return selectedOwners.some(owner => g.ownerStatuses[owner]?.[filters.status])
+        }
+
+        return Boolean(g[filters.status])
+      })
+    }
 
     if (filters.players) {
       if (filters.players === 7) {
