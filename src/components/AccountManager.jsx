@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react'
 const BGG_COLLECTION_URL = (username) =>
   `https://boardgamegeek.com/xmlapi2/collection?username=${encodeURIComponent(username)}&stats=1&excludesubtype=boardgameexpansion`
 
-export default function AccountManager({ accounts, onAdd, onRefresh, onRemove, onUploadXml, onUploadCombinedXml, loading }) {
+export default function AccountManager({ accounts, onAdd, onRefresh, onReloadDefault, onRemove, onUploadXml, onUploadCombinedXml, loading }) {
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
   const [mode, setMode] = useState('api') // 'api' | 'upload' | 'combined'
@@ -26,6 +26,12 @@ export default function AccountManager({ accounts, onAdd, onRefresh, onRemove, o
 
   const handleKey = (e) => {
     if (e.key === 'Enter') handleAdd()
+  }
+
+  const handleReloadDefault = async () => {
+    setError('')
+    const err = await onReloadDefault()
+    if (err) setError(String(err))
   }
 
   const handleFileUpload = async (e) => {
@@ -70,7 +76,7 @@ export default function AccountManager({ accounts, onAdd, onRefresh, onRemove, o
       borderRadius: 'var(--radius-lg)',
       padding: '20px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, marginBottom: 14 }}>
         <p style={{
           fontFamily: 'var(--font-display)',
           fontSize: 18, fontWeight: 500,
@@ -78,19 +84,34 @@ export default function AccountManager({ accounts, onAdd, onRefresh, onRemove, o
         }}>
           BGG Accounts
         </p>
-        <button
-          onClick={onRefresh}
-          disabled={loading || !accounts.some(account => !account.fromFile)}
-          title="Reload collections for accounts connected through the BGG API"
-          style={{
-            padding: '5px 9px', borderRadius: 6, fontSize: 12, fontWeight: 500,
-            border: '1px solid var(--border)',
-            background: 'transparent', color: 'var(--text2)',
-            cursor: loading || !accounts.some(account => !account.fromFile) ? 'default' : 'pointer',
-            opacity: loading || !accounts.some(account => !account.fromFile) ? 0.5 : 1,
-            whiteSpace: 'nowrap',
-          }}
-        >↻ Refresh</button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            onClick={handleReloadDefault}
+            disabled={loading}
+            title="Reload the default collection from public/default-collection.json"
+            style={{
+              padding: '5px 9px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+              border: '1px solid var(--border)',
+              background: 'transparent', color: 'var(--text2)',
+              cursor: loading ? 'default' : 'pointer',
+              opacity: loading ? 0.5 : 1,
+              whiteSpace: 'nowrap',
+            }}
+          >↻ Default</button>
+          <button
+            onClick={onRefresh}
+            disabled={loading || !accounts.some(account => !account.fromFile)}
+            title="Reload collections for accounts connected through the BGG API"
+            style={{
+              padding: '5px 9px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+              border: '1px solid var(--border)',
+              background: 'transparent', color: 'var(--text2)',
+              cursor: loading || !accounts.some(account => !account.fromFile) ? 'default' : 'pointer',
+              opacity: loading || !accounts.some(account => !account.fromFile) ? 0.5 : 1,
+              whiteSpace: 'nowrap',
+            }}
+          >↻ Refresh</button>
+        </div>
       </div>
 
       {/* Existing accounts */}

@@ -283,6 +283,14 @@ export default function App() {
     }))
   }, [accounts])
 
+  const handleReloadDefaultCollection = useCallback(async () => {
+    const state = await loadDefaultCollection()
+    if (!state) return 'Could not load public/default-collection.json.'
+    setAccounts(state.accounts)
+    setCollections(state.collections)
+    return null
+  }, [])
+
   const handleRemoveAccount = useCallback((username) => {
     setAccounts(prev => prev.filter(a => a.username !== username))
     setCollections(prev => {
@@ -409,6 +417,7 @@ export default function App() {
         handleFilterChange={handleFilterChange}
         handleAddAccount={handleAddAccount}
         handleRefreshAccounts={handleRefreshAccounts}
+        handleReloadDefaultCollection={handleReloadDefaultCollection}
         handleRemoveAccount={handleRemoveAccount}
         handleUploadXml={handleUploadXml}
         handleUploadCombinedXml={handleUploadCombinedXml}
@@ -561,6 +570,7 @@ export default function App() {
               accounts={accounts}
               onAdd={handleAddAccount}
               onRefresh={handleRefreshAccounts}
+              onReloadDefault={handleReloadDefaultCollection}
               onRemove={handleRemoveAccount}
               onUploadXml={handleUploadXml}
               onUploadCombinedXml={handleUploadCombinedXml}
