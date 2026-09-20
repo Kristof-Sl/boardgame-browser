@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml } from './bggApi'
 import { exportState, parseStateFile, loadDefaultCollection, loadGameDetails } from './stateManager'
-import GameCard from './components/GameCard'
+import GameCard, { GameDetailsPanel } from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
 import EventPlanner from './events/EventPlanner'
@@ -57,6 +57,8 @@ export default function App() {
   const [toast, setToast] = useState(null)
   const [isAdmin, setIsAdmin] = useState(sessionStorage.getItem('admin_auth') === '1')
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [detailsMode, setDetailsMode] = useState(false)
+  const [selectedGame, setSelectedGame] = useState(null)
   const importRef = useRef()
 
   // On mount: if nothing in localStorage, try default-collection.json
@@ -531,6 +533,16 @@ export default function App() {
           >
             {sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
           </button>
+          <button
+            onClick={() => { setDetailsMode(mode => !mode); setSelectedGame(null) }}
+            title="Open tile details in a right-side panel"
+            style={{
+              padding: '5px 12px', borderRadius: 8,
+              border: `1px solid ${detailsMode ? 'var(--accent)' : 'var(--border)'}`,
+              color: detailsMode ? 'var(--accent)' : 'var(--text2)', fontSize: 13,
+              background: detailsMode ? 'var(--accent-bg)' : 'transparent', cursor: 'pointer',
+            }}
+          >{detailsMode ? 'Panel details' : 'Tile details'}</button>
         </div>
       </header>
 
@@ -593,7 +605,7 @@ export default function App() {
         )}
 
         {/* Game grid */}
-        <main style={{ flex: 1, padding: '24px', overflowX: 'hidden' }}>
+        <main style={{ flex: 1, minWidth: 0, padding: '24px', overflowX: 'hidden' }}>
           {allGames.length === 0 && accounts.length === 0 && (
             <EmptyState onImport={() => importRef.current?.click()} />
           )}
@@ -624,12 +636,17 @@ export default function App() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
               gap: 16,
             }}>
-              {filteredGames.map(game => (
-                <GameCard key={game.id} game={game} />
+                {filteredGames.map(game => (
+                <GameCard key={game.id} game={game} detailsMode={detailsMode} onDetails={setSelectedGame} />
               ))}
             </div>
           )}
         </main>
+        {detailsMode && selectedGame && (
+          <aside style={{ width: 340, flexShrink: 0, borderLeft: '1px solid var(--border)', background: 'var(--surface)', position: 'sticky', top: 56, height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
+            <GameDetailsPanel game={selectedGame} onClose={() => setSelectedGame(null)} />
+          </aside>
+        )}
         </>)}
       </div>
 
