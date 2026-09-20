@@ -160,6 +160,31 @@ function GameFilterBar({ games, filters, onChange }) {
           <Pill label="7+" active={filters.players === 7} onClick={() => onChange({ ...filters, players: filters.players === 7 ? null : 7 })} />
         </FilterGroup>
 
+        {/* BGG player recommendations */}
+        {['bestWith', 'recommendedWith'].map(filterKey => {
+          const selected = filters[filterKey] || []
+          const label = filterKey === 'bestWith' ? 'Best with' : 'Recommended with'
+          const toggle = playerCount => {
+            const next = selected.includes(playerCount)
+              ? selected.filter(value => value !== playerCount)
+              : [...selected, playerCount]
+            onChange({ ...filters, [filterKey]: next })
+          }
+          return (
+            <FilterGroup key={filterKey} label={label}>
+              <Pill label="Any" active={selected.length === 0} onClick={() => onChange({ ...filters, [filterKey]: [] })} />
+              {[1, 2, 3, 4, 5, 6, 7].map(playerCount => (
+                <Pill
+                  key={playerCount}
+                  label={playerCount === 7 ? '7+' : `${playerCount}`}
+                  active={selected.includes(playerCount)}
+                  onClick={() => toggle(playerCount)}
+                />
+              ))}
+            </FilterGroup>
+          )
+        })}
+
         {/* Playtime */}
         <FilterGroup label="Playtime">
           <Pill label="Any" active={!filters.maxTime} onClick={() => onChange({ ...filters, maxTime: null })} />
@@ -229,6 +254,21 @@ function applyGameFilters(games, filters) {
     if (filters.maxTime === 999) { if (g.maxPlaytime < 120) return false }
     else if (filters.maxTime) { if (!g.maxPlaytime || g.maxPlaytime > filters.maxTime) return false }
     if (filters.minRating && g.rating < filters.minRating) return false
+    const bestWith = Array.isArray(filters.bestWith) ? filters.bestWith : filters.bestWith ? [filters.bestWith] : []
+    const recommendedWith = Array.isArray(filters.recommendedWith) ? filters.recommendedWith : filters.recommendedWith ? [filters.recommendedWith] : []
+    const hasPlayerCount = (category, playerCount) => {
+      const entries = g.details?.suggestedPlayerCounts?.[category] || g.suggestedPlayerCounts?.[category] || []
+      return entries.some(entry => {
+        const players = String(entry.players || '')
+        if (playerCount === 7) return players === '7+' || players.split('-').some(value => parseInt(value, 10) >= 7)
+        return players === String(playerCount) || players.split('-').some(value => parseInt(value, 10) === playerCount)
+      })
+    }
+    if (bestWith.length || recommendedWith.length) {
+      const matchesBest = bestWith.some(playerCount => hasPlayerCount('best', playerCount))
+      const matchesRecommended = recommendedWith.some(playerCount => hasPlayerCount('recommended', playerCount))
+      if (!matchesBest && !matchesRecommended) return false
+    }
     if (filters.decades && filters.decades.length > 0) {
       if (!g.yearPublished || !filters.decades.some(d => g.yearPublished >= d && g.yearPublished < d + 10)) return false
     }
@@ -236,7 +276,7 @@ function applyGameFilters(games, filters) {
   })
 }
 
-const EMPTY_GAME_FILTERS = { search: '', players: null, maxTime: null, minRating: null, decades: [] }
+const EMPTY_GAME_FILTERS = { search: '', players: null, bestWith: [], recommendedWith: [], maxTime: null, minRating: null, decades: [] }
 
 // ─── Not configured banner ────────────────────────────────────────────────────
 
@@ -546,6 +586,7 @@ function mergeCollections(eventCol, localCol) {
         minAge:      existing.minAge      || g.minAge,
         yearPublished: existing.yearPublished || g.yearPublished,
         thumbnail:   existing.thumbnail   || g.thumbnail,
+        details:      existing.details      || g.details,
       })
     } else {
       map.set(g.id, g)
