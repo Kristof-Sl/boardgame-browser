@@ -547,7 +547,7 @@ export default function App() {
       </header>
 
       {/* Main layout */}
-      <div style={{ display: 'flex', flex: 1, maxWidth: 1400, margin: '0 auto', width: '100%', padding: '0' }}>
+      <div style={{ display: 'flex', flex: 1, width: '100%', padding: '0' }}>
 
         {/* Events tab */}
         {tab === 'events' && (
