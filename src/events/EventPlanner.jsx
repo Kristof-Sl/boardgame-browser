@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { db, isConfigured } from './supabase'
 import { generateSchedule, scheduleStats, getSlots } from './scheduler'
+import { GameDetailsPanel } from '../components/GameCard'
 
 // ─── Shared UI helpers ────────────────────────────────────────────────────────
 
@@ -682,6 +683,7 @@ function VotingPhase({ event, participants, me, votes, gameFiles, mergedCollecti
   const [voteFilter, setVoteFilter] = useState('all') // all | voted | unvoted | allvotes
   const [gameFilters, setGameFilters] = useState(EMPTY_GAME_FILTERS)
   const [saving, setSaving] = useState(false)
+  const [selectedGame, setSelectedGame] = useState(null)
 
   // BGG URL lookup state
   const [bggInput, setBggInput] = useState('')
@@ -925,7 +927,14 @@ function VotingPhase({ event, participants, me, votes, gameFiles, mergedCollecti
               display: 'flex', alignItems: 'center', gap: 12,
             }}>
               {game.thumbnail && (
-                <img src={game.thumbnail} alt="" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
+                <button
+                  onClick={() => setSelectedGame(game)}
+                  title={`Show details for ${game.name}`}
+                  aria-label={`Show details for ${game.name}`}
+                  style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', flexShrink: 0, lineHeight: 0 }}
+                >
+                  <img src={game.thumbnail} alt="" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover' }} />
+                </button>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{game.name}</p>
@@ -966,6 +975,16 @@ function VotingPhase({ event, participants, me, votes, gameFiles, mergedCollecti
           </p>
         )}
       </div>
+      {selectedGame && (
+        <aside style={{
+          position: 'fixed', top: 0, right: 0, bottom: 0, width: 340,
+          maxWidth: '100vw', background: 'var(--surface)',
+          borderLeft: '1px solid var(--border)', zIndex: 100,
+          boxShadow: '-8px 0 32px rgba(0,0,0,0.28)', overflow: 'hidden',
+        }}>
+          <GameDetailsPanel game={selectedGame} onClose={() => setSelectedGame(null)} />
+        </aside>
+      )}
     </div>
   )
 }
