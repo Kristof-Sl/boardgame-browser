@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-09-18T17:51:03.575Z",
+  "exportedAt": "2026-09-20T11:44:08.453Z",
   "source": "BoardGameGeek XML API v2",
   "games": [
     {
@@ -20,56 +20,19 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 13,
-            "recommendedVotes": 110,
-            "notRecommendedVotes": 1111
-          },
-          {
             "players": "2",
             "bestVotes": 1493,
             "recommendedVotes": 32,
             "notRecommendedVotes": 6
-          },
-          {
-            "players": "2+",
-            "bestVotes": 7,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 1185
           }
         ],
-        "recommended": [
-          {
-            "players": "1",
-            "bestVotes": 13,
-            "recommendedVotes": 110,
-            "notRecommendedVotes": 1111
-          },
-          {
-            "players": "2",
-            "bestVotes": 1493,
-            "recommendedVotes": 32,
-            "notRecommendedVotes": 6
-          },
-          {
-            "players": "2+",
-            "bestVotes": 7,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 1185
-          }
-        ],
+        "recommended": [],
         "notRecommended": [
           {
             "players": "1",
             "bestVotes": 13,
             "recommendedVotes": 110,
             "notRecommendedVotes": 1111
-          },
-          {
-            "players": "2",
-            "bestVotes": 1493,
-            "recommendedVotes": 32,
-            "notRecommendedVotes": 6
           },
           {
             "players": "2+",
@@ -99,18 +62,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 85,
-            "recommendedVotes": 852,
-            "notRecommendedVotes": 455
-          },
-          {
-            "players": "2",
-            "bestVotes": 390,
-            "recommendedVotes": 1130,
-            "notRecommendedVotes": 195
-          },
-          {
             "players": "3",
             "bestVotes": 1048,
             "recommendedVotes": 698,
@@ -121,18 +72,6 @@
             "bestVotes": 1164,
             "recommendedVotes": 572,
             "notRecommendedVotes": 51
-          },
-          {
-            "players": "5",
-            "bestVotes": 321,
-            "recommendedVotes": 840,
-            "notRecommendedVotes": 365
-          },
-          {
-            "players": "5+",
-            "bestVotes": 9,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 803
           }
         ],
         "recommended": [
@@ -149,61 +88,13 @@
             "notRecommendedVotes": 195
           },
           {
-            "players": "3",
-            "bestVotes": 1048,
-            "recommendedVotes": 698,
-            "notRecommendedVotes": 34
-          },
-          {
-            "players": "4",
-            "bestVotes": 1164,
-            "recommendedVotes": 572,
-            "notRecommendedVotes": 51
-          },
-          {
             "players": "5",
             "bestVotes": 321,
             "recommendedVotes": 840,
             "notRecommendedVotes": 365
-          },
-          {
-            "players": "5+",
-            "bestVotes": 9,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 803
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 85,
-            "recommendedVotes": 852,
-            "notRecommendedVotes": 455
-          },
-          {
-            "players": "2",
-            "bestVotes": 390,
-            "recommendedVotes": 1130,
-            "notRecommendedVotes": 195
-          },
-          {
-            "players": "3",
-            "bestVotes": 1048,
-            "recommendedVotes": 698,
-            "notRecommendedVotes": 34
-          },
-          {
-            "players": "4",
-            "bestVotes": 1164,
-            "recommendedVotes": 572,
-            "notRecommendedVotes": 51
-          },
-          {
-            "players": "5",
-            "bestVotes": 321,
-            "recommendedVotes": 840,
-            "notRecommendedVotes": 365
-          },
           {
             "players": "5+",
             "bestVotes": 9,
@@ -232,24 +123,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 247
-          },
-          {
-            "players": "2",
-            "bestVotes": 67,
-            "recommendedVotes": 261,
-            "notRecommendedVotes": 62
-          },
-          {
-            "players": "3",
-            "bestVotes": 188,
-            "recommendedVotes": 193,
-            "notRecommendedVotes": 4
-          },
-          {
             "players": "4",
             "bestVotes": 242,
             "recommendedVotes": 130,
@@ -258,12 +131,6 @@
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 247
-          },
-          {
             "players": "2",
             "bestVotes": 67,
             "recommendedVotes": 261,
@@ -274,18 +141,6 @@
             "bestVotes": 188,
             "recommendedVotes": 193,
             "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 242,
-            "recommendedVotes": 130,
-            "notRecommendedVotes": 21
-          },
-          {
-            "players": "4+",
-            "bestVotes": 0,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 207
           }
         ],
         "notRecommended": [
@@ -294,24 +149,6 @@
             "bestVotes": 1,
             "recommendedVotes": 14,
             "notRecommendedVotes": 247
-          },
-          {
-            "players": "2",
-            "bestVotes": 67,
-            "recommendedVotes": 261,
-            "notRecommendedVotes": 62
-          },
-          {
-            "players": "3",
-            "bestVotes": 188,
-            "recommendedVotes": 193,
-            "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 242,
-            "recommendedVotes": 130,
-            "notRecommendedVotes": 21
           },
           {
             "players": "4+",
@@ -341,54 +178,18 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 9,
-            "recommendedVotes": 38,
-            "notRecommendedVotes": 14
-          },
-          {
             "players": "3",
             "bestVotes": 44,
             "recommendedVotes": 19,
             "notRecommendedVotes": 1
-          },
-          {
-            "players": "4",
-            "bestVotes": 30,
-            "recommendedVotes": 33,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "5",
-            "bestVotes": 8,
-            "recommendedVotes": 25,
-            "notRecommendedVotes": 16
-          },
-          {
-            "players": "6",
-            "bestVotes": 2,
-            "recommendedVotes": 15,
-            "notRecommendedVotes": 28
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 39
-          },
-          {
             "players": "2",
             "bestVotes": 9,
             "recommendedVotes": 38,
             "notRecommendedVotes": 14
-          },
-          {
-            "players": "3",
-            "bestVotes": 44,
-            "recommendedVotes": 19,
-            "notRecommendedVotes": 1
           },
           {
             "players": "4",
@@ -401,12 +202,6 @@
             "bestVotes": 8,
             "recommendedVotes": 25,
             "notRecommendedVotes": 16
-          },
-          {
-            "players": "6",
-            "bestVotes": 2,
-            "recommendedVotes": 15,
-            "notRecommendedVotes": 28
           }
         ],
         "notRecommended": [
@@ -415,30 +210,6 @@
             "bestVotes": 0,
             "recommendedVotes": 1,
             "notRecommendedVotes": 39
-          },
-          {
-            "players": "2",
-            "bestVotes": 9,
-            "recommendedVotes": 38,
-            "notRecommendedVotes": 14
-          },
-          {
-            "players": "3",
-            "bestVotes": 44,
-            "recommendedVotes": 19,
-            "notRecommendedVotes": 1
-          },
-          {
-            "players": "4",
-            "bestVotes": 30,
-            "recommendedVotes": 33,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "5",
-            "bestVotes": 8,
-            "recommendedVotes": 25,
-            "notRecommendedVotes": 16
           },
           {
             "players": "6",
@@ -474,12 +245,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 135,
-            "recommendedVotes": 903,
-            "notRecommendedVotes": 186
-          },
-          {
             "players": "3",
             "bestVotes": 774,
             "recommendedVotes": 466,
@@ -490,44 +255,14 @@
             "bestVotes": 801,
             "recommendedVotes": 379,
             "notRecommendedVotes": 54
-          },
-          {
-            "players": "4+",
-            "bestVotes": 2,
-            "recommendedVotes": 6,
-            "notRecommendedVotes": 667
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 72,
-            "notRecommendedVotes": 791
-          },
-          {
             "players": "2",
             "bestVotes": 135,
             "recommendedVotes": 903,
             "notRecommendedVotes": 186
-          },
-          {
-            "players": "3",
-            "bestVotes": 774,
-            "recommendedVotes": 466,
-            "notRecommendedVotes": 20
-          },
-          {
-            "players": "4",
-            "bestVotes": 801,
-            "recommendedVotes": 379,
-            "notRecommendedVotes": 54
-          },
-          {
-            "players": "4+",
-            "bestVotes": 2,
-            "recommendedVotes": 6,
-            "notRecommendedVotes": 667
           }
         ],
         "notRecommended": [
@@ -536,24 +271,6 @@
             "bestVotes": 0,
             "recommendedVotes": 72,
             "notRecommendedVotes": 791
-          },
-          {
-            "players": "2",
-            "bestVotes": 135,
-            "recommendedVotes": 903,
-            "notRecommendedVotes": 186
-          },
-          {
-            "players": "3",
-            "bestVotes": 774,
-            "recommendedVotes": 466,
-            "notRecommendedVotes": 20
-          },
-          {
-            "players": "4",
-            "bestVotes": 801,
-            "recommendedVotes": 379,
-            "notRecommendedVotes": 54
           },
           {
             "players": "4+",
@@ -583,43 +300,13 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 5,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 0
-          },
-          {
             "players": "3",
             "bestVotes": 6,
             "recommendedVotes": 4,
             "notRecommendedVotes": 0
-          },
-          {
-            "players": "4",
-            "bestVotes": 4,
-            "recommendedVotes": 6,
-            "notRecommendedVotes": 1
-          },
-          {
-            "players": "6",
-            "bestVotes": 2,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 3
           }
         ],
         "recommended": [
-          {
-            "players": "2",
-            "bestVotes": 5,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 0
-          },
-          {
-            "players": "3",
-            "bestVotes": 6,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 0
-          },
           {
             "players": "4",
             "bestVotes": 4,
@@ -645,24 +332,6 @@
             "bestVotes": 0,
             "recommendedVotes": 0,
             "notRecommendedVotes": 7
-          },
-          {
-            "players": "4",
-            "bestVotes": 4,
-            "recommendedVotes": 6,
-            "notRecommendedVotes": 1
-          },
-          {
-            "players": "5",
-            "bestVotes": 0,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "6",
-            "bestVotes": 2,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 3
           },
           {
             "players": "6+",
@@ -692,12 +361,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 131,
-            "recommendedVotes": 427,
-            "notRecommendedVotes": 143
-          },
-          {
             "players": "2",
             "bestVotes": 572,
             "recommendedVotes": 332,
@@ -708,18 +371,6 @@
             "bestVotes": 540,
             "recommendedVotes": 320,
             "notRecommendedVotes": 17
-          },
-          {
-            "players": "4",
-            "bestVotes": 183,
-            "recommendedVotes": 545,
-            "notRecommendedVotes": 81
-          },
-          {
-            "players": "4+",
-            "bestVotes": 2,
-            "recommendedVotes": 37,
-            "notRecommendedVotes": 446
           }
         ],
         "recommended": [
@@ -730,55 +381,13 @@
             "notRecommendedVotes": 143
           },
           {
-            "players": "2",
-            "bestVotes": 572,
-            "recommendedVotes": 332,
-            "notRecommendedVotes": 17
-          },
-          {
-            "players": "3",
-            "bestVotes": 540,
-            "recommendedVotes": 320,
-            "notRecommendedVotes": 17
-          },
-          {
             "players": "4",
             "bestVotes": 183,
             "recommendedVotes": 545,
             "notRecommendedVotes": 81
-          },
-          {
-            "players": "4+",
-            "bestVotes": 2,
-            "recommendedVotes": 37,
-            "notRecommendedVotes": 446
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 131,
-            "recommendedVotes": 427,
-            "notRecommendedVotes": 143
-          },
-          {
-            "players": "2",
-            "bestVotes": 572,
-            "recommendedVotes": 332,
-            "notRecommendedVotes": 17
-          },
-          {
-            "players": "3",
-            "bestVotes": 540,
-            "recommendedVotes": 320,
-            "notRecommendedVotes": 17
-          },
-          {
-            "players": "4",
-            "bestVotes": 183,
-            "recommendedVotes": 545,
-            "notRecommendedVotes": 81
-          },
           {
             "players": "4+",
             "bestVotes": 2,
@@ -807,66 +416,18 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 1561
-          },
-          {
-            "players": "2",
-            "bestVotes": 16,
-            "recommendedVotes": 267,
-            "notRecommendedVotes": 1391
-          },
-          {
-            "players": "3",
-            "bestVotes": 734,
-            "recommendedVotes": 1171,
-            "notRecommendedVotes": 114
-          },
-          {
             "players": "4",
-            "bestVotes": 1563,
+            "bestVotes": 1564,
             "recommendedVotes": 472,
             "notRecommendedVotes": 48
-          },
-          {
-            "players": "4+",
-            "bestVotes": 63,
-            "recommendedVotes": 210,
-            "notRecommendedVotes": 995
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 1561
-          },
-          {
-            "players": "2",
-            "bestVotes": 16,
-            "recommendedVotes": 267,
-            "notRecommendedVotes": 1391
-          },
-          {
             "players": "3",
             "bestVotes": 734,
-            "recommendedVotes": 1171,
+            "recommendedVotes": 1172,
             "notRecommendedVotes": 114
-          },
-          {
-            "players": "4",
-            "bestVotes": 1563,
-            "recommendedVotes": 472,
-            "notRecommendedVotes": 48
-          },
-          {
-            "players": "4+",
-            "bestVotes": 63,
-            "recommendedVotes": 210,
-            "notRecommendedVotes": 995
           }
         ],
         "notRecommended": [
@@ -874,31 +435,19 @@
             "players": "1",
             "bestVotes": 1,
             "recommendedVotes": 4,
-            "notRecommendedVotes": 1561
+            "notRecommendedVotes": 1562
           },
           {
             "players": "2",
             "bestVotes": 16,
             "recommendedVotes": 267,
-            "notRecommendedVotes": 1391
-          },
-          {
-            "players": "3",
-            "bestVotes": 734,
-            "recommendedVotes": 1171,
-            "notRecommendedVotes": 114
-          },
-          {
-            "players": "4",
-            "bestVotes": 1563,
-            "recommendedVotes": 472,
-            "notRecommendedVotes": 48
+            "notRecommendedVotes": 1392
           },
           {
             "players": "4+",
             "bestVotes": 63,
             "recommendedVotes": 210,
-            "notRecommendedVotes": 995
+            "notRecommendedVotes": 996
           }
         ]
       },
@@ -922,52 +471,10 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 17,
-            "recommendedVotes": 220,
-            "notRecommendedVotes": 146
-          },
-          {
-            "players": "2",
-            "bestVotes": 94,
-            "recommendedVotes": 329,
-            "notRecommendedVotes": 64
-          },
-          {
-            "players": "3",
-            "bestVotes": 218,
-            "recommendedVotes": 264,
-            "notRecommendedVotes": 15
-          },
-          {
             "players": "4",
             "bestVotes": 319,
             "recommendedVotes": 174,
             "notRecommendedVotes": 14
-          },
-          {
-            "players": "5",
-            "bestVotes": 90,
-            "recommendedVotes": 228,
-            "notRecommendedVotes": 120
-          },
-          {
-            "players": "6",
-            "bestVotes": 20,
-            "recommendedVotes": 123,
-            "notRecommendedVotes": 266
-          },
-          {
-            "players": "7",
-            "bestVotes": 15,
-            "recommendedVotes": 68,
-            "notRecommendedVotes": 329
-          },
-          {
-            "players": "7+",
-            "bestVotes": 1,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 279
           }
         ],
         "recommended": [
@@ -990,67 +497,13 @@
             "notRecommendedVotes": 15
           },
           {
-            "players": "4",
-            "bestVotes": 319,
-            "recommendedVotes": 174,
-            "notRecommendedVotes": 14
-          },
-          {
             "players": "5",
             "bestVotes": 90,
             "recommendedVotes": 228,
             "notRecommendedVotes": 120
-          },
-          {
-            "players": "6",
-            "bestVotes": 20,
-            "recommendedVotes": 123,
-            "notRecommendedVotes": 266
-          },
-          {
-            "players": "7",
-            "bestVotes": 15,
-            "recommendedVotes": 68,
-            "notRecommendedVotes": 329
-          },
-          {
-            "players": "7+",
-            "bestVotes": 1,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 279
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 17,
-            "recommendedVotes": 220,
-            "notRecommendedVotes": 146
-          },
-          {
-            "players": "2",
-            "bestVotes": 94,
-            "recommendedVotes": 329,
-            "notRecommendedVotes": 64
-          },
-          {
-            "players": "3",
-            "bestVotes": 218,
-            "recommendedVotes": 264,
-            "notRecommendedVotes": 15
-          },
-          {
-            "players": "4",
-            "bestVotes": 319,
-            "recommendedVotes": 174,
-            "notRecommendedVotes": 14
-          },
-          {
-            "players": "5",
-            "bestVotes": 90,
-            "recommendedVotes": 228,
-            "notRecommendedVotes": 120
-          },
           {
             "players": "6",
             "bestVotes": 20,
@@ -1091,48 +544,18 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 155,
-            "recommendedVotes": 381,
-            "notRecommendedVotes": 124
-          },
-          {
             "players": "3",
             "bestVotes": 439,
             "recommendedVotes": 248,
             "notRecommendedVotes": 13
-          },
-          {
-            "players": "4",
-            "bestVotes": 313,
-            "recommendedVotes": 326,
-            "notRecommendedVotes": 31
-          },
-          {
-            "players": "5",
-            "bestVotes": 81,
-            "recommendedVotes": 284,
-            "notRecommendedVotes": 242
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 15,
-            "notRecommendedVotes": 394
-          },
-          {
             "players": "2",
             "bestVotes": 155,
             "recommendedVotes": 381,
             "notRecommendedVotes": 124
-          },
-          {
-            "players": "3",
-            "bestVotes": 439,
-            "recommendedVotes": 248,
-            "notRecommendedVotes": 13
           },
           {
             "players": "4",
@@ -1145,12 +568,6 @@
             "bestVotes": 81,
             "recommendedVotes": 284,
             "notRecommendedVotes": 242
-          },
-          {
-            "players": "5+",
-            "bestVotes": 0,
-            "recommendedVotes": 2,
-            "notRecommendedVotes": 351
           }
         ],
         "notRecommended": [
@@ -1159,30 +576,6 @@
             "bestVotes": 0,
             "recommendedVotes": 15,
             "notRecommendedVotes": 394
-          },
-          {
-            "players": "2",
-            "bestVotes": 155,
-            "recommendedVotes": 381,
-            "notRecommendedVotes": 124
-          },
-          {
-            "players": "3",
-            "bestVotes": 439,
-            "recommendedVotes": 248,
-            "notRecommendedVotes": 13
-          },
-          {
-            "players": "4",
-            "bestVotes": 313,
-            "recommendedVotes": 326,
-            "notRecommendedVotes": 31
-          },
-          {
-            "players": "5",
-            "bestVotes": 81,
-            "recommendedVotes": 284,
-            "notRecommendedVotes": 242
           },
           {
             "players": "5+",
@@ -1212,36 +605,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 4,
-            "recommendedVotes": 47,
-            "notRecommendedVotes": 105
-          },
-          {
-            "players": "2",
-            "bestVotes": 9,
-            "recommendedVotes": 99,
-            "notRecommendedVotes": 76
-          },
-          {
-            "players": "3",
-            "bestVotes": 23,
-            "recommendedVotes": 96,
-            "notRecommendedVotes": 39
-          },
-          {
-            "players": "4",
-            "bestVotes": 57,
-            "recommendedVotes": 109,
-            "notRecommendedVotes": 12
-          },
-          {
-            "players": "5",
-            "bestVotes": 30,
-            "recommendedVotes": 120,
-            "notRecommendedVotes": 14
-          },
-          {
             "players": "6",
             "bestVotes": 110,
             "recommendedVotes": 50,
@@ -1250,12 +613,6 @@
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 4,
-            "recommendedVotes": 47,
-            "notRecommendedVotes": 105
-          },
-          {
             "players": "2",
             "bestVotes": 9,
             "recommendedVotes": 99,
@@ -1278,18 +635,6 @@
             "bestVotes": 30,
             "recommendedVotes": 120,
             "notRecommendedVotes": 14
-          },
-          {
-            "players": "6",
-            "bestVotes": 110,
-            "recommendedVotes": 50,
-            "notRecommendedVotes": 17
-          },
-          {
-            "players": "6+",
-            "bestVotes": 0,
-            "recommendedVotes": 2,
-            "notRecommendedVotes": 108
           }
         ],
         "notRecommended": [
@@ -1298,36 +643,6 @@
             "bestVotes": 4,
             "recommendedVotes": 47,
             "notRecommendedVotes": 105
-          },
-          {
-            "players": "2",
-            "bestVotes": 9,
-            "recommendedVotes": 99,
-            "notRecommendedVotes": 76
-          },
-          {
-            "players": "3",
-            "bestVotes": 23,
-            "recommendedVotes": 96,
-            "notRecommendedVotes": 39
-          },
-          {
-            "players": "4",
-            "bestVotes": 57,
-            "recommendedVotes": 109,
-            "notRecommendedVotes": 12
-          },
-          {
-            "players": "5",
-            "bestVotes": 30,
-            "recommendedVotes": 120,
-            "notRecommendedVotes": 14
-          },
-          {
-            "players": "6",
-            "bestVotes": 110,
-            "recommendedVotes": 50,
-            "notRecommendedVotes": 17
           },
           {
             "players": "6+",
@@ -1353,27 +668,9 @@
       "maxPlaytime": 0,
       "minAge": 0,
       "rating": 6.7,
-      "bggRank": 2750,
+      "bggRank": 2751,
       "suggestedPlayerCounts": {
         "best": [
-          {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 0,
-            "notRecommendedVotes": 15
-          },
-          {
-            "players": "2",
-            "bestVotes": 4,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "3",
-            "bestVotes": 8,
-            "recommendedVotes": 13,
-            "notRecommendedVotes": 0
-          },
           {
             "players": "4",
             "bestVotes": 19,
@@ -1393,12 +690,6 @@
             "bestVotes": 8,
             "recommendedVotes": 13,
             "notRecommendedVotes": 0
-          },
-          {
-            "players": "4",
-            "bestVotes": 19,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 0
           }
         ],
         "notRecommended": [
@@ -1407,12 +698,6 @@
             "bestVotes": 1,
             "recommendedVotes": 0,
             "notRecommendedVotes": 15
-          },
-          {
-            "players": "2",
-            "bestVotes": 4,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 3
           },
           {
             "players": "4+",
@@ -1442,28 +727,10 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 5,
-            "recommendedVotes": 40,
-            "notRecommendedVotes": 22
-          },
-          {
-            "players": "2",
-            "bestVotes": 28,
-            "recommendedVotes": 60,
-            "notRecommendedVotes": 2
-          },
-          {
             "players": "3",
             "bestVotes": 50,
             "recommendedVotes": 23,
             "notRecommendedVotes": 3
-          },
-          {
-            "players": "4",
-            "bestVotes": 11,
-            "recommendedVotes": 51,
-            "notRecommendedVotes": 8
           }
         ],
         "recommended": [
@@ -1480,12 +747,6 @@
             "notRecommendedVotes": 2
           },
           {
-            "players": "3",
-            "bestVotes": 50,
-            "recommendedVotes": 23,
-            "notRecommendedVotes": 3
-          },
-          {
             "players": "4",
             "bestVotes": 11,
             "recommendedVotes": 51,
@@ -1493,30 +754,6 @@
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 5,
-            "recommendedVotes": 40,
-            "notRecommendedVotes": 22
-          },
-          {
-            "players": "2",
-            "bestVotes": 28,
-            "recommendedVotes": 60,
-            "notRecommendedVotes": 2
-          },
-          {
-            "players": "3",
-            "bestVotes": 50,
-            "recommendedVotes": 23,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "4",
-            "bestVotes": 11,
-            "recommendedVotes": 51,
-            "notRecommendedVotes": 8
-          },
           {
             "players": "4+",
             "bestVotes": 0,
@@ -1545,50 +782,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 3,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 25
-          },
-          {
             "players": "2",
             "bestVotes": 41,
             "recommendedVotes": 33,
             "notRecommendedVotes": 1
-          },
-          {
-            "players": "3",
-            "bestVotes": 23,
-            "recommendedVotes": 38,
-            "notRecommendedVotes": 2
-          },
-          {
-            "players": "4",
-            "bestVotes": 17,
-            "recommendedVotes": 31,
-            "notRecommendedVotes": 12
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 31
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 3,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 25
-          },
-          {
-            "players": "2",
-            "bestVotes": 41,
-            "recommendedVotes": 33,
-            "notRecommendedVotes": 1
-          },
-          {
             "players": "3",
             "bestVotes": 23,
             "recommendedVotes": 38,
@@ -1599,12 +800,6 @@
             "bestVotes": 17,
             "recommendedVotes": 31,
             "notRecommendedVotes": 12
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 31
           }
         ],
         "notRecommended": [
@@ -1613,24 +808,6 @@
             "bestVotes": 3,
             "recommendedVotes": 14,
             "notRecommendedVotes": 25
-          },
-          {
-            "players": "2",
-            "bestVotes": 41,
-            "recommendedVotes": 33,
-            "notRecommendedVotes": 1
-          },
-          {
-            "players": "3",
-            "bestVotes": 23,
-            "recommendedVotes": 38,
-            "notRecommendedVotes": 2
-          },
-          {
-            "players": "4",
-            "bestVotes": 17,
-            "recommendedVotes": 31,
-            "notRecommendedVotes": 12
           },
           {
             "players": "4+",
@@ -1660,50 +837,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 4,
-            "recommendedVotes": 84,
-            "notRecommendedVotes": 460
-          },
-          {
             "players": "2",
             "bestVotes": 533,
             "recommendedVotes": 311,
             "notRecommendedVotes": 69
-          },
-          {
-            "players": "3",
-            "bestVotes": 325,
-            "recommendedVotes": 465,
-            "notRecommendedVotes": 34
-          },
-          {
-            "players": "4",
-            "bestVotes": 218,
-            "recommendedVotes": 413,
-            "notRecommendedVotes": 173
-          },
-          {
-            "players": "4+",
-            "bestVotes": 6,
-            "recommendedVotes": 17,
-            "notRecommendedVotes": 435
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 4,
-            "recommendedVotes": 84,
-            "notRecommendedVotes": 460
-          },
-          {
-            "players": "2",
-            "bestVotes": 533,
-            "recommendedVotes": 311,
-            "notRecommendedVotes": 69
-          },
-          {
             "players": "3",
             "bestVotes": 325,
             "recommendedVotes": 465,
@@ -1714,12 +855,6 @@
             "bestVotes": 218,
             "recommendedVotes": 413,
             "notRecommendedVotes": 173
-          },
-          {
-            "players": "4+",
-            "bestVotes": 6,
-            "recommendedVotes": 17,
-            "notRecommendedVotes": 435
           }
         ],
         "notRecommended": [
@@ -1728,24 +863,6 @@
             "bestVotes": 4,
             "recommendedVotes": 84,
             "notRecommendedVotes": 460
-          },
-          {
-            "players": "2",
-            "bestVotes": 533,
-            "recommendedVotes": 311,
-            "notRecommendedVotes": 69
-          },
-          {
-            "players": "3",
-            "bestVotes": 325,
-            "recommendedVotes": 465,
-            "notRecommendedVotes": 34
-          },
-          {
-            "players": "4",
-            "bestVotes": 218,
-            "recommendedVotes": 413,
-            "notRecommendedVotes": 173
           },
           {
             "players": "4+",
@@ -1771,42 +888,18 @@
       "maxPlaytime": 0,
       "minAge": 0,
       "rating": 7.2,
-      "bggRank": 547,
+      "bggRank": 548,
       "suggestedPlayerCounts": {
         "best": [
-          {
-            "players": "2",
-            "bestVotes": 11,
-            "recommendedVotes": 93,
-            "notRecommendedVotes": 74
-          },
-          {
-            "players": "3",
-            "bestVotes": 77,
-            "recommendedVotes": 104,
-            "notRecommendedVotes": 5
-          },
           {
             "players": "4",
             "bestVotes": 149,
             "recommendedVotes": 33,
             "notRecommendedVotes": 5
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 85
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 2,
-            "notRecommendedVotes": 107
-          },
-          {
             "players": "2",
             "bestVotes": 11,
             "recommendedVotes": 93,
@@ -1817,18 +910,6 @@
             "bestVotes": 77,
             "recommendedVotes": 104,
             "notRecommendedVotes": 5
-          },
-          {
-            "players": "4",
-            "bestVotes": 149,
-            "recommendedVotes": 33,
-            "notRecommendedVotes": 5
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 85
           }
         ],
         "notRecommended": [
@@ -1837,24 +918,6 @@
             "bestVotes": 0,
             "recommendedVotes": 2,
             "notRecommendedVotes": 107
-          },
-          {
-            "players": "2",
-            "bestVotes": 11,
-            "recommendedVotes": 93,
-            "notRecommendedVotes": 74
-          },
-          {
-            "players": "3",
-            "bestVotes": 77,
-            "recommendedVotes": 104,
-            "notRecommendedVotes": 5
-          },
-          {
-            "players": "4",
-            "bestVotes": 149,
-            "recommendedVotes": 33,
-            "notRecommendedVotes": 5
           },
           {
             "players": "4+",
@@ -1884,24 +947,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 46,
-            "recommendedVotes": 125,
-            "notRecommendedVotes": 76
-          },
-          {
-            "players": "3",
-            "bestVotes": 109,
-            "recommendedVotes": 134,
-            "notRecommendedVotes": 20
-          },
-          {
-            "players": "4",
-            "bestVotes": 13,
-            "recommendedVotes": 156,
-            "notRecommendedVotes": 73
-          },
-          {
             "players": "5",
             "bestVotes": 196,
             "recommendedVotes": 66,
@@ -1910,12 +955,6 @@
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 193
-          },
-          {
             "players": "2",
             "bestVotes": 46,
             "recommendedVotes": 125,
@@ -1932,18 +971,6 @@
             "bestVotes": 13,
             "recommendedVotes": 156,
             "notRecommendedVotes": 73
-          },
-          {
-            "players": "5",
-            "bestVotes": 196,
-            "recommendedVotes": 66,
-            "notRecommendedVotes": 20
-          },
-          {
-            "players": "5+",
-            "bestVotes": 0,
-            "recommendedVotes": 2,
-            "notRecommendedVotes": 139
           }
         ],
         "notRecommended": [
@@ -1952,30 +979,6 @@
             "bestVotes": 0,
             "recommendedVotes": 1,
             "notRecommendedVotes": 193
-          },
-          {
-            "players": "2",
-            "bestVotes": 46,
-            "recommendedVotes": 125,
-            "notRecommendedVotes": 76
-          },
-          {
-            "players": "3",
-            "bestVotes": 109,
-            "recommendedVotes": 134,
-            "notRecommendedVotes": 20
-          },
-          {
-            "players": "4",
-            "bestVotes": 13,
-            "recommendedVotes": 156,
-            "notRecommendedVotes": 73
-          },
-          {
-            "players": "5",
-            "bestVotes": 196,
-            "recommendedVotes": 66,
-            "notRecommendedVotes": 20
           },
           {
             "players": "5+",
@@ -2001,58 +1004,22 @@
       "maxPlaytime": 0,
       "minAge": 0,
       "rating": 6.5,
-      "bggRank": 3748,
+      "bggRank": 3751,
       "suggestedPlayerCounts": {
         "best": [
-          {
-            "players": "2",
-            "bestVotes": 3,
-            "recommendedVotes": 10,
-            "notRecommendedVotes": 18
-          },
-          {
-            "players": "3",
-            "bestVotes": 10,
-            "recommendedVotes": 20,
-            "notRecommendedVotes": 1
-          },
           {
             "players": "4",
             "bestVotes": 19,
             "recommendedVotes": 10,
             "notRecommendedVotes": 0
-          },
-          {
-            "players": "5",
-            "bestVotes": 10,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "6",
-            "bestVotes": 5,
-            "recommendedVotes": 12,
-            "notRecommendedVotes": 9
           }
         ],
         "recommended": [
           {
-            "players": "2",
-            "bestVotes": 3,
-            "recommendedVotes": 10,
-            "notRecommendedVotes": 18
-          },
-          {
             "players": "3",
             "bestVotes": 10,
             "recommendedVotes": 20,
             "notRecommendedVotes": 1
-          },
-          {
-            "players": "4",
-            "bestVotes": 19,
-            "recommendedVotes": 10,
-            "notRecommendedVotes": 0
           },
           {
             "players": "5",
@@ -2079,24 +1046,6 @@
             "bestVotes": 3,
             "recommendedVotes": 10,
             "notRecommendedVotes": 18
-          },
-          {
-            "players": "3",
-            "bestVotes": 10,
-            "recommendedVotes": 20,
-            "notRecommendedVotes": 1
-          },
-          {
-            "players": "5",
-            "bestVotes": 10,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "6",
-            "bestVotes": 5,
-            "recommendedVotes": 12,
-            "notRecommendedVotes": 9
           },
           {
             "players": "6+",
@@ -2126,72 +1075,18 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 1,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 121
-          },
-          {
-            "players": "3",
-            "bestVotes": 2,
-            "recommendedVotes": 30,
-            "notRecommendedVotes": 125
-          },
-          {
-            "players": "4",
-            "bestVotes": 16,
-            "recommendedVotes": 101,
-            "notRecommendedVotes": 47
-          },
-          {
             "players": "5",
             "bestVotes": 182,
             "recommendedVotes": 22,
             "notRecommendedVotes": 1
-          },
-          {
-            "players": "5+",
-            "bestVotes": 20,
-            "recommendedVotes": 16,
-            "notRecommendedVotes": 49
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 2,
-            "notRecommendedVotes": 116
-          },
-          {
-            "players": "2",
-            "bestVotes": 1,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 121
-          },
-          {
-            "players": "3",
-            "bestVotes": 2,
-            "recommendedVotes": 30,
-            "notRecommendedVotes": 125
-          },
-          {
             "players": "4",
             "bestVotes": 16,
             "recommendedVotes": 101,
             "notRecommendedVotes": 47
-          },
-          {
-            "players": "5",
-            "bestVotes": 182,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 1
-          },
-          {
-            "players": "5+",
-            "bestVotes": 20,
-            "recommendedVotes": 16,
-            "notRecommendedVotes": 49
           }
         ],
         "notRecommended": [
@@ -2212,18 +1107,6 @@
             "bestVotes": 2,
             "recommendedVotes": 30,
             "notRecommendedVotes": 125
-          },
-          {
-            "players": "4",
-            "bestVotes": 16,
-            "recommendedVotes": 101,
-            "notRecommendedVotes": 47
-          },
-          {
-            "players": "5",
-            "bestVotes": 182,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 1
           },
           {
             "players": "5+",
@@ -2253,38 +1136,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 62,
-            "recommendedVotes": 124,
-            "notRecommendedVotes": 73
-          },
-          {
-            "players": "3",
-            "bestVotes": 72,
-            "recommendedVotes": 177,
-            "notRecommendedVotes": 11
-          },
-          {
             "players": "4",
             "bestVotes": 209,
             "recommendedVotes": 59,
             "notRecommendedVotes": 6
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 126
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 151
-          },
-          {
             "players": "2",
             "bestVotes": 62,
             "recommendedVotes": 124,
@@ -2295,18 +1154,6 @@
             "bestVotes": 72,
             "recommendedVotes": 177,
             "notRecommendedVotes": 11
-          },
-          {
-            "players": "4",
-            "bestVotes": 209,
-            "recommendedVotes": 59,
-            "notRecommendedVotes": 6
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 126
           }
         ],
         "notRecommended": [
@@ -2315,24 +1162,6 @@
             "bestVotes": 0,
             "recommendedVotes": 3,
             "notRecommendedVotes": 151
-          },
-          {
-            "players": "2",
-            "bestVotes": 62,
-            "recommendedVotes": 124,
-            "notRecommendedVotes": 73
-          },
-          {
-            "players": "3",
-            "bestVotes": 72,
-            "recommendedVotes": 177,
-            "notRecommendedVotes": 11
-          },
-          {
-            "players": "4",
-            "bestVotes": 209,
-            "recommendedVotes": 59,
-            "notRecommendedVotes": 6
           },
           {
             "players": "4+",
@@ -2362,60 +1191,24 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 3,
-            "recommendedVotes": 69,
-            "notRecommendedVotes": 453
-          },
-          {
-            "players": "2",
-            "bestVotes": 146,
-            "recommendedVotes": 559,
-            "notRecommendedVotes": 73
-          },
-          {
             "players": "3",
             "bestVotes": 571,
             "recommendedVotes": 199,
             "notRecommendedVotes": 8
-          },
-          {
-            "players": "4",
-            "bestVotes": 208,
-            "recommendedVotes": 419,
-            "notRecommendedVotes": 102
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 3,
-            "recommendedVotes": 69,
-            "notRecommendedVotes": 453
-          },
-          {
             "players": "2",
             "bestVotes": 146,
             "recommendedVotes": 559,
             "notRecommendedVotes": 73
           },
           {
-            "players": "3",
-            "bestVotes": 571,
-            "recommendedVotes": 199,
-            "notRecommendedVotes": 8
-          },
-          {
             "players": "4",
             "bestVotes": 208,
             "recommendedVotes": 419,
             "notRecommendedVotes": 102
-          },
-          {
-            "players": "4+",
-            "bestVotes": 0,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 417
           }
         ],
         "notRecommended": [
@@ -2424,24 +1217,6 @@
             "bestVotes": 3,
             "recommendedVotes": 69,
             "notRecommendedVotes": 453
-          },
-          {
-            "players": "2",
-            "bestVotes": 146,
-            "recommendedVotes": 559,
-            "notRecommendedVotes": 73
-          },
-          {
-            "players": "3",
-            "bestVotes": 571,
-            "recommendedVotes": 199,
-            "notRecommendedVotes": 8
-          },
-          {
-            "players": "4",
-            "bestVotes": 208,
-            "recommendedVotes": 419,
-            "notRecommendedVotes": 102
           },
           {
             "players": "4+",
@@ -2471,24 +1246,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 4,
-            "recommendedVotes": 8,
-            "notRecommendedVotes": 15
-          },
-          {
-            "players": "2",
-            "bestVotes": 5,
-            "recommendedVotes": 17,
-            "notRecommendedVotes": 11
-          },
-          {
-            "players": "3",
-            "bestVotes": 13,
-            "recommendedVotes": 23,
-            "notRecommendedVotes": 0
-          },
-          {
             "players": "4",
             "bestVotes": 21,
             "recommendedVotes": 11,
@@ -2497,12 +1254,6 @@
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 4,
-            "recommendedVotes": 8,
-            "notRecommendedVotes": 15
-          },
-          {
             "players": "2",
             "bestVotes": 5,
             "recommendedVotes": 17,
@@ -2513,12 +1264,6 @@
             "bestVotes": 13,
             "recommendedVotes": 23,
             "notRecommendedVotes": 0
-          },
-          {
-            "players": "4",
-            "bestVotes": 21,
-            "recommendedVotes": 11,
-            "notRecommendedVotes": 2
           }
         ],
         "notRecommended": [
@@ -2527,18 +1272,6 @@
             "bestVotes": 4,
             "recommendedVotes": 8,
             "notRecommendedVotes": 15
-          },
-          {
-            "players": "2",
-            "bestVotes": 5,
-            "recommendedVotes": 17,
-            "notRecommendedVotes": 11
-          },
-          {
-            "players": "4",
-            "bestVotes": 21,
-            "recommendedVotes": 11,
-            "notRecommendedVotes": 2
           },
           {
             "players": "4+",
@@ -2568,34 +1301,10 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 24,
-            "recommendedVotes": 314,
-            "notRecommendedVotes": 198
-          },
-          {
-            "players": "2",
-            "bestVotes": 270,
-            "recommendedVotes": 443,
-            "notRecommendedVotes": 51
-          },
-          {
             "players": "3",
             "bestVotes": 580,
             "recommendedVotes": 190,
             "notRecommendedVotes": 13
-          },
-          {
-            "players": "4",
-            "bestVotes": 123,
-            "recommendedVotes": 355,
-            "notRecommendedVotes": 205
-          },
-          {
-            "players": "5",
-            "bestVotes": 16,
-            "recommendedVotes": 118,
-            "notRecommendedVotes": 469
           }
         ],
         "recommended": [
@@ -2612,55 +1321,13 @@
             "notRecommendedVotes": 51
           },
           {
-            "players": "3",
-            "bestVotes": 580,
-            "recommendedVotes": 190,
-            "notRecommendedVotes": 13
-          },
-          {
             "players": "4",
             "bestVotes": 123,
             "recommendedVotes": 355,
             "notRecommendedVotes": 205
-          },
-          {
-            "players": "5",
-            "bestVotes": 16,
-            "recommendedVotes": 118,
-            "notRecommendedVotes": 469
-          },
-          {
-            "players": "5+",
-            "bestVotes": 0,
-            "recommendedVotes": 2,
-            "notRecommendedVotes": 364
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 24,
-            "recommendedVotes": 314,
-            "notRecommendedVotes": 198
-          },
-          {
-            "players": "2",
-            "bestVotes": 270,
-            "recommendedVotes": 443,
-            "notRecommendedVotes": 51
-          },
-          {
-            "players": "3",
-            "bestVotes": 580,
-            "recommendedVotes": 190,
-            "notRecommendedVotes": 13
-          },
-          {
-            "players": "4",
-            "bestVotes": 123,
-            "recommendedVotes": 355,
-            "notRecommendedVotes": 205
-          },
           {
             "players": "5",
             "bestVotes": 16,
@@ -2691,21 +1358,9 @@
       "maxPlaytime": 0,
       "minAge": 0,
       "rating": 7.2,
-      "bggRank": 1865,
+      "bggRank": 1862,
       "suggestedPlayerCounts": {
         "best": [
-          {
-            "players": "2",
-            "bestVotes": 1,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 11
-          },
-          {
-            "players": "3",
-            "bestVotes": 12,
-            "recommendedVotes": 16,
-            "notRecommendedVotes": 2
-          },
           {
             "players": "4",
             "bestVotes": 19,
@@ -2715,22 +1370,10 @@
         ],
         "recommended": [
           {
-            "players": "2",
-            "bestVotes": 1,
-            "recommendedVotes": 4,
-            "notRecommendedVotes": 11
-          },
-          {
             "players": "3",
             "bestVotes": 12,
             "recommendedVotes": 16,
             "notRecommendedVotes": 2
-          },
-          {
-            "players": "4",
-            "bestVotes": 19,
-            "recommendedVotes": 7,
-            "notRecommendedVotes": 0
           }
         ],
         "notRecommended": [
@@ -2745,12 +1388,6 @@
             "bestVotes": 1,
             "recommendedVotes": 4,
             "notRecommendedVotes": 11
-          },
-          {
-            "players": "3",
-            "bestVotes": 12,
-            "recommendedVotes": 16,
-            "notRecommendedVotes": 2
           },
           {
             "players": "4+",
@@ -2780,24 +1417,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 12,
-            "notRecommendedVotes": 138
-          },
-          {
-            "players": "2",
-            "bestVotes": 31,
-            "recommendedVotes": 130,
-            "notRecommendedVotes": 17
-          },
-          {
-            "players": "3",
-            "bestVotes": 52,
-            "recommendedVotes": 129,
-            "notRecommendedVotes": 4
-          },
-          {
             "players": "4",
             "bestVotes": 140,
             "recommendedVotes": 45,
@@ -2806,12 +1425,6 @@
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 12,
-            "notRecommendedVotes": 138
-          },
-          {
             "players": "2",
             "bestVotes": 31,
             "recommendedVotes": 130,
@@ -2822,18 +1435,6 @@
             "bestVotes": 52,
             "recommendedVotes": 129,
             "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 140,
-            "recommendedVotes": 45,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "4+",
-            "bestVotes": 0,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 125
           }
         ],
         "notRecommended": [
@@ -2842,24 +1443,6 @@
             "bestVotes": 1,
             "recommendedVotes": 12,
             "notRecommendedVotes": 138
-          },
-          {
-            "players": "2",
-            "bestVotes": 31,
-            "recommendedVotes": 130,
-            "notRecommendedVotes": 17
-          },
-          {
-            "players": "3",
-            "bestVotes": 52,
-            "recommendedVotes": 129,
-            "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 140,
-            "recommendedVotes": 45,
-            "notRecommendedVotes": 3
           },
           {
             "players": "4+",
@@ -2889,18 +1472,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 452
-          },
-          {
-            "players": "2",
-            "bestVotes": 84,
-            "recommendedVotes": 437,
-            "notRecommendedVotes": 157
-          },
-          {
             "players": "3",
             "bestVotes": 407,
             "recommendedVotes": 303,
@@ -2911,56 +1482,20 @@
             "bestVotes": 481,
             "recommendedVotes": 218,
             "notRecommendedVotes": 15
-          },
-          {
-            "players": "5",
-            "bestVotes": 126,
-            "recommendedVotes": 362,
-            "notRecommendedVotes": 129
-          },
-          {
-            "players": "5+",
-            "bestVotes": 8,
-            "recommendedVotes": 42,
-            "notRecommendedVotes": 344
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 14,
-            "notRecommendedVotes": 452
-          },
-          {
             "players": "2",
             "bestVotes": 84,
             "recommendedVotes": 437,
             "notRecommendedVotes": 157
           },
           {
-            "players": "3",
-            "bestVotes": 407,
-            "recommendedVotes": 303,
-            "notRecommendedVotes": 12
-          },
-          {
-            "players": "4",
-            "bestVotes": 481,
-            "recommendedVotes": 218,
-            "notRecommendedVotes": 15
-          },
-          {
             "players": "5",
             "bestVotes": 126,
             "recommendedVotes": 362,
             "notRecommendedVotes": 129
-          },
-          {
-            "players": "5+",
-            "bestVotes": 8,
-            "recommendedVotes": 42,
-            "notRecommendedVotes": 344
           }
         ],
         "notRecommended": [
@@ -2969,30 +1504,6 @@
             "bestVotes": 1,
             "recommendedVotes": 14,
             "notRecommendedVotes": 452
-          },
-          {
-            "players": "2",
-            "bestVotes": 84,
-            "recommendedVotes": 437,
-            "notRecommendedVotes": 157
-          },
-          {
-            "players": "3",
-            "bestVotes": 407,
-            "recommendedVotes": 303,
-            "notRecommendedVotes": 12
-          },
-          {
-            "players": "4",
-            "bestVotes": 481,
-            "recommendedVotes": 218,
-            "notRecommendedVotes": 15
-          },
-          {
-            "players": "5",
-            "bestVotes": 126,
-            "recommendedVotes": 362,
-            "notRecommendedVotes": 129
           },
           {
             "players": "5+",
@@ -3022,44 +1533,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 2,
-            "notRecommendedVotes": 251
-          },
-          {
-            "players": "2",
-            "bestVotes": 28,
-            "recommendedVotes": 194,
-            "notRecommendedVotes": 118
-          },
-          {
-            "players": "3",
-            "bestVotes": 119,
-            "recommendedVotes": 206,
-            "notRecommendedVotes": 9
-          },
-          {
             "players": "4",
             "bestVotes": 258,
             "recommendedVotes": 83,
             "notRecommendedVotes": 15
-          },
-          {
-            "players": "4+",
-            "bestVotes": 8,
-            "recommendedVotes": 29,
-            "notRecommendedVotes": 158
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 2,
-            "notRecommendedVotes": 251
-          },
-          {
             "players": "2",
             "bestVotes": 28,
             "recommendedVotes": 194,
@@ -3070,18 +1551,6 @@
             "bestVotes": 119,
             "recommendedVotes": 206,
             "notRecommendedVotes": 9
-          },
-          {
-            "players": "4",
-            "bestVotes": 258,
-            "recommendedVotes": 83,
-            "notRecommendedVotes": 15
-          },
-          {
-            "players": "4+",
-            "bestVotes": 8,
-            "recommendedVotes": 29,
-            "notRecommendedVotes": 158
           }
         ],
         "notRecommended": [
@@ -3090,24 +1559,6 @@
             "bestVotes": 1,
             "recommendedVotes": 2,
             "notRecommendedVotes": 251
-          },
-          {
-            "players": "2",
-            "bestVotes": 28,
-            "recommendedVotes": 194,
-            "notRecommendedVotes": 118
-          },
-          {
-            "players": "3",
-            "bestVotes": 119,
-            "recommendedVotes": 206,
-            "notRecommendedVotes": 9
-          },
-          {
-            "players": "4",
-            "bestVotes": 258,
-            "recommendedVotes": 83,
-            "notRecommendedVotes": 15
           },
           {
             "players": "4+",
@@ -3133,27 +1584,9 @@
       "maxPlaytime": 0,
       "minAge": 0,
       "rating": 7.5,
-      "bggRank": 718,
+      "bggRank": 719,
       "suggestedPlayerCounts": {
         "best": [
-          {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 0,
-            "notRecommendedVotes": 52
-          },
-          {
-            "players": "2",
-            "bestVotes": 21,
-            "recommendedVotes": 62,
-            "notRecommendedVotes": 14
-          },
-          {
-            "players": "3",
-            "bestVotes": 31,
-            "recommendedVotes": 56,
-            "notRecommendedVotes": 3
-          },
           {
             "players": "4",
             "bestVotes": 55,
@@ -3173,12 +1606,6 @@
             "bestVotes": 31,
             "recommendedVotes": 56,
             "notRecommendedVotes": 3
-          },
-          {
-            "players": "4",
-            "bestVotes": 55,
-            "recommendedVotes": 27,
-            "notRecommendedVotes": 6
           }
         ],
         "notRecommended": [
@@ -3187,24 +1614,6 @@
             "bestVotes": 1,
             "recommendedVotes": 0,
             "notRecommendedVotes": 52
-          },
-          {
-            "players": "2",
-            "bestVotes": 21,
-            "recommendedVotes": 62,
-            "notRecommendedVotes": 14
-          },
-          {
-            "players": "3",
-            "bestVotes": 31,
-            "recommendedVotes": 56,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "4",
-            "bestVotes": 55,
-            "recommendedVotes": 27,
-            "notRecommendedVotes": 6
           },
           {
             "players": "4+",
@@ -3234,34 +1643,10 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 9,
-            "recommendedVotes": 39,
-            "notRecommendedVotes": 32
-          },
-          {
-            "players": "2",
-            "bestVotes": 7,
-            "recommendedVotes": 55,
-            "notRecommendedVotes": 29
-          },
-          {
-            "players": "3",
-            "bestVotes": 31,
-            "recommendedVotes": 57,
-            "notRecommendedVotes": 4
-          },
-          {
             "players": "4",
             "bestVotes": 60,
             "recommendedVotes": 31,
             "notRecommendedVotes": 2
-          },
-          {
-            "players": "5",
-            "bestVotes": 14,
-            "recommendedVotes": 48,
-            "notRecommendedVotes": 16
           }
         ],
         "recommended": [
@@ -3284,12 +1669,6 @@
             "notRecommendedVotes": 4
           },
           {
-            "players": "4",
-            "bestVotes": 60,
-            "recommendedVotes": 31,
-            "notRecommendedVotes": 2
-          },
-          {
             "players": "5",
             "bestVotes": 14,
             "recommendedVotes": 48,
@@ -3297,36 +1676,6 @@
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 9,
-            "recommendedVotes": 39,
-            "notRecommendedVotes": 32
-          },
-          {
-            "players": "2",
-            "bestVotes": 7,
-            "recommendedVotes": 55,
-            "notRecommendedVotes": 29
-          },
-          {
-            "players": "3",
-            "bestVotes": 31,
-            "recommendedVotes": 57,
-            "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 60,
-            "recommendedVotes": 31,
-            "notRecommendedVotes": 2
-          },
-          {
-            "players": "5",
-            "bestVotes": 14,
-            "recommendedVotes": 48,
-            "notRecommendedVotes": 16
-          },
           {
             "players": "5+",
             "bestVotes": 0,
@@ -3351,21 +1700,9 @@
       "maxPlaytime": 0,
       "minAge": 0,
       "rating": 7,
-      "bggRank": 1583,
+      "bggRank": 1582,
       "suggestedPlayerCounts": {
         "best": [
-          {
-            "players": "2",
-            "bestVotes": 8,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 21
-          },
-          {
-            "players": "3",
-            "bestVotes": 15,
-            "recommendedVotes": 26,
-            "notRecommendedVotes": 3
-          },
           {
             "players": "4",
             "bestVotes": 36,
@@ -3375,22 +1712,10 @@
         ],
         "recommended": [
           {
-            "players": "2",
-            "bestVotes": 8,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 21
-          },
-          {
             "players": "3",
             "bestVotes": 15,
             "recommendedVotes": 26,
             "notRecommendedVotes": 3
-          },
-          {
-            "players": "4",
-            "bestVotes": 36,
-            "recommendedVotes": 11,
-            "notRecommendedVotes": 2
           }
         ],
         "notRecommended": [
@@ -3405,18 +1730,6 @@
             "bestVotes": 8,
             "recommendedVotes": 3,
             "notRecommendedVotes": 21
-          },
-          {
-            "players": "3",
-            "bestVotes": 15,
-            "recommendedVotes": 26,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "4",
-            "bestVotes": 36,
-            "recommendedVotes": 11,
-            "notRecommendedVotes": 2
           },
           {
             "players": "4+",
@@ -3446,74 +1759,19 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 7,
-            "recommendedVotes": 55,
-            "notRecommendedVotes": 197
-          },
-          {
             "players": "2",
             "bestVotes": 338,
             "recommendedVotes": 22,
             "notRecommendedVotes": 2
-          },
-          {
-            "players": "3",
-            "bestVotes": 20,
-            "recommendedVotes": 67,
-            "notRecommendedVotes": 156
-          },
-          {
-            "players": "4",
-            "bestVotes": 3,
-            "recommendedVotes": 27,
-            "notRecommendedVotes": 67
           }
         ],
-        "recommended": [
-          {
-            "players": "1",
-            "bestVotes": 7,
-            "recommendedVotes": 55,
-            "notRecommendedVotes": 197
-          },
-          {
-            "players": "2",
-            "bestVotes": 338,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 2
-          },
-          {
-            "players": "3",
-            "bestVotes": 20,
-            "recommendedVotes": 67,
-            "notRecommendedVotes": 156
-          },
-          {
-            "players": "4",
-            "bestVotes": 3,
-            "recommendedVotes": 27,
-            "notRecommendedVotes": 67
-          },
-          {
-            "players": "4+",
-            "bestVotes": 0,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 93
-          }
-        ],
+        "recommended": [],
         "notRecommended": [
           {
             "players": "1",
             "bestVotes": 7,
             "recommendedVotes": 55,
             "notRecommendedVotes": 197
-          },
-          {
-            "players": "2",
-            "bestVotes": 338,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 2
           },
           {
             "players": "3",
@@ -3551,32 +1809,14 @@
       "maxPlaytime": 0,
       "minAge": 0,
       "rating": 7.5,
-      "bggRank": 486,
+      "bggRank": 485,
       "suggestedPlayerCounts": {
         "best": [
-          {
-            "players": "1",
-            "bestVotes": 47,
-            "recommendedVotes": 59,
-            "notRecommendedVotes": 15
-          },
-          {
-            "players": "2",
-            "bestVotes": 39,
-            "recommendedVotes": 85,
-            "notRecommendedVotes": 9
-          },
           {
             "players": "3",
             "bestVotes": 75,
             "recommendedVotes": 35,
             "notRecommendedVotes": 5
-          },
-          {
-            "players": "4",
-            "bestVotes": 20,
-            "recommendedVotes": 71,
-            "notRecommendedVotes": 17
           }
         ],
         "recommended": [
@@ -3593,49 +1833,13 @@
             "notRecommendedVotes": 9
           },
           {
-            "players": "3",
-            "bestVotes": 75,
-            "recommendedVotes": 35,
-            "notRecommendedVotes": 5
-          },
-          {
             "players": "4",
             "bestVotes": 20,
             "recommendedVotes": 71,
             "notRecommendedVotes": 17
-          },
-          {
-            "players": "4+",
-            "bestVotes": 0,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 64
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 47,
-            "recommendedVotes": 59,
-            "notRecommendedVotes": 15
-          },
-          {
-            "players": "2",
-            "bestVotes": 39,
-            "recommendedVotes": 85,
-            "notRecommendedVotes": 9
-          },
-          {
-            "players": "3",
-            "bestVotes": 75,
-            "recommendedVotes": 35,
-            "notRecommendedVotes": 5
-          },
-          {
-            "players": "4",
-            "bestVotes": 20,
-            "recommendedVotes": 71,
-            "notRecommendedVotes": 17
-          },
           {
             "players": "4+",
             "bestVotes": 0,
@@ -3664,18 +1868,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 8,
-            "recommendedVotes": 87,
-            "notRecommendedVotes": 65
-          },
-          {
-            "players": "2",
-            "bestVotes": 51,
-            "recommendedVotes": 131,
-            "notRecommendedVotes": 26
-          },
-          {
             "players": "3",
             "bestVotes": 128,
             "recommendedVotes": 83,
@@ -3700,51 +1892,9 @@
             "bestVotes": 51,
             "recommendedVotes": 131,
             "notRecommendedVotes": 26
-          },
-          {
-            "players": "3",
-            "bestVotes": 128,
-            "recommendedVotes": 83,
-            "notRecommendedVotes": 9
-          },
-          {
-            "players": "4",
-            "bestVotes": 88,
-            "recommendedVotes": 84,
-            "notRecommendedVotes": 34
-          },
-          {
-            "players": "4+",
-            "bestVotes": 0,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 115
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 8,
-            "recommendedVotes": 87,
-            "notRecommendedVotes": 65
-          },
-          {
-            "players": "2",
-            "bestVotes": 51,
-            "recommendedVotes": 131,
-            "notRecommendedVotes": 26
-          },
-          {
-            "players": "3",
-            "bestVotes": 128,
-            "recommendedVotes": 83,
-            "notRecommendedVotes": 9
-          },
-          {
-            "players": "4",
-            "bestVotes": 88,
-            "recommendedVotes": 84,
-            "notRecommendedVotes": 34
-          },
           {
             "players": "4+",
             "bestVotes": 0,
@@ -3773,28 +1923,10 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 14,
-            "recommendedVotes": 80,
-            "notRecommendedVotes": 52
-          },
-          {
-            "players": "2",
-            "bestVotes": 49,
-            "recommendedVotes": 110,
-            "notRecommendedVotes": 32
-          },
-          {
             "players": "3",
             "bestVotes": 134,
             "recommendedVotes": 53,
             "notRecommendedVotes": 6
-          },
-          {
-            "players": "4",
-            "bestVotes": 28,
-            "recommendedVotes": 99,
-            "notRecommendedVotes": 43
           }
         ],
         "recommended": [
@@ -3811,12 +1943,6 @@
             "notRecommendedVotes": 32
           },
           {
-            "players": "3",
-            "bestVotes": 134,
-            "recommendedVotes": 53,
-            "notRecommendedVotes": 6
-          },
-          {
             "players": "4",
             "bestVotes": 28,
             "recommendedVotes": 99,
@@ -3824,30 +1950,6 @@
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 14,
-            "recommendedVotes": 80,
-            "notRecommendedVotes": 52
-          },
-          {
-            "players": "2",
-            "bestVotes": 49,
-            "recommendedVotes": 110,
-            "notRecommendedVotes": 32
-          },
-          {
-            "players": "3",
-            "bestVotes": 134,
-            "recommendedVotes": 53,
-            "notRecommendedVotes": 6
-          },
-          {
-            "players": "4",
-            "bestVotes": 28,
-            "recommendedVotes": 99,
-            "notRecommendedVotes": 43
-          },
           {
             "players": "4+",
             "bestVotes": 0,
@@ -3876,54 +1978,24 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 25,
-            "recommendedVotes": 169,
-            "notRecommendedVotes": 64
-          },
-          {
             "players": "3",
             "bestVotes": 170,
             "recommendedVotes": 90,
             "notRecommendedVotes": 5
-          },
-          {
-            "players": "4",
-            "bestVotes": 84,
-            "recommendedVotes": 144,
-            "notRecommendedVotes": 35
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 199
-          },
-          {
             "players": "2",
             "bestVotes": 25,
             "recommendedVotes": 169,
             "notRecommendedVotes": 64
           },
           {
-            "players": "3",
-            "bestVotes": 170,
-            "recommendedVotes": 90,
-            "notRecommendedVotes": 5
-          },
-          {
             "players": "4",
             "bestVotes": 84,
             "recommendedVotes": 144,
             "notRecommendedVotes": 35
-          },
-          {
-            "players": "4+",
-            "bestVotes": 0,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 156
           }
         ],
         "notRecommended": [
@@ -3932,24 +2004,6 @@
             "bestVotes": 0,
             "recommendedVotes": 3,
             "notRecommendedVotes": 199
-          },
-          {
-            "players": "2",
-            "bestVotes": 25,
-            "recommendedVotes": 169,
-            "notRecommendedVotes": 64
-          },
-          {
-            "players": "3",
-            "bestVotes": 170,
-            "recommendedVotes": 90,
-            "notRecommendedVotes": 5
-          },
-          {
-            "players": "4",
-            "bestVotes": 84,
-            "recommendedVotes": 144,
-            "notRecommendedVotes": 35
           },
           {
             "players": "4+",
@@ -3979,41 +2033,17 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 46,
-            "recommendedVotes": 78,
-            "notRecommendedVotes": 4
-          },
-          {
             "players": "3",
             "bestVotes": 80,
             "recommendedVotes": 42,
             "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 22,
-            "recommendedVotes": 66,
-            "notRecommendedVotes": 26
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 75
-          },
-          {
             "players": "2",
             "bestVotes": 46,
             "recommendedVotes": 78,
-            "notRecommendedVotes": 4
-          },
-          {
-            "players": "3",
-            "bestVotes": 80,
-            "recommendedVotes": 42,
             "notRecommendedVotes": 4
           },
           {
@@ -4029,24 +2059,6 @@
             "bestVotes": 0,
             "recommendedVotes": 5,
             "notRecommendedVotes": 75
-          },
-          {
-            "players": "2",
-            "bestVotes": 46,
-            "recommendedVotes": 78,
-            "notRecommendedVotes": 4
-          },
-          {
-            "players": "3",
-            "bestVotes": 80,
-            "recommendedVotes": 42,
-            "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 22,
-            "recommendedVotes": 66,
-            "notRecommendedVotes": 26
           },
           {
             "players": "4+",
@@ -4076,18 +2088,6 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 23,
-            "recommendedVotes": 258,
-            "notRecommendedVotes": 751
-          },
-          {
-            "players": "3",
-            "bestVotes": 121,
-            "recommendedVotes": 814,
-            "notRecommendedVotes": 186
-          },
-          {
             "players": "4",
             "bestVotes": 864,
             "recommendedVotes": 351,
@@ -4098,62 +2098,20 @@
             "bestVotes": 805,
             "recommendedVotes": 334,
             "notRecommendedVotes": 33
-          },
-          {
-            "players": "6",
-            "bestVotes": 224,
-            "recommendedVotes": 624,
-            "notRecommendedVotes": 191
-          },
-          {
-            "players": "6+",
-            "bestVotes": 2,
-            "recommendedVotes": 15,
-            "notRecommendedVotes": 563
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 15,
-            "notRecommendedVotes": 784
-          },
-          {
-            "players": "2",
-            "bestVotes": 23,
-            "recommendedVotes": 258,
-            "notRecommendedVotes": 751
-          },
-          {
             "players": "3",
             "bestVotes": 121,
             "recommendedVotes": 814,
             "notRecommendedVotes": 186
           },
           {
-            "players": "4",
-            "bestVotes": 864,
-            "recommendedVotes": 351,
-            "notRecommendedVotes": 10
-          },
-          {
-            "players": "5",
-            "bestVotes": 805,
-            "recommendedVotes": 334,
-            "notRecommendedVotes": 33
-          },
-          {
             "players": "6",
             "bestVotes": 224,
             "recommendedVotes": 624,
             "notRecommendedVotes": 191
-          },
-          {
-            "players": "6+",
-            "bestVotes": 2,
-            "recommendedVotes": 15,
-            "notRecommendedVotes": 563
           }
         ],
         "notRecommended": [
@@ -4168,30 +2126,6 @@
             "bestVotes": 23,
             "recommendedVotes": 258,
             "notRecommendedVotes": 751
-          },
-          {
-            "players": "3",
-            "bestVotes": 121,
-            "recommendedVotes": 814,
-            "notRecommendedVotes": 186
-          },
-          {
-            "players": "4",
-            "bestVotes": 864,
-            "recommendedVotes": 351,
-            "notRecommendedVotes": 10
-          },
-          {
-            "players": "5",
-            "bestVotes": 805,
-            "recommendedVotes": 334,
-            "notRecommendedVotes": 33
-          },
-          {
-            "players": "6",
-            "bestVotes": 224,
-            "recommendedVotes": 624,
-            "notRecommendedVotes": 191
           },
           {
             "players": "6+",
@@ -4221,50 +2155,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 14,
-            "recommendedVotes": 118,
-            "notRecommendedVotes": 562
-          },
-          {
             "players": "2",
             "bestVotes": 849,
             "recommendedVotes": 318,
             "notRecommendedVotes": 37
-          },
-          {
-            "players": "3",
-            "bestVotes": 380,
-            "recommendedVotes": 649,
-            "notRecommendedVotes": 53
-          },
-          {
-            "players": "4",
-            "bestVotes": 437,
-            "recommendedVotes": 520,
-            "notRecommendedVotes": 91
-          },
-          {
-            "players": "4+",
-            "bestVotes": 19,
-            "recommendedVotes": 111,
-            "notRecommendedVotes": 481
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 14,
-            "recommendedVotes": 118,
-            "notRecommendedVotes": 562
-          },
-          {
-            "players": "2",
-            "bestVotes": 849,
-            "recommendedVotes": 318,
-            "notRecommendedVotes": 37
-          },
-          {
             "players": "3",
             "bestVotes": 380,
             "recommendedVotes": 649,
@@ -4275,12 +2173,6 @@
             "bestVotes": 437,
             "recommendedVotes": 520,
             "notRecommendedVotes": 91
-          },
-          {
-            "players": "4+",
-            "bestVotes": 19,
-            "recommendedVotes": 111,
-            "notRecommendedVotes": 481
           }
         ],
         "notRecommended": [
@@ -4289,24 +2181,6 @@
             "bestVotes": 14,
             "recommendedVotes": 118,
             "notRecommendedVotes": 562
-          },
-          {
-            "players": "2",
-            "bestVotes": 849,
-            "recommendedVotes": 318,
-            "notRecommendedVotes": 37
-          },
-          {
-            "players": "3",
-            "bestVotes": 380,
-            "recommendedVotes": 649,
-            "notRecommendedVotes": 53
-          },
-          {
-            "players": "4",
-            "bestVotes": 437,
-            "recommendedVotes": 520,
-            "notRecommendedVotes": 91
           },
           {
             "players": "4+",
@@ -4336,50 +2210,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 3,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 670
-          },
-          {
-            "players": "2",
-            "bestVotes": 124,
-            "recommendedVotes": 547,
-            "notRecommendedVotes": 273
-          },
-          {
-            "players": "3",
-            "bestVotes": 346,
-            "recommendedVotes": 580,
-            "notRecommendedVotes": 34
-          },
-          {
             "players": "4",
             "bestVotes": 722,
             "recommendedVotes": 275,
             "notRecommendedVotes": 19
-          },
-          {
-            "players": "5",
-            "bestVotes": 252,
-            "recommendedVotes": 550,
-            "notRecommendedVotes": 107
-          },
-          {
-            "players": "5+",
-            "bestVotes": 7,
-            "recommendedVotes": 39,
-            "notRecommendedVotes": 483
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 3,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 670
-          },
-          {
             "players": "2",
             "bestVotes": 124,
             "recommendedVotes": 547,
@@ -4392,22 +2230,10 @@
             "notRecommendedVotes": 34
           },
           {
-            "players": "4",
-            "bestVotes": 722,
-            "recommendedVotes": 275,
-            "notRecommendedVotes": 19
-          },
-          {
             "players": "5",
             "bestVotes": 252,
             "recommendedVotes": 550,
             "notRecommendedVotes": 107
-          },
-          {
-            "players": "5+",
-            "bestVotes": 7,
-            "recommendedVotes": 39,
-            "notRecommendedVotes": 483
           }
         ],
         "notRecommended": [
@@ -4416,30 +2242,6 @@
             "bestVotes": 3,
             "recommendedVotes": 22,
             "notRecommendedVotes": 670
-          },
-          {
-            "players": "2",
-            "bestVotes": 124,
-            "recommendedVotes": 547,
-            "notRecommendedVotes": 273
-          },
-          {
-            "players": "3",
-            "bestVotes": 346,
-            "recommendedVotes": 580,
-            "notRecommendedVotes": 34
-          },
-          {
-            "players": "4",
-            "bestVotes": 722,
-            "recommendedVotes": 275,
-            "notRecommendedVotes": 19
-          },
-          {
-            "players": "5",
-            "bestVotes": 252,
-            "recommendedVotes": 550,
-            "notRecommendedVotes": 107
           },
           {
             "players": "5+",
@@ -4469,48 +2271,18 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 6,
-            "recommendedVotes": 18,
-            "notRecommendedVotes": 18
-          },
-          {
-            "players": "3",
-            "bestVotes": 15,
-            "recommendedVotes": 32,
-            "notRecommendedVotes": 0
-          },
-          {
             "players": "4",
             "bestVotes": 30,
             "recommendedVotes": 18,
             "notRecommendedVotes": 1
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 0,
-            "notRecommendedVotes": 25
           }
         ],
         "recommended": [
           {
-            "players": "2",
-            "bestVotes": 6,
-            "recommendedVotes": 18,
-            "notRecommendedVotes": 18
-          },
-          {
             "players": "3",
             "bestVotes": 15,
             "recommendedVotes": 32,
             "notRecommendedVotes": 0
-          },
-          {
-            "players": "4",
-            "bestVotes": 30,
-            "recommendedVotes": 18,
-            "notRecommendedVotes": 1
           }
         ],
         "notRecommended": [
@@ -4519,18 +2291,6 @@
             "bestVotes": 0,
             "recommendedVotes": 0,
             "notRecommendedVotes": 27
-          },
-          {
-            "players": "2",
-            "bestVotes": 6,
-            "recommendedVotes": 18,
-            "notRecommendedVotes": 18
-          },
-          {
-            "players": "4",
-            "bestVotes": 30,
-            "recommendedVotes": 18,
-            "notRecommendedVotes": 1
           },
           {
             "players": "4+",
@@ -4560,28 +2320,10 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 12,
-            "recommendedVotes": 126,
-            "notRecommendedVotes": 113
-          },
-          {
-            "players": "2",
-            "bestVotes": 112,
-            "recommendedVotes": 227,
-            "notRecommendedVotes": 17
-          },
-          {
             "players": "3",
             "bestVotes": 210,
             "recommendedVotes": 112,
             "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 94,
-            "recommendedVotes": 168,
-            "notRecommendedVotes": 48
           }
         ],
         "recommended": [
@@ -4598,49 +2340,13 @@
             "notRecommendedVotes": 17
           },
           {
-            "players": "3",
-            "bestVotes": 210,
-            "recommendedVotes": 112,
-            "notRecommendedVotes": 4
-          },
-          {
             "players": "4",
             "bestVotes": 94,
             "recommendedVotes": 168,
             "notRecommendedVotes": 48
-          },
-          {
-            "players": "4+",
-            "bestVotes": 0,
-            "recommendedVotes": 6,
-            "notRecommendedVotes": 175
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 12,
-            "recommendedVotes": 126,
-            "notRecommendedVotes": 113
-          },
-          {
-            "players": "2",
-            "bestVotes": 112,
-            "recommendedVotes": 227,
-            "notRecommendedVotes": 17
-          },
-          {
-            "players": "3",
-            "bestVotes": 210,
-            "recommendedVotes": 112,
-            "notRecommendedVotes": 4
-          },
-          {
-            "players": "4",
-            "bestVotes": 94,
-            "recommendedVotes": 168,
-            "notRecommendedVotes": 48
-          },
           {
             "players": "4+",
             "bestVotes": 0,
@@ -4669,72 +2375,24 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 34,
-            "recommendedVotes": 413,
-            "notRecommendedVotes": 437
-          },
-          {
-            "players": "3",
-            "bestVotes": 178,
-            "recommendedVotes": 682,
-            "notRecommendedVotes": 65
-          },
-          {
             "players": "4",
             "bestVotes": 795,
             "recommendedVotes": 185,
             "notRecommendedVotes": 7
-          },
-          {
-            "players": "5",
-            "bestVotes": 214,
-            "recommendedVotes": 519,
-            "notRecommendedVotes": 119
-          },
-          {
-            "players": "5+",
-            "bestVotes": 8,
-            "recommendedVotes": 17,
-            "notRecommendedVotes": 482
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 23,
-            "notRecommendedVotes": 654
-          },
-          {
-            "players": "2",
-            "bestVotes": 34,
-            "recommendedVotes": 413,
-            "notRecommendedVotes": 437
-          },
-          {
             "players": "3",
             "bestVotes": 178,
             "recommendedVotes": 682,
             "notRecommendedVotes": 65
           },
           {
-            "players": "4",
-            "bestVotes": 795,
-            "recommendedVotes": 185,
-            "notRecommendedVotes": 7
-          },
-          {
             "players": "5",
             "bestVotes": 214,
             "recommendedVotes": 519,
             "notRecommendedVotes": 119
-          },
-          {
-            "players": "5+",
-            "bestVotes": 8,
-            "recommendedVotes": 17,
-            "notRecommendedVotes": 482
           }
         ],
         "notRecommended": [
@@ -4749,24 +2407,6 @@
             "bestVotes": 34,
             "recommendedVotes": 413,
             "notRecommendedVotes": 437
-          },
-          {
-            "players": "3",
-            "bestVotes": 178,
-            "recommendedVotes": 682,
-            "notRecommendedVotes": 65
-          },
-          {
-            "players": "4",
-            "bestVotes": 795,
-            "recommendedVotes": 185,
-            "notRecommendedVotes": 7
-          },
-          {
-            "players": "5",
-            "bestVotes": 214,
-            "recommendedVotes": 519,
-            "notRecommendedVotes": 119
           },
           {
             "players": "5+",
@@ -4796,40 +2436,10 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 221,
-            "recommendedVotes": 1253,
-            "notRecommendedVotes": 576
-          },
-          {
-            "players": "2",
-            "bestVotes": 628,
-            "recommendedVotes": 1585,
-            "notRecommendedVotes": 268
-          },
-          {
             "players": "3",
             "bestVotes": 1753,
             "recommendedVotes": 724,
             "notRecommendedVotes": 41
-          },
-          {
-            "players": "4",
-            "bestVotes": 927,
-            "recommendedVotes": 1226,
-            "notRecommendedVotes": 225
-          },
-          {
-            "players": "5",
-            "bestVotes": 112,
-            "recommendedVotes": 731,
-            "notRecommendedVotes": 1214
-          },
-          {
-            "players": "5+",
-            "bestVotes": 9,
-            "recommendedVotes": 9,
-            "notRecommendedVotes": 1393
           }
         ],
         "recommended": [
@@ -4846,55 +2456,13 @@
             "notRecommendedVotes": 268
           },
           {
-            "players": "3",
-            "bestVotes": 1753,
-            "recommendedVotes": 724,
-            "notRecommendedVotes": 41
-          },
-          {
             "players": "4",
             "bestVotes": 927,
             "recommendedVotes": 1226,
             "notRecommendedVotes": 225
-          },
-          {
-            "players": "5",
-            "bestVotes": 112,
-            "recommendedVotes": 731,
-            "notRecommendedVotes": 1214
-          },
-          {
-            "players": "5+",
-            "bestVotes": 9,
-            "recommendedVotes": 9,
-            "notRecommendedVotes": 1393
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 221,
-            "recommendedVotes": 1253,
-            "notRecommendedVotes": 576
-          },
-          {
-            "players": "2",
-            "bestVotes": 628,
-            "recommendedVotes": 1585,
-            "notRecommendedVotes": 268
-          },
-          {
-            "players": "3",
-            "bestVotes": 1753,
-            "recommendedVotes": 724,
-            "notRecommendedVotes": 41
-          },
-          {
-            "players": "4",
-            "bestVotes": 927,
-            "recommendedVotes": 1226,
-            "notRecommendedVotes": 225
-          },
           {
             "players": "5",
             "bestVotes": 112,
@@ -4929,44 +2497,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 386
-          },
-          {
-            "players": "2",
-            "bestVotes": 75,
-            "recommendedVotes": 290,
-            "notRecommendedVotes": 191
-          },
-          {
-            "players": "3",
-            "bestVotes": 208,
-            "recommendedVotes": 365,
-            "notRecommendedVotes": 29
-          },
-          {
             "players": "4",
             "bestVotes": 460,
             "recommendedVotes": 141,
             "notRecommendedVotes": 23
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 312
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 1,
-            "recommendedVotes": 1,
-            "notRecommendedVotes": 386
-          },
-          {
             "players": "2",
             "bestVotes": 75,
             "recommendedVotes": 290,
@@ -4977,18 +2515,6 @@
             "bestVotes": 208,
             "recommendedVotes": 365,
             "notRecommendedVotes": 29
-          },
-          {
-            "players": "4",
-            "bestVotes": 460,
-            "recommendedVotes": 141,
-            "notRecommendedVotes": 23
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 5,
-            "notRecommendedVotes": 312
           }
         ],
         "notRecommended": [
@@ -4997,24 +2523,6 @@
             "bestVotes": 1,
             "recommendedVotes": 1,
             "notRecommendedVotes": 386
-          },
-          {
-            "players": "2",
-            "bestVotes": 75,
-            "recommendedVotes": 290,
-            "notRecommendedVotes": 191
-          },
-          {
-            "players": "3",
-            "bestVotes": 208,
-            "recommendedVotes": 365,
-            "notRecommendedVotes": 29
-          },
-          {
-            "players": "4",
-            "bestVotes": 460,
-            "recommendedVotes": 141,
-            "notRecommendedVotes": 23
           },
           {
             "players": "4+",
@@ -5044,38 +2552,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 95,
-            "recommendedVotes": 387,
-            "notRecommendedVotes": 74
-          },
-          {
-            "players": "3",
-            "bestVotes": 189,
-            "recommendedVotes": 346,
-            "notRecommendedVotes": 11
-          },
-          {
             "players": "4",
             "bestVotes": 425,
             "recommendedVotes": 127,
             "notRecommendedVotes": 21
-          },
-          {
-            "players": "4+",
-            "bestVotes": 3,
-            "recommendedVotes": 19,
-            "notRecommendedVotes": 279
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 22,
-            "notRecommendedVotes": 356
-          },
-          {
             "players": "2",
             "bestVotes": 95,
             "recommendedVotes": 387,
@@ -5086,18 +2570,6 @@
             "bestVotes": 189,
             "recommendedVotes": 346,
             "notRecommendedVotes": 11
-          },
-          {
-            "players": "4",
-            "bestVotes": 425,
-            "recommendedVotes": 127,
-            "notRecommendedVotes": 21
-          },
-          {
-            "players": "4+",
-            "bestVotes": 3,
-            "recommendedVotes": 19,
-            "notRecommendedVotes": 279
           }
         ],
         "notRecommended": [
@@ -5106,24 +2578,6 @@
             "bestVotes": 0,
             "recommendedVotes": 22,
             "notRecommendedVotes": 356
-          },
-          {
-            "players": "2",
-            "bestVotes": 95,
-            "recommendedVotes": 387,
-            "notRecommendedVotes": 74
-          },
-          {
-            "players": "3",
-            "bestVotes": 189,
-            "recommendedVotes": 346,
-            "notRecommendedVotes": 11
-          },
-          {
-            "players": "4",
-            "bestVotes": 425,
-            "recommendedVotes": 127,
-            "notRecommendedVotes": 21
           },
           {
             "players": "4+",
@@ -5153,38 +2607,14 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 40,
-            "recommendedVotes": 213,
-            "notRecommendedVotes": 47
-          },
-          {
-            "players": "3",
-            "bestVotes": 109,
-            "recommendedVotes": 175,
-            "notRecommendedVotes": 3
-          },
-          {
             "players": "4",
             "bestVotes": 225,
             "recommendedVotes": 78,
             "notRecommendedVotes": 6
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 11,
-            "notRecommendedVotes": 141
           }
         ],
         "recommended": [
           {
-            "players": "1",
-            "bestVotes": 0,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 183
-          },
-          {
             "players": "2",
             "bestVotes": 40,
             "recommendedVotes": 213,
@@ -5195,18 +2625,6 @@
             "bestVotes": 109,
             "recommendedVotes": 175,
             "notRecommendedVotes": 3
-          },
-          {
-            "players": "4",
-            "bestVotes": 225,
-            "recommendedVotes": 78,
-            "notRecommendedVotes": 6
-          },
-          {
-            "players": "4+",
-            "bestVotes": 1,
-            "recommendedVotes": 11,
-            "notRecommendedVotes": 141
           }
         ],
         "notRecommended": [
@@ -5215,24 +2633,6 @@
             "bestVotes": 0,
             "recommendedVotes": 3,
             "notRecommendedVotes": 183
-          },
-          {
-            "players": "2",
-            "bestVotes": 40,
-            "recommendedVotes": 213,
-            "notRecommendedVotes": 47
-          },
-          {
-            "players": "3",
-            "bestVotes": 109,
-            "recommendedVotes": 175,
-            "notRecommendedVotes": 3
-          },
-          {
-            "players": "4",
-            "bestVotes": 225,
-            "recommendedVotes": 78,
-            "notRecommendedVotes": 6
           },
           {
             "players": "4+",
@@ -5262,43 +2662,13 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "2",
-            "bestVotes": 1,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 53
-          },
-          {
             "players": "3",
             "bestVotes": 74,
             "recommendedVotes": 19,
             "notRecommendedVotes": 1
-          },
-          {
-            "players": "4",
-            "bestVotes": 25,
-            "recommendedVotes": 59,
-            "notRecommendedVotes": 7
-          },
-          {
-            "players": "5",
-            "bestVotes": 4,
-            "recommendedVotes": 49,
-            "notRecommendedVotes": 26
           }
         ],
         "recommended": [
-          {
-            "players": "2",
-            "bestVotes": 1,
-            "recommendedVotes": 3,
-            "notRecommendedVotes": 53
-          },
-          {
-            "players": "3",
-            "bestVotes": 74,
-            "recommendedVotes": 19,
-            "notRecommendedVotes": 1
-          },
           {
             "players": "4",
             "bestVotes": 25,
@@ -5324,24 +2694,6 @@
             "bestVotes": 1,
             "recommendedVotes": 3,
             "notRecommendedVotes": 53
-          },
-          {
-            "players": "3",
-            "bestVotes": 74,
-            "recommendedVotes": 19,
-            "notRecommendedVotes": 1
-          },
-          {
-            "players": "4",
-            "bestVotes": 25,
-            "recommendedVotes": 59,
-            "notRecommendedVotes": 7
-          },
-          {
-            "players": "5",
-            "bestVotes": 4,
-            "recommendedVotes": 49,
-            "notRecommendedVotes": 26
           },
           {
             "players": "5+",
@@ -5371,40 +2723,10 @@
       "suggestedPlayerCounts": {
         "best": [
           {
-            "players": "1",
-            "bestVotes": 116,
-            "recommendedVotes": 850,
-            "notRecommendedVotes": 396
-          },
-          {
-            "players": "2",
-            "bestVotes": 638,
-            "recommendedVotes": 1166,
-            "notRecommendedVotes": 103
-          },
-          {
             "players": "3",
             "bestVotes": 1252,
             "recommendedVotes": 607,
             "notRecommendedVotes": 26
-          },
-          {
-            "players": "4",
-            "bestVotes": 556,
-            "recommendedVotes": 949,
-            "notRecommendedVotes": 243
-          },
-          {
-            "players": "5",
-            "bestVotes": 54,
-            "recommendedVotes": 567,
-            "notRecommendedVotes": 881
-          },
-          {
-            "players": "5+",
-            "bestVotes": 3,
-            "recommendedVotes": 32,
-            "notRecommendedVotes": 1051
           }
         ],
         "recommended": [
@@ -5421,55 +2743,13 @@
             "notRecommendedVotes": 103
           },
           {
-            "players": "3",
-            "bestVotes": 1252,
-            "recommendedVotes": 607,
-            "notRecommendedVotes": 26
-          },
-          {
             "players": "4",
             "bestVotes": 556,
             "recommendedVotes": 949,
             "notRecommendedVotes": 243
-          },
-          {
-            "players": "5",
-            "bestVotes": 54,
-            "recommendedVotes": 567,
-            "notRecommendedVotes": 881
-          },
-          {
-            "players": "5+",
-            "bestVotes": 3,
-            "recommendedVotes": 32,
-            "notRecommendedVotes": 1051
           }
         ],
         "notRecommended": [
-          {
-            "players": "1",
-            "bestVotes": 116,
-            "recommendedVotes": 850,
-            "notRecommendedVotes": 396
-          },
-          {
-            "players": "2",
-            "bestVotes": 638,
-            "recommendedVotes": 1166,
-            "notRecommendedVotes": 103
-          },
-          {
-            "players": "3",
-            "bestVotes": 1252,
-            "recommendedVotes": 607,
-            "notRecommendedVotes": 26
-          },
-          {
-            "players": "4",
-            "bestVotes": 556,
-            "recommendedVotes": 949,
-            "notRecommendedVotes": 243
-          },
           {
             "players": "5",
             "bestVotes": 54,
