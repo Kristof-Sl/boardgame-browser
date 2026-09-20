@@ -177,12 +177,18 @@ export default function App() {
       })
     }
 
-    if (filters.bestWith) {
-      games = games.filter(g => hasPlayerCount(g, 'best', filters.bestWith))
-    }
+    const bestWith = Array.isArray(filters.bestWith)
+      ? filters.bestWith
+      : filters.bestWith ? [filters.bestWith] : []
+    const recommendedWith = Array.isArray(filters.recommendedWith)
+      ? filters.recommendedWith
+      : filters.recommendedWith ? [filters.recommendedWith] : []
 
-    if (filters.recommendedWith) {
-      games = games.filter(g => hasPlayerCount(g, 'recommended', filters.recommendedWith))
+    if (bestWith.length || recommendedWith.length) {
+      games = games.filter(g =>
+        bestWith.some(playerCount => hasPlayerCount(g, 'best', playerCount)) ||
+        recommendedWith.some(playerCount => hasPlayerCount(g, 'recommended', playerCount))
+      )
     }
 
     if (filters.minRating) {
