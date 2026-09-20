@@ -8,6 +8,7 @@ import EventPlanner from './events/EventPlanner'
 import PlayLog from './events/PlayLog'
 import AdminPage from './events/AdminPage'
 import MobileLayout from './components/MobileLayout'
+import SettingsPage from './components/SettingsPage'
 import { db, isConfigured } from './events/supabase'
 
 const DEFAULT_FILTERS = {
@@ -24,6 +25,7 @@ const DEFAULT_FILTERS = {
 }
 
 const STORAGE_KEY = 'bgg-browser-collections'
+const THEME_STORAGE_KEY = 'bgg-browser-theme'
 
 function loadFromStorage() {
   try {
@@ -59,7 +61,12 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [detailsMode, setDetailsMode] = useState(false)
   const [selectedGame, setSelectedGame] = useState(null)
+  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'original')
   const importRef = useRef()
+
+  useEffect(() => {
+    localStorage.setItem(THEME_STORAGE_KEY, theme)
+  }, [theme])
 
   // On mount: if nothing in localStorage, try default-collection.json
   useEffect(() => {
@@ -442,13 +449,15 @@ export default function App() {
         PlayLog={PlayLog}
         showToast={showToast}
         handleAuthChange={setIsAdmin}
+        theme={theme}
+        onThemeChange={setTheme}
       />
     )
   }
 
   // Desktop layout
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
+    <div data-theme={theme} style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', background: 'var(--bg)' }}>
       {/* Header */}
       <header style={{
         borderBottom: '1px solid var(--border)',
@@ -543,6 +552,16 @@ export default function App() {
               background: detailsMode ? 'var(--accent-bg)' : 'transparent', cursor: 'pointer',
             }}
           >{detailsMode ? 'Panel details' : 'Tile details'}</button>
+          <button
+            onClick={() => setTab('settings')}
+            aria-label="Open settings"
+            title="Settings"
+            style={{
+              width: 32, height: 32, borderRadius: 8,
+              border: '1px solid var(--border)', color: 'var(--text2)',
+              background: 'transparent', fontSize: 17, lineHeight: 1,
+            }}
+          >⚙</button>
         </div>
       </header>
 
@@ -568,6 +587,10 @@ export default function App() {
           <div style={{ flex: 1, overflowX: 'hidden' }}>
             <AdminPage localCollection={allGames} onAuthChange={setIsAdmin} />
           </div>
+        )}
+
+        {tab === 'settings' && (
+          <SettingsPage theme={theme} onThemeChange={setTheme} onBack={() => setTab('collection')} />
         )}
 
         {/* Collection tab */}

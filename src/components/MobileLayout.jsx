@@ -2,13 +2,15 @@ import React, { useState, useMemo } from 'react'
 import FilterBar from './FilterBar'
 import AccountManager from './AccountManager'
 import GameCard from './GameCard'
+import SettingsPage from './SettingsPage'
 
 export default function MobileLayout({
   accounts, collections, allGames, filteredGames, filters, 
   handleFilterChange, handleAddAccount, handleRefreshAccounts, handleReloadDefaultCollection, handleRemoveAccount, 
   handleUploadXml, handleUploadCombinedXml, handleExport, 
   handleExportDefault, handleImportFile, anyLoading, tab, setTab,
-  importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, showToast, handleAuthChange
+  importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, showToast, handleAuthChange,
+  theme, onThemeChange
 }) {
   const [showFilters, setShowFilters] = useState(false)
   const [showAccounts, setShowAccounts] = useState(false)
@@ -175,7 +177,7 @@ export default function MobileLayout({
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', paddingBottom: 60 }}>
+    <div data-theme={theme} style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', paddingBottom: 60, background: 'var(--bg)' }}>
       {/* Header */}
       <header style={{
         borderBottom: '1px solid var(--border)',
@@ -221,6 +223,16 @@ export default function MobileLayout({
           >
             ↑
           </button>
+          <button
+            onClick={() => setTab('settings')}
+            aria-label="Open settings"
+            title="Settings"
+            style={{
+              width: 36, height: 36, borderRadius: 8,
+              border: '1px solid var(--border)', background: 'transparent',
+              color: 'var(--text2)', fontSize: 18, lineHeight: 1,
+            }}
+          >⚙</button>
         </div>
         <input ref={importRef} type="file" accept=".json,application/json"
           onChange={handleImportFile} style={{ display: 'none' }} />
@@ -282,6 +294,10 @@ export default function MobileLayout({
           <div style={{ padding: '16px' }}>
             <AdminPage localCollection={allGames} onAuthChange={handleAuthChange} />
           </div>
+        )}
+
+        {tab === 'settings' && (
+          <SettingsPage theme={theme} onThemeChange={onThemeChange} onBack={() => setTab('collection')} />
         )}
       </main>
 

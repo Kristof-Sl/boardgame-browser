@@ -25,6 +25,29 @@ const STATUS_LABELS = {
   closed: 'Closed',
 }
 
+const RECENT_EVENTS_KEY = 'bgg-browser-recent-events'
+const RECENT_EVENTS_LIMIT = 5
+
+function loadRecentEvents() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECENT_EVENTS_KEY) || '[]')
+    return Array.isArray(saved) ? saved.slice(0, RECENT_EVENTS_LIMIT) : []
+  } catch {
+    return []
+  }
+}
+
+function saveRecentEvent(event) {
+  const entry = {
+    id: event.id,
+    name: event.name,
+    start_date: event.start_date,
+    end_date: event.end_date,
+  }
+  const recent = [entry, ...loadRecentEvents().filter(item => item.id !== entry.id)]
+  localStorage.setItem(RECENT_EVENTS_KEY, JSON.stringify(recent.slice(0, RECENT_EVENTS_LIMIT)))
+}
+
 function Card({ children, style }) {
   return (
     <div style={{
@@ -246,17 +269,26 @@ function EventList({ onOpen, onNew }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [recentEvents, setRecentEvents] = useState(loadRecentEvents)
 
-  const handleJoin = async () => {
-    const c = code.trim().toUpperCase()
+  const handleJoin = async (joinCode = code) => {
+    const c = joinCode.trim().toUpperCase()
     if (!c) return
     setLoading(true); setError('')
     try {
       const events = await db.select('events', { filter: `id=eq.${c}` })
       if (!events.length) { setError('Event not found. Check the code and try again.'); return }
+      saveRecentEvent(events[0])
+      setRecentEvents(loadRecentEvents())
       onOpen(events[0])
     } catch (e) { setError(e.message) }
     finally { setLoading(false) }
+  }
+
+  const handleRecentJoin = recentCode => {
+    setCode(recentCode)
+    setError('')
+    handleJoin(recentCode)
   }
 
   return (
@@ -279,12 +311,39 @@ function EventList({ onOpen, onNew }) {
               fontSize: 14, outline: 'none', fontFamily: 'monospace', letterSpacing: '0.1em',
             }}
           />
-          <Btn onClick={handleJoin} accent disabled={loading || !code.trim()}>
+          <Btn onClick={() => handleJoin()} accent disabled={loading || !code.trim()}>
             {loading ? '…' : 'Join'}
           </Btn>
         </div>
         {error && <p style={{ fontSize: 12, color: 'var(--red)', marginTop: 8 }}>{error}</p>}
       </Card>
+      {recentEvents.length > 0 && (
+        <Card>
+          <p style={{ fontSize: 12, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Recently joined</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recentEvents.map(event => (
+              <button
+                key={event.id}
+                onClick={() => handleRecentJoin(event.id)}
+                disabled={loading}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                  width: '100%', textAlign: 'left', padding: '10px 12px',
+                  border: '1px solid var(--border)', borderRadius: 8,
+                  background: 'var(--bg3)', color: 'var(--text)',
+                  opacity: loading ? 0.6 : 1, cursor: loading ? 'default' : 'pointer',
+                }}
+              >
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{event.name || 'Unnamed event'}</span>
+                  <span style={{ display: 'block', fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>{event.start_date} → {event.end_date}</span>
+                </span>
+                <span style={{ flexShrink: 0, color: 'var(--accent)', fontFamily: 'monospace', fontSize: 12, letterSpacing: '0.08em' }}>{event.id}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
       <div style={{ textAlign: 'center' }}>
         <span style={{ fontSize: 12, color: 'var(--text3)' }}>— or —</span>
       </div>
