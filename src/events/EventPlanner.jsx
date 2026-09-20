@@ -311,7 +311,7 @@ function EventList({ onOpen, onNew }) {
               fontSize: 14, outline: 'none', fontFamily: 'monospace', letterSpacing: '0.1em',
             }}
           />
-          <Btn onClick={handleJoin} accent disabled={loading || !code.trim()}>
+          <Btn onClick={() => handleJoin()} accent disabled={loading || !code.trim()}>
             {loading ? '…' : 'Join'}
           </Btn>
         </div>
