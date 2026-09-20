@@ -163,6 +163,7 @@ export default function MobileLayout({
             accounts={accounts}
             onAdd={handleAddAccount}
             onRefresh={handleRefreshAccounts}
+            onReloadDefault={handleReloadDefaultCollection}
             onRemove={handleRemoveAccount}
             onUploadXml={handleUploadXml}
             onUploadCombinedXml={handleUploadCombinedXml}
