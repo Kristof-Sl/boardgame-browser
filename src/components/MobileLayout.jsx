@@ -90,7 +90,7 @@ export default function MobileLayout({
         zIndex: 50,
         transform: showFilters ? 'translateY(0)' : 'translateY(100%)',
         transition: 'transform 300ms ease',
-        touchAction: 'none',
+        touchAction: 'pan-y',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
