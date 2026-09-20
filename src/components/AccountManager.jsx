@@ -187,7 +187,7 @@ export default function AccountManager({ accounts, onAdd, onRefresh, onReloadDef
       {/* API mode */}
       {mode === 'api' && (
         <div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, minWidth: 0 }}>
             <input
               type="text"
               placeholder="BGG username"
@@ -196,7 +196,7 @@ export default function AccountManager({ accounts, onAdd, onRefresh, onReloadDef
               onKeyDown={handleKey}
               disabled={loading}
               style={{
-                flex: 1, background: 'var(--bg3)',
+                flex: 1, minWidth: 0, boxSizing: 'border-box', background: 'var(--bg3)',
                 border: `1px solid ${error ? 'var(--red)' : 'var(--border)'}`,
                 borderRadius: 8, padding: '8px 12px',
                 color: 'var(--text)', fontSize: 13, outline: 'none',
@@ -207,6 +207,7 @@ export default function AccountManager({ accounts, onAdd, onRefresh, onReloadDef
               disabled={!input.trim() || loading}
               style={{
                 padding: '8px 14px', borderRadius: 8,
+                flexShrink: 0,
                 background: input.trim() ? 'var(--accent)' : 'var(--bg4)',
                 color: input.trim() ? '#0f0e0c' : 'var(--text3)',
                 fontSize: 13, fontWeight: 500,
