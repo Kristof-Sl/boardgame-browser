@@ -76,7 +76,7 @@ export default function AccountManager({ accounts, onAdd, onRefresh, onReloadDef
       borderRadius: 'var(--radius-lg)',
       padding: '20px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, marginBottom: 14 }}>
         <p style={{
           fontFamily: 'var(--font-display)',
           fontSize: 18, fontWeight: 500,
