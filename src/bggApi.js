@@ -115,9 +115,15 @@ function parseThingItem(item) {
         recommendedVotes: counts.recommended || 0,
         notRecommendedVotes: counts.notrecommended || 0,
       }
-      if (entry.bestVotes > 0) suggested.best.push(entry)
-      if (entry.recommendedVotes > 0) suggested.recommended.push(entry)
-      if (entry.notRecommendedVotes > 0) suggested.notRecommended.push(entry)
+      if (entry.bestVotes > entry.recommendedVotes && entry.bestVotes > entry.notRecommendedVotes) {
+        suggested.best.push(entry)
+      }
+      if (entry.recommendedVotes > entry.bestVotes && entry.recommendedVotes > entry.notRecommendedVotes) {
+        suggested.recommended.push(entry)
+      }
+      if (entry.notRecommendedVotes > entry.bestVotes && entry.notRecommendedVotes > entry.recommendedVotes) {
+        suggested.notRecommended.push(entry)
+      }
     })
   }
 
