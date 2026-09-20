@@ -1104,7 +1104,13 @@ function AdminBggDetails({ localCollection, onBack }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      const result = await response.json()
+      const responseText = await response.text()
+      let result
+      try {
+        result = JSON.parse(responseText)
+      } catch {
+        throw new Error('The upload endpoint is unavailable. Run the app with npm run dev or npm run preview.')
+      }
       if (!response.ok) throw new Error(result.error || 'Could not save the file.')
       setStatus(`Saved ${result.games} games to public/${result.filename}.`)
       setUploadFile(null)

@@ -4,41 +4,46 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 function bggDetailsUploadPlugin() {
+  const uploadMiddleware = (req, res, next) => {
+    if (req.method !== 'POST') {
+      next()
+      return
+    }
+
+    const chunks = []
+    req.on('data', chunk => chunks.push(chunk))
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+        const games = Array.isArray(payload) ? payload : payload?.games
+        if (!Array.isArray(games) || games.length === 0) {
+          throw new Error('The JSON must contain a non-empty games array.')
+        }
+
+        const output = Array.isArray(payload)
+          ? { version: 1, exportedAt: new Date().toISOString(), source: 'BoardGameGeek XML API v2', games: payload }
+          : payload
+        const target = path.resolve(process.cwd(), 'public', 'bgg-game-details.json')
+        await fs.writeFile(target, JSON.stringify(output, null, 2) + '\n', 'utf8')
+
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({ games: games.length, filename: 'bgg-game-details.json' }))
+      } catch (error) {
+        res.statusCode = 400
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({ error: error.message || 'Could not save the BGG details file.' }))
+      }
+    })
+  }
+
   return {
     name: 'bgg-details-upload',
     configureServer(server) {
-      server.middlewares.use('/api/upload-bgg-details', (req, res, next) => {
-        if (req.method !== 'POST') {
-          next()
-          return
-        }
-
-        const chunks = []
-        req.on('data', chunk => chunks.push(chunk))
-        req.on('end', async () => {
-          try {
-            const payload = JSON.parse(Buffer.concat(chunks).toString('utf8'))
-            const games = Array.isArray(payload) ? payload : payload?.games
-            if (!Array.isArray(games) || games.length === 0) {
-              throw new Error('The JSON must contain a non-empty games array.')
-            }
-
-            const output = Array.isArray(payload)
-              ? { version: 1, exportedAt: new Date().toISOString(), source: 'BoardGameGeek XML API v2', games: payload }
-              : payload
-            const target = path.resolve(process.cwd(), 'public', 'bgg-game-details.json')
-            await fs.writeFile(target, JSON.stringify(output, null, 2) + '\n', 'utf8')
-
-            res.statusCode = 200
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify({ games: games.length, filename: 'bgg-game-details.json' }))
-          } catch (error) {
-            res.statusCode = 400
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify({ error: error.message || 'Could not save the BGG details file.' }))
-          }
-        })
-      })
+      server.middlewares.use('/api/upload-bgg-details', uploadMiddleware)
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use('/api/upload-bgg-details', uploadMiddleware)
     },
   }
 }
