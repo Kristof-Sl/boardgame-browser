@@ -7,7 +7,7 @@ const STATUS_INFO = {
   prevOwned:  { label: 'Previously owned',  color: 'var(--text3)',  bg: 'rgba(255,255,255,0.06)' },
 }
 
-export default function GameCard({ game, isMobile }) {
+export default function GameCard({ game, isMobile, detailsMode = false, onDetails }) {
   const [imgErr, setImgErr] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -202,7 +202,7 @@ export default function GameCard({ game, isMobile }) {
 
           {/* Show details button */}
           <button
-            onClick={() => setDetailsOpen(o => !o)}
+            onClick={() => detailsMode ? onDetails?.(game) : setDetailsOpen(o => !o)}
             style={{
               marginTop: 6, padding: '4px 0',
               background: 'none', border: 'none',
@@ -211,11 +211,11 @@ export default function GameCard({ game, isMobile }) {
               transition: 'color 140ms',
             }}
           >
-            {detailsOpen ? '▲ Hide details' : '▼ Show details'}
+            {detailsMode ? '▣ Open details' : detailsOpen ? '▲ Hide details' : '▼ Show details'}
           </button>
 
           {/* Inline details panel (visible when detailsOpen) */}
-          {detailsOpen && (
+          {!detailsMode && detailsOpen && (
             <div style={{
               marginTop: 4,
               background: 'var(--bg3)',
@@ -248,6 +248,52 @@ export default function GameCard({ game, isMobile }) {
           {popupContent}
         </div>
       )}
+    </div>
+  )
+}
+
+export function GameDetailsPanel({ game, onClose }) {
+  const detail = game.details || game
+  const fileLinks = Array.isArray(game.files) ? game.files : []
+  const playerStr = !detail.minPlayers && !detail.maxPlayers ? null
+    : detail.minPlayers === detail.maxPlayers ? `${detail.minPlayers}`
+    : `${detail.minPlayers}–${detail.maxPlayers}`
+  const timeStr = detail.minPlaytime && detail.maxPlaytime
+    ? detail.minPlaytime === detail.maxPlaytime ? `${detail.minPlaytime} min`
+      : `${detail.minPlaytime}–${detail.maxPlaytime} min`
+    : detail.maxPlaytime ? `${detail.maxPlaytime} min` : null
+  const ratingColor = detail.rating >= 8 ? 'var(--green)'
+    : detail.rating >= 7 ? 'var(--accent)'
+    : detail.rating >= 6 ? 'var(--text2)'
+    : 'var(--text3)'
+  const userStatuses = Object.entries(game.ownerStatuses || {})
+
+  return (
+    <div style={{ height: '100%', overflowY: 'auto', padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
+        <div>
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 500, color: 'var(--text)', lineHeight: 1.3 }}>
+            {detail.name || game.name}
+          </p>
+          {detail.yearPublished && <p style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>{detail.yearPublished}</p>}
+        </div>
+        <button onClick={onClose} aria-label="Close details" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 22, lineHeight: 1 }}>×</button>
+      </div>
+      {(detail.image || detail.thumbnail) && <img src={detail.image || detail.thumbnail} alt={detail.name || game.name} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 8, marginBottom: 16 }} />}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {detail.rating > 0 && <PopupRow label="BGG rating"><span style={{ color: ratingColor, fontWeight: 600 }}>★ {detail.rating.toFixed(1)}</span>{detail.numRatings > 0 && <span style={{ color: 'var(--text3)', fontSize: 10 }}> ({detail.numRatings.toLocaleString()})</span>}</PopupRow>}
+        {detail.bggRank && <PopupRow label="BGG rank">#{detail.bggRank.toLocaleString()}</PopupRow>}
+        {playerStr && <PopupRow label="Players">{playerStr}</PopupRow>}
+        {timeStr && <PopupRow label="Playtime">{timeStr}</PopupRow>}
+        {detail.minAge > 0 && <PopupRow label="Min. age">{detail.minAge}+</PopupRow>}
+      </div>
+      {userStatuses.length > 0 && <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {userStatuses.map(([username, status]) => <div key={username} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ fontSize: 11, color: 'var(--text2)' }}>{username}</span><div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>{status.owned && <StatusPill type="owned" />}{status.wishlist && <StatusPill type="wishlist" />}{status.wantToPlay && <StatusPill type="wantToPlay" />}{!status.owned && status.prevOwned && <StatusPill type="prevOwned" />}</div></div>)}
+      </div>}
+      <PlayerRecommendations details={detail} />
+      {detail.description && <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)' }}><p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', marginBottom: 6 }}>Description</p><p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{detail.description}</p></div>}
+      {fileLinks.length > 0 && <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)' }}><p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)', marginBottom: 6 }}>Files</p>{fileLinks.map((file, index) => <a key={index} href={file.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', fontSize: 11, color: 'var(--accent)', textDecoration: 'none', wordBreak: 'break-all', marginBottom: 4 }}>{file.name || file.url}</a>)}</div>}
+      <a href={detail.bggUrl || game.bggUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 16, fontSize: 11, color: 'var(--accent)', textDecoration: 'none' }}>Open on BGG ↗</a>
     </div>
   )
 }

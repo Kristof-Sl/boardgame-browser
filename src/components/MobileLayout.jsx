@@ -5,7 +5,7 @@ import GameCard from './GameCard'
 
 export default function MobileLayout({
   accounts, collections, allGames, filteredGames, filters, 
-  handleFilterChange, handleAddAccount, handleRefreshAccounts, handleRemoveAccount, 
+  handleFilterChange, handleAddAccount, handleRefreshAccounts, handleReloadDefaultCollection, handleRemoveAccount, 
   handleUploadXml, handleUploadCombinedXml, handleExport, 
   handleExportDefault, handleImportFile, anyLoading, tab, setTab,
   importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, showToast, handleAuthChange
@@ -90,7 +90,7 @@ export default function MobileLayout({
         zIndex: 50,
         transform: showFilters ? 'translateY(0)' : 'translateY(100%)',
         transition: 'transform 300ms ease',
-        touchAction: 'none',
+        touchAction: 'pan-y',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
