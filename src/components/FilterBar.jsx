@@ -139,21 +139,33 @@ export default function FilterBar({ filters, onChange, games, availableAccounts 
 
       <Section label="Best with">
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {pill('Any', !filters.bestWith, () => onChange('bestWith', null))}
+          {pill('Any', !filters.bestWith?.length, () => onChange('bestWith', []))}
           {[1, 2, 3, 4, 5, 6].map(n =>
-            pill(`${n}`, filters.bestWith === n, () => onChange('bestWith', filters.bestWith === n ? null : n))
+            pill(`${n}`, filters.bestWith?.includes(n), () => {
+              const selected = filters.bestWith || []
+              onChange('bestWith', selected.includes(n) ? selected.filter(value => value !== n) : [...selected, n])
+            })
           )}
-          {pill('7+', filters.bestWith === 7, () => onChange('bestWith', filters.bestWith === 7 ? null : 7))}
+          {pill('7+', filters.bestWith?.includes(7), () => {
+            const selected = filters.bestWith || []
+            onChange('bestWith', selected.includes(7) ? selected.filter(value => value !== 7) : [...selected, 7])
+          })}
         </div>
       </Section>
 
       <Section label="Recommended with">
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {pill('Any', !filters.recommendedWith, () => onChange('recommendedWith', null))}
+          {pill('Any', !filters.recommendedWith?.length, () => onChange('recommendedWith', []))}
           {[1, 2, 3, 4, 5, 6].map(n =>
-            pill(`${n}`, filters.recommendedWith === n, () => onChange('recommendedWith', filters.recommendedWith === n ? null : n))
+            pill(`${n}`, filters.recommendedWith?.includes(n), () => {
+              const selected = filters.recommendedWith || []
+              onChange('recommendedWith', selected.includes(n) ? selected.filter(value => value !== n) : [...selected, n])
+            })
           )}
-          {pill('7+', filters.recommendedWith === 7, () => onChange('recommendedWith', filters.recommendedWith === 7 ? null : 7))}
+          {pill('7+', filters.recommendedWith?.includes(7), () => {
+            const selected = filters.recommendedWith || []
+            onChange('recommendedWith', selected.includes(7) ? selected.filter(value => value !== 7) : [...selected, 7])
+          })}
         </div>
       </Section>
 
