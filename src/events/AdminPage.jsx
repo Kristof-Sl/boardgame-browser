@@ -1046,6 +1046,7 @@ function AdminGameFiles({ localCollection, onBack }) {
 function AdminBggDetails({ localCollection, onBack }) {
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
+  const [uploadFile, setUploadFile] = useState(null)
 
   const handleExport = async () => {
     const games = localCollection || []
@@ -1083,6 +1084,37 @@ function AdminBggDetails({ localCollection, onBack }) {
     }
   }
 
+  const handleUpload = async () => {
+    if (!uploadFile) {
+      setStatus('Choose a bgg-game-details JSON file first.')
+      return
+    }
+
+    setBusy(true)
+    setStatus('Saving BGG details to public/bgg-game-details.json…')
+    try {
+      const payload = JSON.parse(await uploadFile.text())
+      const games = Array.isArray(payload) ? payload : payload?.games
+      if (!Array.isArray(games) || games.length === 0) {
+        throw new Error('The JSON must contain a non-empty games array.')
+      }
+
+      const response = await fetch('/api/upload-bgg-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Could not save the file.')
+      setStatus(`Saved ${result.games} games to public/${result.filename}.`)
+      setUploadFile(null)
+    } catch (error) {
+      setStatus(`Upload failed: ${error.message || error}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
@@ -1100,7 +1132,25 @@ function AdminBggDetails({ localCollection, onBack }) {
         <Btn onClick={handleExport} accent disabled={busy || !localCollection?.length}>
           {busy ? 'Fetching BGG details…' : 'Download JSON'}
         </Btn>
-        {status && <p style={{ fontSize: 12, color: status.startsWith('Export failed') ? 'var(--red)' : 'var(--text3)', marginTop: 14 }}>{status}</p>}
+        <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 16 }}>
+          <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 8 }}>Install existing details</p>
+          <p style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 12 }}>
+            Upload a previously exported JSON file to write it as public/bgg-game-details.json.
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <input
+              type="file"
+              accept=".json,application/json"
+              disabled={busy}
+              onChange={event => setUploadFile(event.target.files?.[0] || null)}
+              style={{ fontSize: 12, color: 'var(--text2)', maxWidth: '100%' }}
+            />
+            <Btn onClick={handleUpload} accent disabled={busy || !uploadFile}>
+              {busy ? 'Saving…' : 'Upload JSON'}
+            </Btn>
+          </div>
+        </div>
+        {status && <p style={{ fontSize: 12, color: status.startsWith('Export failed') || status.startsWith('Upload failed') ? 'var(--red)' : 'var(--text3)', marginTop: 14 }}>{status}</p>}
       </Card>
     </div>
   )
