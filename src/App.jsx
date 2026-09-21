@@ -9,6 +9,7 @@ import PlayLog from './events/PlayLog'
 import AdminPage from './events/AdminPage'
 import MobileLayout from './components/MobileLayout'
 import SettingsPage from './components/SettingsPage'
+import Analyzer from './components/Analyzer'
 import { db, isConfigured } from './events/supabase'
 
 const DEFAULT_FILTERS = {
@@ -447,6 +448,7 @@ export default function App() {
         EventPlanner={EventPlanner}
         AdminPage={AdminPage}
         PlayLog={PlayLog}
+        Analyzer={Analyzer}
         showToast={showToast}
         handleAuthChange={setIsAdmin}
         theme={theme}
@@ -483,7 +485,7 @@ export default function App() {
 	</h1>
           {/* Tab switcher */}
           <div style={{ display: 'flex', gap: 4, marginLeft: 12, flexWrap: 'wrap' }}>
-            {[['collection', 'Collection'], ['events', '🗓️ Events'], ['playlog', '📝 PlayLog'], ['admin', '🔧 Admin']].map(([t, label]) => (
+            {[['collection', 'Collection'], ['events', '🗓️ Events'], ['playlog', '📝 PlayLog'], ['admin', '🔧 Admin'], ['analyzer', 'Analyzer']].map(([t, label]) => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '4px 12px', borderRadius: 6, fontSize: 13,
                 border: `1px solid ${tab === t ? 'var(--accent)' : 'var(--border)'}`,
@@ -592,6 +594,8 @@ export default function App() {
         {tab === 'settings' && (
           <SettingsPage theme={theme} onThemeChange={setTheme} onBack={() => setTab('collection')} />
         )}
+
+        {tab === 'analyzer' && <Analyzer games={allGames} />}
 
         {/* Collection tab */}
         {tab === 'collection' && (<>

@@ -95,6 +95,9 @@ function parseThingItem(item) {
   var primaryName = names[0] ? getAttr(names[0], 'value') : getText('name')
   var stats = item.querySelector('statistics ratings')
   var rating = stats ? parseFloat(getAttr(stats.querySelector('average'), 'value')) || 0 : 0
+  var averageWeight = stats ? parseFloat(getAttr(stats.querySelector('averageweight'), 'value')) || 0 : 0
+  var themes = Array.from(item.querySelectorAll('link[type="boardgamecategory"]')).map(function(link) { return getAttr(link, 'value') }).filter(Boolean)
+  var mechanics = Array.from(item.querySelectorAll('link[type="boardgamemechanic"]')).map(function(link) { return getAttr(link, 'value') }).filter(Boolean)
   var rank = stats ? stats.querySelector('ranks rank[name="boardgame"]') : null
   var suggested = { best: [], recommended: [], notRecommended: [] }
   var poll = item.querySelector('poll[name="suggested_numplayers"]')
@@ -140,6 +143,11 @@ function parseThingItem(item) {
     maxPlaytime: parseInt(getText('maxplaytime')) || 0,
     minAge: parseInt(getText('minage')) || 0,
     rating: Math.round(rating * 10) / 10,
+    averageweight: averageWeight,
+    themes: themes,
+    mechanics: mechanics,
+    theme: themes[0] || 'Unknown',
+    mechanic: mechanics[0] || 'Unknown',
     bggRank: rank && getAttr(rank, 'value') !== 'Not Ranked' ? parseInt(getAttr(rank, 'value')) : null,
     suggestedPlayerCounts: suggested,
     bggUrl: 'https://boardgamegeek.com/boardgame/' + id,
@@ -194,6 +202,7 @@ function parseCollectionItem(item, username) {
 
   // ✅ Correct: inside <rating>
   var ratingValue = parseFloat(getAttrFrom(rating?.querySelector('average'), 'value')) || 0
+  var averageWeight = parseFloat(getAttrFrom(rating?.querySelector('averageweight'), 'value')) || 0
   var numRatings = parseInt(getAttrFrom(rating?.querySelector('usersrated'), 'value')) || 0
 
   // ✅ Rank
@@ -234,6 +243,7 @@ function parseCollectionItem(item, username) {
     maxPlaytime: maxPlaytime,
     minAge: minAge,
     rating: Math.round(ratingValue * 10) / 10,
+    averageweight: averageWeight,
     numRatings: numRatings,
     bggRank: bggRank,
     userRating: userRating,

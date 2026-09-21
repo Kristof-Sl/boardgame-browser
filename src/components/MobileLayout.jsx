@@ -9,7 +9,7 @@ export default function MobileLayout({
   handleFilterChange, handleAddAccount, handleRefreshAccounts, handleReloadDefaultCollection, handleRemoveAccount, 
   handleUploadXml, handleUploadCombinedXml, handleExport, 
   handleExportDefault, handleImportFile, anyLoading, tab, setTab,
-  importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, showToast, handleAuthChange,
+  importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, Analyzer, showToast, handleAuthChange,
   theme, onThemeChange
 }) {
   const [showFilters, setShowFilters] = useState(false)
@@ -296,6 +296,8 @@ export default function MobileLayout({
           </div>
         )}
 
+        {tab === 'analyzer' && <Analyzer games={allGames} />}
+
         {tab === 'settings' && (
           <SettingsPage theme={theme} onThemeChange={onThemeChange} onBack={() => setTab('collection')} />
         )}
@@ -316,6 +318,7 @@ export default function MobileLayout({
           ['events', '🗓️ Events'],
           ['playlog', '📝 PlayLog'],
           ['admin', '⚙️ Admin'],
+          ['analyzer', '🔎 Analyzer'],
         ].map(([t, label]) => (
           <button
             key={t}
