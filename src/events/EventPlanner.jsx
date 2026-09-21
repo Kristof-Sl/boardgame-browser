@@ -995,6 +995,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
   const [savingPref, setSavingPref] = useState(null)
   const [savingAvail, setSavingAvail] = useState(false)
   const [gameFilters, setGameFilters] = useState(EMPTY_GAME_FILTERS)
+  const [preferenceFilters, setPreferenceFilters] = useState({ notVoted: false, someoneLoves: false })
   const [selectedGame, setSelectedGame] = useState(null)
 
   const myPrefs = {}
@@ -1047,7 +1048,11 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
       details: localGame?.details || eg.game_data?.details,
     }
   })
-  const filteredEventGames = applyGameFilters(gamesForFilter, gameFilters)
+  const filteredEventGames = applyGameFilters(gamesForFilter, gameFilters).filter(game => {
+    if (preferenceFilters.notVoted && myPrefs[game.id]) return false
+    if (preferenceFilters.someoneLoves && !prefs.some(pref => pref.game_id === game.id && pref.preference === 'really_want')) return false
+    return true
+  })
   const filteredIds = new Set(filteredEventGames.map(g => g.id))
 
   return (
@@ -1098,6 +1103,21 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
 
         {/* Game filters */}
         <GameFilterBar games={gamesForFilter} filters={gameFilters} onChange={setGameFilters} />
+
+        <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
+          <FilterGroup label="Preference filters">
+            <Pill
+              label="Not voted by me"
+              active={preferenceFilters.notVoted}
+              onClick={() => setPreferenceFilters(filters => ({ ...filters, notVoted: !filters.notVoted }))}
+            />
+            <Pill
+              label="Games someone loves"
+              active={preferenceFilters.someoneLoves}
+              onClick={() => setPreferenceFilters(filters => ({ ...filters, someoneLoves: !filters.someoneLoves }))}
+            />
+          </FilterGroup>
+        </div>
 
         <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>
           Showing {filteredEventGames.length} of {eventGames.length} games
