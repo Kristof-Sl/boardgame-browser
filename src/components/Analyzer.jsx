@@ -197,12 +197,32 @@ function AnalyzerRange({ label, values, bounds, step, onChange, format }) {
 }
 
 function RatingsMap({ games, onSelect }) {
+  const [hoveredGame, setHoveredGame] = useState(null)
   const width = 900
   const height = 520
   const valid = games.filter(game => game.analyzerRating > 0)
   const x = value => 50 + ((value - 1) / 3.6) * (width - 90)
   const y = value => height - 45 - ((value - 5) / 5) * (height - 85)
-  return <div className="analyzer-map"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity against BGG rating"><line x1="50" y1="25" x2="50" y2={height - 45} /><line x1="50" y1={height - 45} x2={width - 40} y2={height - 45} />{[1, 2, 3, 4].map(value => <g key={value}><line className="grid" x1={x(value)} y1="25" x2={x(value)} y2={height - 45} /><text x={x(value)} y={height - 20}>{value}</text></g>)}{[6, 7, 8, 9].map(value => <g key={value}><line className="grid" x1="50" y1={y(value)} x2={width - 40} y2={y(value)} /><text x="28" y={y(value) + 4}>{value}</text></g>)}{valid.map(game => { const weight = game.analyzerWeight || 2.5; return <g key={game.id} className="analyzer-dot" onClick={() => onSelect(game)}><circle cx={x(weight)} cy={y(game.analyzerRating)} r={Math.max(5, Math.min(13, 4 + Math.sqrt(game.analyzerRatings || 1) / 35))} /><title>{game.name}{game.analyzerWeight == null ? ' (complexity unavailable)' : ''}</title></g> })}<text className="axis-label" x={width / 2} y={height - 3}>Complexity</text><text className="axis-label" transform={`translate(12 ${height / 2}) rotate(-90)`}>BGG rating</text></svg><div className="analyzer-map-note">Click a point to open details. Games without complexity metadata are shown at the neutral midpoint.</div></div>
+  return <div className="analyzer-map"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity against BGG rating"><line x1="50" y1="25" x2="50" y2={height - 45} /><line x1="50" y1={height - 45} x2={width - 40} y2={height - 45} />{[1, 2, 3, 4].map(value => <g key={value}><line className="grid" x1={x(value)} y1="25" x2={x(value)} y2={height - 45} /><text x={x(value)} y={height - 20}>{value}</text></g>)}{[6, 7, 8, 9].map(value => <g key={value}><line className="grid" x1="50" y1={y(value)} x2={width - 40} y2={y(value)} /><text x="28" y={y(value) + 4}>{value}</text></g>)}{valid.map(game => { const weight = game.analyzerWeight || 2.5; return <g key={game.id} className="analyzer-dot" onClick={() => onSelect(game)} onMouseEnter={() => setHoveredGame(game)} onMouseLeave={() => setHoveredGame(null)}><circle cx={x(weight)} cy={y(game.analyzerRating)} r={Math.max(5, Math.min(13, 4 + Math.sqrt(game.analyzerRatings || 1) / 35))} /><title>{game.name}{game.analyzerWeight == null ? ' (complexity unavailable)' : ''}</title></g> })}<text className="axis-label" x={width / 2} y={height - 3}>Complexity</text><text className="axis-label" transform={`translate(12 ${height / 2}) rotate(-90)`}>BGG rating</text></svg>{hoveredGame && <AnalyzerHoverCard game={hoveredGame} onDetails={() => onSelect(hoveredGame)} />}<div className="analyzer-map-note">Click a point to open details. Games without complexity metadata are shown at the neutral midpoint.</div></div>
+}
+
+function AnalyzerHoverCard({ game, onDetails }) {
+  const statuses = [
+    game.owned && 'Owned',
+    game.wishlist && 'Wishlist',
+    game.wantToPlay && 'Want to play',
+    game.prevOwned && 'Previously owned',
+  ].filter(Boolean)
+  return <div className="analyzer-hover-card" onMouseDown={event => event.stopPropagation()}>
+    {(game.thumbnail || game.details?.thumbnail) && <img src={game.thumbnail || game.details.thumbnail} alt="" />}
+    <div className="analyzer-hover-content">
+      <strong>{game.name}</strong>
+      <span>★ {game.analyzerRating.toFixed(1)} · {formatRange(game.analyzerMinPlayers, game.analyzerMaxPlayers, ' players')}</span>
+      <span>{formatRange(game.analyzerMinTime, game.analyzerMaxTime, ' min')} · complexity {game.analyzerWeight?.toFixed(1) || '—'}</span>
+      {statuses.length > 0 && <small>{statuses.join(' · ')}</small>}
+      <button onClick={onDetails}>Open full details</button>
+    </div>
+  </div>
 }
 
 function YearlyView({ games, onSelect }) {

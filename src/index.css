@@ -276,6 +276,13 @@ input {
 .analyzer-dot { cursor: pointer; }
 .analyzer-dot circle { fill: var(--accent); opacity: .8; stroke: var(--bg); stroke-width: 2; }
 .analyzer-dot:hover circle { fill: var(--green); opacity: 1; stroke: var(--text); }
+.analyzer-hover-card { align-items: flex-start; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); box-shadow: 0 10px 28px rgba(0,0,0,.4); display: flex; gap: 9px; max-width: 290px; padding: 9px; position: absolute; right: 16px; top: 16px; z-index: 5; }
+.analyzer-hover-card img { background: var(--bg3); border-radius: 5px; flex: 0 0 58px; height: 44px; object-fit: cover; width: 58px; }
+.analyzer-hover-content { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.analyzer-hover-content strong { color: var(--text); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.analyzer-hover-content span, .analyzer-hover-content small { color: var(--text2); font-size: 10px; line-height: 1.35; }
+.analyzer-hover-content small { color: var(--accent); }
+.analyzer-hover-content button { align-self: flex-start; color: var(--accent); font-size: 10px; padding: 2px 0; text-decoration: underline; }
 .analyzer-map-note { color: var(--text3); font-size: 10px; padding: 3px 6px 5px; }
 .analyzer-years { display: flex; flex-direction: column; gap: 16px; }
 .analyzer-years section { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }

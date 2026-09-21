@@ -64,10 +64,21 @@ export default function App() {
   const [selectedGame, setSelectedGame] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'original')
   const importRef = useRef()
+  const headerRef = useRef()
+  const [headerHeight, setHeaderHeight] = useState(56)
 
   useEffect(() => {
     localStorage.setItem(THEME_STORAGE_KEY, theme)
   }, [theme])
+
+  useEffect(() => {
+    if (isMobile || !headerRef.current) return
+    const updateHeaderHeight = () => setHeaderHeight(headerRef.current.getBoundingClientRect().height)
+    updateHeaderHeight()
+    const observer = new ResizeObserver(updateHeaderHeight)
+    observer.observe(headerRef.current)
+    return () => observer.disconnect()
+  }, [isMobile])
 
   // On mount: if nothing in localStorage, try default-collection.json
   useEffect(() => {
@@ -459,18 +470,18 @@ export default function App() {
 
   // Desktop layout
   return (
-    <div data-theme={theme} style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', background: 'var(--bg)' }}>
+    <div data-theme={theme} style={{ '--app-header-height': `${headerHeight}px`, display: 'flex', minHeight: '100vh', flexDirection: 'column', background: 'var(--bg)' }}>
       {/* Header */}
       <header style={{
         borderBottom: '1px solid var(--border)',
         padding: '0 16px 0 24px',
-        height: 56,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        minHeight: 56, height: 'auto',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
         position: 'sticky', top: 0, zIndex: 10,
         background: 'var(--bg)',
         backdropFilter: 'blur(8px)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      }} ref={headerRef}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flexWrap: 'wrap' }}>
           <img 
 			src="/MeepleSync_Logo.png"
 			alt="MeepleSync"
@@ -497,7 +508,7 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {allGames.length > 0 && (
             <span style={{ fontSize: 13, color: 'var(--text3)', marginRight: 4 }}>
               {filteredGames.length} / {allGames.length} games
@@ -606,7 +617,7 @@ export default function App() {
             width: 280, flexShrink: 0,
             padding: '20px 16px',
             display: 'flex', flexDirection: 'column', gap: 16,
-            position: 'sticky', top: 56,
+            position: 'sticky', top: 'var(--app-header-height, 56px)',
             height: 'calc(100vh - 56px)',
             overflowY: 'auto',
             borderRight: '1px solid var(--border)',
@@ -670,7 +681,7 @@ export default function App() {
           )}
         </main>
         {detailsMode && selectedGame && (
-          <aside style={{ width: 340, flexShrink: 0, borderLeft: '1px solid var(--border)', background: 'var(--surface)', position: 'sticky', top: 56, height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
+          <aside style={{ width: 340, flexShrink: 0, borderLeft: '1px solid var(--border)', background: 'var(--surface)', position: 'sticky', top: 'var(--app-header-height, 56px)', height: 'calc(100vh - var(--app-header-height, 56px))', overflow: 'hidden' }}>
             <GameDetailsPanel game={selectedGame} onClose={() => setSelectedGame(null)} />
           </aside>
         )}

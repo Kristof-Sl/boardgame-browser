@@ -977,7 +977,7 @@ function VotingPhase({ event, participants, me, votes, gameFiles, mergedCollecti
       </div>
       {selectedGame && (
         <aside style={{
-          position: 'fixed', top: 56, right: 0, bottom: 0, width: 340,
+          position: 'fixed', top: 'var(--app-header-height, 56px)', right: 0, bottom: 0, width: 340,
           maxWidth: '100vw', background: 'var(--surface)',
           borderLeft: '1px solid var(--border)', zIndex: 100,
           boxShadow: '-8px 0 32px rgba(0,0,0,0.28)', overflow: 'hidden',
@@ -1212,7 +1212,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
       </div>
       {selectedGame && (
         <aside style={{
-          position: 'fixed', top: 56, right: 0, bottom: 0, width: 340,
+          position: 'fixed', top: 'var(--app-header-height, 56px)', right: 0, bottom: 0, width: 340,
           maxWidth: '100vw', background: 'var(--surface)',
           borderLeft: '1px solid var(--border)', zIndex: 100,
           boxShadow: '-8px 0 32px rgba(0,0,0,0.28)', overflow: 'hidden',
