@@ -242,6 +242,9 @@ input {
 .analyzer-interest-filter { display: flex; flex-wrap: wrap; gap: 4px; }
 .analyzer-interest-filter button { background: transparent; border: 1px solid var(--border); border-radius: 999px; color: var(--text2); cursor: pointer; font-size: 10px; padding: 5px 7px; }
 .analyzer-interest-filter button.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.analyzer-account-filter { display: flex; flex-wrap: wrap; gap: 4px; }
+.analyzer-account-filter button { background: transparent; border: 1px solid var(--border); border-radius: 999px; color: var(--text2); cursor: pointer; font-size: 10px; max-width: 100%; overflow: hidden; padding: 5px 7px; text-overflow: ellipsis; white-space: nowrap; }
+.analyzer-account-filter button.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
 .analyzer-reset { margin-top: 2px; width: 100%; }
 .analyzer-results { min-width: 0; overflow: auto; padding: 16px; }
 .analyzer-result-head { color: var(--text3); display: flex; justify-content: space-between; font-size: 11px; gap: 12px; margin-bottom: 10px; }

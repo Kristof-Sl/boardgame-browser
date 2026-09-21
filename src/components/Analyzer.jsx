@@ -19,7 +19,7 @@ const PRESETS = [
 
 const DEFAULT_FILTERS = {
   rating: [0, 10], weight: [0, 5], time: [0, 240], players: [1, 8],
-  theme: '', mechanic: '', interest: [], search: '',
+  theme: '', mechanic: '', interest: [], accounts: [], status: null, search: '',
 }
 
 function numberValue(...values) {
@@ -32,6 +32,11 @@ function numberValue(...values) {
 
 function enrichGame(game) {
   const detail = game.details || {}
+  const owners = Array.isArray(game.owners)
+    ? game.owners
+    : typeof game.owners === 'string'
+      ? game.owners.split(',').map(owner => owner.trim()).filter(Boolean)
+      : []
   const weight = numberValue(game.weight, game.averageweight, detail.weight, detail.averageweight)
   return {
     ...game,
@@ -45,6 +50,7 @@ function enrichGame(game) {
     analyzerMaxTime: numberValue(game.maxPlaytime, detail.maxPlaytime) || 0,
     analyzerYear: numberValue(game.yearPublished, detail.yearPublished),
     analyzerRatings: numberValue(game.numRatings, detail.numRatings) || 0,
+    analyzerOwners: owners,
   }
 }
 
@@ -68,6 +74,7 @@ export default function Analyzer({ games }) {
   const analyzerGames = useMemo(() => (importedGames || games || []).map(enrichGame), [games, importedGames])
   const themes = useMemo(() => [...new Set(analyzerGames.map(game => game.analyzerTheme))].sort(), [analyzerGames])
   const mechanics = useMemo(() => [...new Set(analyzerGames.map(game => game.analyzerMechanic))].sort(), [analyzerGames])
+  const accounts = useMemo(() => [...new Set(analyzerGames.flatMap(game => game.analyzerOwners))].sort(), [analyzerGames])
   const bounds = useMemo(() => ({
     rating: [Math.min(0, ...analyzerGames.map(g => g.analyzerRating)), 10],
     weight: [0, Math.max(5, ...analyzerGames.map(g => g.analyzerWeight || 0))],
@@ -88,6 +95,8 @@ export default function Analyzer({ games }) {
     if (filters.theme && game.analyzerTheme !== filters.theme) return false
     if (filters.mechanic && game.analyzerMechanic !== filters.mechanic) return false
     if (filters.interest.length && !filters.interest.includes(interest[game.id] || 'unmarked')) return false
+    if (filters.accounts.length && !filters.accounts.some(account => game.analyzerOwners.includes(account))) return false
+    if (filters.status && !game[filters.status]) return false
     return true
   }).sort((a, b) => b.analyzerRating - a.analyzerRating), [analyzerGames, filters, interest])
 
@@ -159,6 +168,8 @@ export default function Analyzer({ games }) {
           <AnalyzerRange label="Players" values={filters.players} bounds={bounds.players} step={1} onChange={value => setFilters({ ...filters, players: value })} format={value => `${value}${value >= bounds.players[1] ? '+' : ''}`} />
           <label><span>Theme</span><select value={filters.theme} onChange={event => setFilters({ ...filters, theme: event.target.value })}><option value="">Any theme</option>{themes.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
           <label><span>Mechanic</span><select value={filters.mechanic} onChange={event => setFilters({ ...filters, mechanic: event.target.value })}><option value="">Any mechanic</option>{mechanics.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+          {accounts.length > 0 && <section><h3>BGG account</h3><div className="analyzer-account-filter"><button className={!filters.accounts.length ? 'active' : ''} onClick={() => setFilters({ ...filters, accounts: [] })}>All accounts</button>{accounts.map(account => <button key={account} className={filters.accounts.includes(account) ? 'active' : ''} onClick={() => setFilters({ ...filters, accounts: filters.accounts.includes(account) ? filters.accounts.filter(value => value !== account) : [...filters.accounts, account] })}>{account}</button>)}</div></section>}
+          <label><span>Collection status</span><select value={filters.status || ''} onChange={event => setFilters({ ...filters, status: event.target.value || null })}><option value="">Any status</option><option value="owned">Owned</option><option value="wishlist">Wishlist</option><option value="wantToPlay">Want to play</option><option value="prevOwned">Previously owned</option></select></label>
           <section><h3>Player interest</h3><div className="analyzer-interest-filter">{INTERESTS.map(option => <button key={option.id} className={filters.interest.includes(option.id) ? 'active' : ''} onClick={() => setFilters({ ...filters, interest: filters.interest.includes(option.id) ? filters.interest.filter(value => value !== option.id) : [...filters.interest, option.id] })}>{option.icon} {option.label}</button>)}</div></section>
           <button className="analyzer-reset" onClick={() => { setFilters(DEFAULT_FILTERS); setPreset(null) }}>Reset filters</button>
         </aside>
@@ -188,10 +199,10 @@ function AnalyzerRange({ label, values, bounds, step, onChange, format }) {
 function RatingsMap({ games, onSelect }) {
   const width = 900
   const height = 520
-  const valid = games.filter(game => game.analyzerWeight != null && game.analyzerRating > 0)
+  const valid = games.filter(game => game.analyzerRating > 0)
   const x = value => 50 + ((value - 1) / 3.6) * (width - 90)
   const y = value => height - 45 - ((value - 5) / 5) * (height - 85)
-  return <div className="analyzer-map"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity against BGG rating"><line x1="50" y1="25" x2="50" y2={height - 45} /><line x1="50" y1={height - 45} x2={width - 40} y2={height - 45} />{[1, 2, 3, 4].map(value => <g key={value}><line className="grid" x1={x(value)} y1="25" x2={x(value)} y2={height - 45} /><text x={x(value)} y={height - 20}>{value}</text></g>)}{[6, 7, 8, 9].map(value => <g key={value}><line className="grid" x1="50" y1={y(value)} x2={width - 40} y2={y(value)} /><text x="28" y={y(value) + 4}>{value}</text></g>)}{valid.map(game => <g key={game.id} className="analyzer-dot" onClick={() => onSelect(game)}><circle cx={x(game.analyzerWeight)} cy={y(game.analyzerRating)} r={Math.max(5, Math.min(13, 4 + Math.sqrt(game.analyzerRatings || 1) / 35))} /><title>{game.name}</title></g>)}<text className="axis-label" x={width / 2} y={height - 3}>Complexity</text><text className="axis-label" transform={`translate(12 ${height / 2}) rotate(-90)`}>BGG rating</text></svg><div className="analyzer-map-note">Click a point to open details. Games without complexity metadata are omitted from the map.</div></div>
+  return <div className="analyzer-map"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity against BGG rating"><line x1="50" y1="25" x2="50" y2={height - 45} /><line x1="50" y1={height - 45} x2={width - 40} y2={height - 45} />{[1, 2, 3, 4].map(value => <g key={value}><line className="grid" x1={x(value)} y1="25" x2={x(value)} y2={height - 45} /><text x={x(value)} y={height - 20}>{value}</text></g>)}{[6, 7, 8, 9].map(value => <g key={value}><line className="grid" x1="50" y1={y(value)} x2={width - 40} y2={y(value)} /><text x="28" y={y(value) + 4}>{value}</text></g>)}{valid.map(game => { const weight = game.analyzerWeight || 2.5; return <g key={game.id} className="analyzer-dot" onClick={() => onSelect(game)}><circle cx={x(weight)} cy={y(game.analyzerRating)} r={Math.max(5, Math.min(13, 4 + Math.sqrt(game.analyzerRatings || 1) / 35))} /><title>{game.name}{game.analyzerWeight == null ? ' (complexity unavailable)' : ''}</title></g> })}<text className="axis-label" x={width / 2} y={height - 3}>Complexity</text><text className="axis-label" transform={`translate(12 ${height / 2}) rotate(-90)`}>BGG rating</text></svg><div className="analyzer-map-note">Click a point to open details. Games without complexity metadata are shown at the neutral midpoint.</div></div>
 }
 
 function YearlyView({ games, onSelect }) {
