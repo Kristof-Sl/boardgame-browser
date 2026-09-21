@@ -203,17 +203,21 @@ function RatingsMap({ games, onSelect }) {
   const valid = games.filter(game => game.analyzerRating > 0)
   const x = value => 50 + ((value - 1) / 3.6) * (width - 90)
   const y = value => height - 45 - ((value - 5) / 5) * (height - 85)
-  return <div className="analyzer-map"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity against BGG rating"><line x1="50" y1="25" x2="50" y2={height - 45} /><line x1="50" y1={height - 45} x2={width - 40} y2={height - 45} />{[1, 2, 3, 4].map(value => <g key={value}><line className="grid" x1={x(value)} y1="25" x2={x(value)} y2={height - 45} /><text x={x(value)} y={height - 20}>{value}</text></g>)}{[6, 7, 8, 9].map(value => <g key={value}><line className="grid" x1="50" y1={y(value)} x2={width - 40} y2={y(value)} /><text x="28" y={y(value) + 4}>{value}</text></g>)}{valid.map(game => { const weight = game.analyzerWeight || 2.5; return <g key={game.id} className="analyzer-dot" onClick={() => onSelect(game)} onMouseEnter={() => setHoveredGame(game)} onMouseLeave={() => setHoveredGame(null)}><circle cx={x(weight)} cy={y(game.analyzerRating)} r={Math.max(5, Math.min(13, 4 + Math.sqrt(game.analyzerRatings || 1) / 35))} /><title>{game.name}{game.analyzerWeight == null ? ' (complexity unavailable)' : ''}</title></g> })}<text className="axis-label" x={width / 2} y={height - 3}>Complexity</text><text className="axis-label" transform={`translate(12 ${height / 2}) rotate(-90)`}>BGG rating</text></svg>{hoveredGame && <AnalyzerHoverCard game={hoveredGame} onDetails={() => onSelect(hoveredGame)} />}<div className="analyzer-map-note">Click a point to open details. Games without complexity metadata are shown at the neutral midpoint.</div></div>
+  const updateHover = (game, event) => setHoveredGame({ game, x: event.clientX, y: event.clientY })
+  return <div className="analyzer-map"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity against BGG rating"><line x1="50" y1="25" x2="50" y2={height - 45} /><line x1="50" y1={height - 45} x2={width - 40} y2={height - 45} />{[1, 2, 3, 4].map(value => <g key={value}><line className="grid" x1={x(value)} y1="25" x2={x(value)} y2={height - 45} /><text x={x(value)} y={height - 20}>{value}</text></g>)}{[6, 7, 8, 9].map(value => <g key={value}><line className="grid" x1="50" y1={y(value)} x2={width - 40} y2={y(value)} /><text x="28" y={y(value) + 4}>{value}</text></g>)}{valid.map(game => { const weight = game.analyzerWeight || 2.5; return <g key={game.id} className="analyzer-dot" onClick={() => onSelect(game)} onMouseEnter={event => updateHover(game, event)} onMouseMove={event => updateHover(game, event)} onMouseLeave={() => setHoveredGame(null)}><circle cx={x(weight)} cy={y(game.analyzerRating)} r={Math.max(5, Math.min(13, 4 + Math.sqrt(game.analyzerRatings || 1) / 35))} /><title>{game.name}{game.analyzerWeight == null ? ' (complexity unavailable)' : ''}</title></g> })}<text className="axis-label" x={width / 2} y={height - 3}>Complexity</text><text className="axis-label" transform={`translate(12 ${height / 2}) rotate(-90)`}>BGG rating</text></svg>{hoveredGame && <AnalyzerHoverCard game={hoveredGame.game} position={{ x: hoveredGame.x, y: hoveredGame.y }} onDetails={() => onSelect(hoveredGame.game)} />}<div className="analyzer-map-note">Click a point to open details. Games without complexity metadata are shown at the neutral midpoint.</div></div>
 }
 
-function AnalyzerHoverCard({ game, onDetails }) {
+function AnalyzerHoverCard({ game, position, onDetails }) {
   const statuses = [
     game.owned && 'Owned',
     game.wishlist && 'Wishlist',
     game.wantToPlay && 'Want to play',
     game.prevOwned && 'Previously owned',
   ].filter(Boolean)
-  return <div className="analyzer-hover-card" onMouseDown={event => event.stopPropagation()}>
+  const cardWidth = 290
+  const left = Math.min(position.x + 16, Math.max(8, window.innerWidth - cardWidth - 8))
+  const top = Math.min(position.y + 16, Math.max(8, window.innerHeight - 170))
+  return <div className="analyzer-hover-card" style={{ left, top }} onMouseDown={event => event.stopPropagation()}>
     {(game.thumbnail || game.details?.thumbnail) && <img src={game.thumbnail || game.details.thumbnail} alt="" />}
     <div className="analyzer-hover-content">
       <strong>{game.name}</strong>
