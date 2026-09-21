@@ -991,10 +991,11 @@ function VotingPhase({ event, participants, me, votes, gameFiles, mergedCollecti
 
 // ─── Phase 2: Preferences & Availability ─────────────────────────────────────
 
-function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }) {
+function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, mergedCollection }) {
   const [savingPref, setSavingPref] = useState(null)
   const [savingAvail, setSavingAvail] = useState(false)
   const [gameFilters, setGameFilters] = useState(EMPTY_GAME_FILTERS)
+  const [selectedGame, setSelectedGame] = useState(null)
 
   const myPrefs = {}
   for (const p of prefs) {
@@ -1036,10 +1037,16 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }
   const partOptions = PARTS.map(p => ({ value: p, label: p.charAt(0).toUpperCase() + p.slice(1) }))
 
   // Build game objects for filtering (from eventGames)
-  const gamesForFilter = eventGames.map(eg => ({
-    id: eg.game_id, name: eg.game_name,
-    ...(eg.game_data || {}),
-  }))
+  const gamesForFilter = eventGames.map(eg => {
+    const localGame = (mergedCollection || []).find(game => game.id === eg.game_id)
+    return {
+      ...localGame,
+      id: eg.game_id,
+      name: eg.game_name,
+      ...(eg.game_data || {}),
+      details: localGame?.details || eg.game_data?.details,
+    }
+  })
   const filteredEventGames = applyGameFilters(gamesForFilter, gameFilters)
   const filteredIds = new Set(filteredEventGames.map(g => g.id))
 
@@ -1100,14 +1107,24 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }
           {eventGames
             .filter(eg => filteredIds.has(eg.game_id))
             .map(eg => {
-              const g = eg.game_data || {}
+              const game = gamesForFilter.find(item => item.id === eg.game_id) || { id: eg.game_id, name: eg.game_name, ...(eg.game_data || {}) }
+              const g = game
               const myPref = myPrefs[eg.game_id]
               return (
                 <div key={eg.game_id} style={{
                   background: 'var(--bg3)', borderRadius: 8, padding: '10px 12px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {g.thumbnail && <img src={g.thumbnail} alt="" style={{ width: 36, height: 36, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />}
+                    {g.thumbnail && (
+                      <button
+                        onClick={() => setSelectedGame(game)}
+                        title={`Show details for ${eg.game_name}`}
+                        aria-label={`Show details for ${eg.game_name}`}
+                        style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', flexShrink: 0, lineHeight: 0 }}
+                      >
+                        <img src={g.thumbnail} alt="" style={{ width: 36, height: 36, borderRadius: 4, objectFit: 'cover' }} />
+                      </button>
+                    )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eg.game_name}</p>
                       <p style={{ fontSize: 11, color: 'var(--text3)' }}>
@@ -1173,6 +1190,16 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload }
       <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--text3)' }}>
         Once all participants have set their preferences and availability, the admin will generate the schedule.
       </div>
+      {selectedGame && (
+        <aside style={{
+          position: 'fixed', top: 56, right: 0, bottom: 0, width: 340,
+          maxWidth: '100vw', background: 'var(--surface)',
+          borderLeft: '1px solid var(--border)', zIndex: 100,
+          boxShadow: '-8px 0 32px rgba(0,0,0,0.28)', overflow: 'hidden',
+        }}>
+          <GameDetailsPanel game={selectedGame} onClose={() => setSelectedGame(null)} />
+        </aside>
+      )}
     </div>
   )
 }
