@@ -205,6 +205,23 @@ input {
   font-family: var(--font-body);
 }
 
+@media (max-width: 600px) {
+  .event-availability-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .event-preference-row {
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+  }
+
+  .event-preference-buttons {
+    flex: 1 1 100%;
+    min-width: 0;
+    justify-content: flex-start !important;
+  }
+}
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }

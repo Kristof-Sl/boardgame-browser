@@ -1084,7 +1084,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
       {/* My availability */}
       <Card>
         <p style={{ fontSize: 12, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>My availability</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
+        <div className="event-availability-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
           <Input label="Arrive date" value={arriveDate} onChange={setArriveDate} type="date" />
           <Select label="Arrive part" value={arrivePart} onChange={setArrivePart} options={partOptions} />
           <Input label="Depart date" value={departDate} onChange={setDepartDate} type="date" />
@@ -1134,7 +1134,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
                 <div key={eg.game_id} style={{
                   background: 'var(--bg3)', borderRadius: 8, padding: '10px 12px',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="event-preference-row" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {g.thumbnail && (
                       <button
                         onClick={() => setSelectedGame(game)}
@@ -1153,7 +1153,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
                         {g.rating > 0 && ` · ★ ${g.rating.toFixed(1)}`}
                       </p>
                     </div>
-                    <div style={{ display: 'flex', gap: 5, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <div className="event-preference-buttons" style={{ display: 'flex', gap: 5, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       {PREF_OPTS.map(opt => (
                         <button key={opt.value} onClick={() => handlePref(eg.game_id, opt.value)}
                           disabled={savingPref === eg.game_id}
