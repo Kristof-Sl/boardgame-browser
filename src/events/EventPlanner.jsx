@@ -134,6 +134,11 @@ function StatusBadge({ status }) {
 // ─── Game filter bar (reused in voting + preferences) ─────────────────────────
 
 function GameFilterBar({ games, filters, onChange }) {
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const categories = uniqueGameValues(games, 'categories', 'themes')
+  const mechanisms = uniqueGameValues(games, 'mechanics')
+  const designers = uniqueGameValues(games, 'designers')
+
   return (
     <div style={{
       background: 'var(--bg3)', border: '1px solid var(--border)',
@@ -149,6 +154,22 @@ function GameFilterBar({ games, filters, onChange }) {
           borderRadius: 8, padding: '7px 12px', color: 'var(--text)', fontSize: 13, outline: 'none',
         }}
       />
+      <button
+        onClick={() => setAdvancedOpen(open => !open)}
+        style={{ alignSelf: 'flex-start', padding: '4px 0', background: 'none', border: 'none', color: advancedOpen ? 'var(--accent)' : 'var(--text2)', fontSize: 12, cursor: 'pointer' }}
+      >{advancedOpen ? '▲ Hide advanced filters' : '▼ Advanced filters'}</button>
+      {advancedOpen && (
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          <FilterGroup label="Weight">
+            {[[null, 'Any'], [1, '1+'], [2, '2+'], [3, '3+'], [4, '4+']].map(([value, label]) => (
+              <Pill key={label} label={label} active={filters.minWeight === value} onClick={() => onChange({ ...filters, minWeight: value })} />
+            ))}
+          </FilterGroup>
+          <EventAdvancedSelect label="Category" value={filters.category || ''} options={categories} onChange={value => onChange({ ...filters, category: value || null })} />
+          <EventAdvancedSelect label="Mechanism" value={filters.mechanism || ''} options={mechanisms} onChange={value => onChange({ ...filters, mechanism: value || null })} />
+          <EventAdvancedSelect label="Designer" value={filters.designer || ''} options={designers} onChange={value => onChange({ ...filters, designer: value || null })} />
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
         {/* Players */}
         <FilterGroup label="Players">
@@ -236,6 +257,25 @@ function GameFilterBar({ games, filters, onChange }) {
   )
 }
 
+function uniqueGameValues(games, primaryKey, fallbackKey) {
+  return Array.from(new Set(games.flatMap(game => {
+    const detail = game.details || game
+    return detail[primaryKey] || (fallbackKey ? detail[fallbackKey] : []) || []
+  }))).sort()
+}
+
+function EventAdvancedSelect({ label, value, options, onChange }) {
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 150 }}>
+      <span style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+      <select value={value} onChange={event => onChange(event.target.value)} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 9px', color: 'var(--text)', fontSize: 12 }}>
+        <option value="">Any {label.toLowerCase()}</option>
+        {options.map(option => <option key={option} value={option}>{option}</option>)}
+      </select>
+    </label>
+  )
+}
+
 function FilterGroup({ label, children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -273,11 +313,20 @@ function applyGameFilters(games, filters) {
     if (filters.decades && filters.decades.length > 0) {
       if (!g.yearPublished || !filters.decades.some(d => g.yearPublished >= d && g.yearPublished < d + 10)) return false
     }
+    const detail = g.details || g
+    const categories = detail.categories || detail.themes || g.categories || g.themes || []
+    const mechanics = detail.mechanics || g.mechanics || []
+    const designers = detail.designers || g.designers || []
+    const weight = Number(detail.averageweight ?? detail.weight ?? g.averageweight ?? g.weight) || 0
+    if (filters.minWeight && weight < filters.minWeight) return false
+    if (filters.category && !categories.includes(filters.category)) return false
+    if (filters.mechanism && !mechanics.includes(filters.mechanism)) return false
+    if (filters.designer && !designers.includes(filters.designer)) return false
     return true
   })
 }
 
-const EMPTY_GAME_FILTERS = { search: '', players: null, bestWith: [], recommendedWith: [], maxTime: null, minRating: null, decades: [] }
+const EMPTY_GAME_FILTERS = { search: '', players: null, bestWith: [], recommendedWith: [], maxTime: null, minRating: null, decades: [], minWeight: null, category: null, mechanism: null, designer: null }
 
 // ─── Not configured banner ────────────────────────────────────────────────────
 
@@ -1231,6 +1280,7 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
   const params = event.schedule_params || {}
   const [myGamesOnly, setMyGamesOnly] = useState(false)
   const [showBringList, setShowBringList] = useState(false)
+  const [selectedGame, setSelectedGame] = useState(null)
 
   if (!schedule.length) {
     return <Card><p style={{ color: 'var(--text3)' }}>No schedule generated yet.</p></Card>
@@ -1272,6 +1322,12 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
       rating: eg.game_data?.rating || localGame?.rating || 0,
       numRatings: localGame?.numRatings || 0,
       bggRank: localGame?.bggRank || null,
+      details: localGame?.details || eg.game_data?.details,
+      categories: localGame?.categories || eg.game_data?.categories,
+      themes: localGame?.themes || eg.game_data?.themes,
+      mechanics: localGame?.mechanics || eg.game_data?.mechanics,
+      designers: localGame?.designers || eg.game_data?.designers,
+      averageweight: localGame?.averageweight || eg.game_data?.averageweight,
       files: gameFiles[eg.game_id] || [],
     }
   }
@@ -1373,11 +1429,21 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
                 slot={slot}
                 gameData={gameDataMap[slot.gameId] || {}}
                 me={me}
+                onDetails={setSelectedGame}
               />
             ))}
           </div>
         </div>
       ))}
+      {selectedGame && (
+        <aside style={{
+          position: 'fixed', top: 'var(--app-header-height, 56px)', right: 0, bottom: 0, width: 340,
+          maxWidth: '100vw', background: 'var(--surface)', borderLeft: '1px solid var(--border)',
+          zIndex: 100, boxShadow: '-8px 0 32px rgba(0,0,0,0.28)', overflow: 'hidden',
+        }}>
+          <GameDetailsPanel game={selectedGame} onClose={() => setSelectedGame(null)} />
+        </aside>
+      )}
     </div>
   )
 }
@@ -1481,7 +1547,7 @@ function PreferencesOverview({ eventGames, participants, prefs, me }) {
   )
 }
 
-function ScheduleGameCard({ slot, gameData, me }) {
+function ScheduleGameCard({ slot, gameData, me, onDetails }) {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [imgErr, setImgErr] = useState(false)
 
@@ -1516,8 +1582,13 @@ function ScheduleGameCard({ slot, gameData, me }) {
       display: 'flex', flexDirection: 'column',
     }}>
       {/* Thumbnail — links to BGG */}
-      <a href={bggUrl} target="_blank" rel="noopener noreferrer"
-        style={{ display: 'block', position: 'relative', paddingTop: '56%', background: 'var(--bg3)', flexShrink: 0, textDecoration: 'none' }}
+      <div
+        onClick={() => onDetails?.({ ...gameData, id: slot.gameId, name: slot.gameName })}
+        role="button"
+        tabIndex={0}
+        onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') onDetails?.({ ...gameData, id: slot.gameId, name: slot.gameName }) }}
+        aria-label={`Show details for ${slot.gameName}`}
+        style={{ display: 'block', position: 'relative', paddingTop: '56%', background: 'var(--bg3)', flexShrink: 0, cursor: 'pointer' }}
       >
         {thumbnail && !imgErr ? (
           <img src={thumbnail} alt={slot.gameName} onError={() => setImgErr(true)}
@@ -1546,12 +1617,12 @@ function ScheduleGameCard({ slot, gameData, me }) {
             ))}
           </div>
         )}
-      </a>
+      </div>
 
       {/* Card body */}
       <div style={{ padding: '10px 12px 12px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
         <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 500, lineHeight: 1.3, color: 'var(--text)' }}>
-          {slot.gameName}
+          <button onClick={() => onDetails?.({ ...gameData, id: slot.gameId, name: slot.gameName })} style={{ padding: 0, border: 'none', background: 'none', color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer' }}>{slot.gameName}</button>
           {isMe && <span style={{ fontSize: 10, color: 'var(--accent)', marginLeft: 6, fontFamily: 'var(--font-body)', fontWeight: 500 }}>★ you</span>}
         </p>
 

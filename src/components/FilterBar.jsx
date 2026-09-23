@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 export default function FilterBar({ filters, onChange, games, availableAccounts }) {
+  const [advancedOpen, setAdvancedOpen] = useState(false)
   // Derive max players from data
   const maxPossiblePlayers = Math.min(
     Math.max(...games.map(g => g.maxPlayers).filter(Boolean), 10),
@@ -11,6 +12,19 @@ export default function FilterBar({ filters, onChange, games, availableAccounts 
   const allAccounts = availableAccounts || Array.from(
     new Set(games.flatMap(g => g.owners || []))
   ).sort()
+
+  const categories = Array.from(new Set(games.flatMap(game => {
+    const detail = game.details || game
+    return detail.categories || detail.themes || []
+  }))).sort()
+  const mechanisms = Array.from(new Set(games.flatMap(game => {
+    const detail = game.details || game
+    return detail.mechanics || []
+  }))).sort()
+  const designers = Array.from(new Set(games.flatMap(game => {
+    const detail = game.details || game
+    return detail.designers || []
+  }))).sort()
 
   const pill = (label, active, onClick) => (
     <button
@@ -63,6 +77,30 @@ export default function FilterBar({ filters, onChange, games, availableAccounts 
         onFocus={e => e.target.style.borderColor = 'var(--border2)'}
         onBlur={e => e.target.style.borderColor = 'var(--border)'}
       />
+
+      <button
+        onClick={() => setAdvancedOpen(open => !open)}
+        style={{
+          alignSelf: 'flex-start', padding: '5px 0', background: 'none', border: 'none',
+          color: advancedOpen ? 'var(--accent)' : 'var(--text2)', fontSize: 12,
+          cursor: 'pointer',
+        }}
+      >{advancedOpen ? '▲ Hide advanced filters' : '▼ Advanced filters'}</button>
+
+      {advancedOpen && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 2 }}>
+          <Section label="Game weight">
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[[null, 'Any'], [1, '1+'], [2, '2+'], [3, '3+'], [4, '4+']].map(([value, label]) =>
+                pill(label, filters.minWeight === value, () => onChange('minWeight', value))
+              )}
+            </div>
+          </Section>
+          <AdvancedSelect label="Category" value={filters.category || ''} options={categories} onChange={value => onChange('category', value || null)} />
+          <AdvancedSelect label="Mechanism" value={filters.mechanism || ''} options={mechanisms} onChange={value => onChange('mechanism', value || null)} />
+          <AdvancedSelect label="Designer" value={filters.designer || ''} options={designers} onChange={value => onChange('designer', value || null)} />
+        </div>
+      )}
 
       {/* Status */}
       <Section label="Status">
@@ -260,6 +298,18 @@ export default function FilterBar({ filters, onChange, games, availableAccounts 
       </Section>
 
     </div>
+  )
+}
+
+function AdvancedSelect({ label, value, options, onChange }) {
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text3)' }}>{label}</span>
+      <select value={value} onChange={event => onChange(event.target.value)} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', color: 'var(--text)', fontSize: 13 }}>
+        <option value="">Any {label.toLowerCase()}</option>
+        {options.map(option => <option key={option} value={option}>{option}</option>)}
+      </select>
+    </label>
   )
 }
 
