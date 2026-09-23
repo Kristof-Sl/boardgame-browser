@@ -22,6 +22,10 @@ const DEFAULT_FILTERS = {
   recommendedWith: null,
   decades: [],
   accounts: [],
+  minWeight: null,
+  category: null,
+  mechanism: null,
+  designer: null,
   sort: 'rating',
 }
 
@@ -225,6 +229,18 @@ export default function App() {
     if (filters.decades && filters.decades.length > 0) {
       games = games.filter(g => g.yearPublished && filters.decades.some(d => g.yearPublished >= d && g.yearPublished < d + 10))
     }
+
+    games = games.filter(g => {
+      const detail = g.details || g
+      const categories = detail.categories || detail.themes || g.categories || g.themes || []
+      const mechanics = detail.mechanics || g.mechanics || []
+      const designers = detail.designers || g.designers || []
+      const weight = Number(detail.averageweight ?? detail.weight ?? g.averageweight ?? g.weight) || 0
+      return (!filters.minWeight || weight >= filters.minWeight)
+        && (!filters.category || categories.includes(filters.category))
+        && (!filters.mechanism || mechanics.includes(filters.mechanism))
+        && (!filters.designer || designers.includes(filters.designer))
+    })
 
     if (filters.accounts && filters.accounts.length > 0) {
       games = games.filter(g => g.owners && g.owners.some(owner => filters.accounts.includes(owner)))
