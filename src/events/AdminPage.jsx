@@ -55,6 +55,41 @@ function StatusBadge({ status }) {
   )
 }
 
+function downloadJson(filename, value) {
+  const blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+function scheduleTemplate(eventId = 'EVENT_ID') {
+  return {
+    format: 'boardgame-browser-event-schedule', version: 1, eventId,
+    description: 'Replace the example slot with one object per scheduled game session.',
+    schedule: [{ date: 'YYYY-MM-DD', part: 'morning', gameId: 'GAME_ID', gameName: 'Game name', gameDuration: 90, players: [{ id: 'PARTICIPANT_ID', name: 'Participant name' }], thumbnail: null }],
+  }
+}
+
+function validateImportedSchedule(payload, eventId) {
+  const schedule = Array.isArray(payload) ? payload : payload?.schedule
+  if (!Array.isArray(schedule)) throw new Error('The file must contain a schedule array.')
+  if (payload?.eventId && payload.eventId !== eventId) throw new Error(`This schedule belongs to event ${payload.eventId}, not ${eventId}.`)
+  schedule.forEach((slot, index) => {
+    if (!slot || !slot.date || !slot.part || !slot.gameId || !slot.gameName) throw new Error(`Schedule slot ${index + 1} needs date, part, gameId, and gameName.`)
+    if (!['morning', 'afternoon', 'evening'].includes(slot.part)) throw new Error(`Schedule slot ${index + 1} has an invalid part.`)
+    if (!Array.isArray(slot.players)) throw new Error(`Schedule slot ${index + 1} needs a players array.`)
+  })
+  return schedule
+}
+
+const adminInputStyle = {
+  width: '100%', background: 'var(--bg)', border: '1px solid var(--border)',
+  borderRadius: 6, padding: '6px 8px', color: 'var(--text)', fontSize: 11,
+}
+
 // ─── Login gate ───────────────────────────────────────────────────────────────
 
 function AdminLogin({ onLogin }) {
@@ -190,6 +225,9 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
   const [prefs, setPrefs] = useState([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [scheduleEditor, setScheduleEditor] = useState(null)
+  const [scheduleMessage, setScheduleMessage] = useState('')
+  const scheduleImportRef = React.useRef()
 
   // For adding games (phase preferences)
   const [gameSearch, setGameSearch] = useState('')
@@ -273,10 +311,14 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
         game_id: game.id,
         game_name: game.name,
         game_data: {
+          description: game.description,
           thumbnail: game.thumbnail, rating: game.rating,
           minPlayers: game.minPlayers, maxPlayers: game.maxPlayers,
           minPlaytime: game.minPlaytime, maxPlaytime: game.maxPlaytime,
-          yearPublished: game.yearPublished,
+          minAge: game.minAge, yearPublished: game.yearPublished,
+          averageweight: game.averageweight, categories: game.categories || game.themes,
+          themes: game.themes, mechanics: game.mechanics, designers: game.designers,
+          suggestedPlayerCounts: game.suggestedPlayerCounts,
         },
       })
       await reload()
@@ -412,6 +454,50 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     URL.revokeObjectURL(url)
   }
 
+  const detailedEventGames = eventGames.map(eg => {
+    const localGame = mergedCollection.find(game => String(game.id) === String(eg.game_id))
+    return { id: eg.game_id, name: eg.game_name, ...localGame, ...(eg.game_data || {}), details: localGame?.details || eg.game_data?.details || null }
+  })
+
+  const handleExportEventData = () => downloadJson(`event-${event.id}-data.json`, {
+    format: 'boardgame-browser-event-data', version: 1, exportedAt: new Date().toISOString(),
+    event, participants, games: detailedEventGames, votes, preferences: prefs,
+    schedule: event.schedule || [], scheduleParams: event.schedule_params || {},
+  })
+
+  const handleExportScheduleTemplate = () => downloadJson(`event-${event.id}-schedule-template.json`, scheduleTemplate(event.id))
+
+  const handleImportSchedule = async eventTarget => {
+    const file = eventTarget.files?.[0]
+    eventTarget.value = ''
+    if (!file) return
+    try {
+      const payload = JSON.parse(await file.text())
+      const schedule = validateImportedSchedule(payload, event.id)
+      setBusy(true)
+      await db.update('events', { status: 'scheduled', schedule, schedule_params: { ...(event.schedule_params || {}), importedAt: new Date().toISOString(), importSource: file.name } }, `id=eq.${event.id}`)
+      await refreshEvent()
+      setScheduleMessage(`Imported ${schedule.length} schedule slots from ${file.name}.`)
+    } catch (error) { setScheduleMessage(`Import failed: ${error.message || error}`) }
+    finally { setBusy(false) }
+  }
+
+  const beginScheduleEditor = () => setScheduleEditor(JSON.parse(JSON.stringify(event.schedule || [])))
+  const updateScheduleSlot = (index, key, value) => setScheduleEditor(slots => slots.map((slot, i) => i === index ? { ...slot, [key]: value } : slot))
+  const removeScheduleSlot = index => setScheduleEditor(slots => slots.filter((_, i) => i !== index))
+  const addScheduleSlot = () => setScheduleEditor(slots => [...slots, { date: event.start_date || '', part: 'morning', gameId: eventGames[0]?.game_id || '', gameName: eventGames[0]?.game_name || '', gameDuration: 90, players: [], thumbnail: eventGames[0]?.game_data?.thumbnail || null }])
+  const saveScheduleEditor = async () => {
+    try {
+      const schedule = validateImportedSchedule({ schedule: scheduleEditor }, event.id)
+      setBusy(true)
+      await db.update('events', { status: 'scheduled', schedule, schedule_params: { ...(event.schedule_params || {}), manuallyEditedAt: new Date().toISOString() } }, `id=eq.${event.id}`)
+      await refreshEvent()
+      setScheduleEditor(null)
+      setScheduleMessage('Manual schedule changes saved.')
+    } catch (error) { setScheduleMessage(`Could not save schedule: ${error.message || error}`) }
+    finally { setBusy(false) }
+  }
+
   // Vote tallies for display
   const tallies = {}
   for (const v of votes) {
@@ -481,6 +567,52 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
             )}
           </div>
         </Card>
+
+        <Card>
+          <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Event data</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Btn accent onClick={handleExportEventData}>Download complete event data</Btn>
+            <Btn onClick={handleExportScheduleTemplate}>Download schedule template</Btn>
+            <Btn onClick={() => scheduleImportRef.current?.click()} disabled={busy}>Import schedule JSON</Btn>
+            <input ref={scheduleImportRef} type="file" accept="application/json,.json" onChange={e => handleImportSchedule(e.target)} style={{ display: 'none' }} />
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 9 }}>
+            Complete data includes attendance, votes, preferences, selected games, detailed BGG data, and the current schedule.
+          </p>
+          {scheduleMessage && <p style={{ fontSize: 12, color: scheduleMessage.includes('failed') || scheduleMessage.includes('Could not') ? 'var(--red)' : 'var(--green)', marginTop: 8 }}>{scheduleMessage}</p>}
+        </Card>
+
+        {event.schedule?.length > 0 && (
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <p style={{ flex: 1, fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Manual schedule editor</p>
+              {!scheduleEditor && <Btn small onClick={beginScheduleEditor}>Edit schedule</Btn>}
+              {scheduleEditor && <><Btn small onClick={addScheduleSlot}>+ Add slot</Btn><Btn small accent onClick={saveScheduleEditor} disabled={busy}>Save changes</Btn><Btn small onClick={() => setScheduleEditor(null)}>Cancel</Btn></>}
+            </div>
+            {scheduleEditor ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {scheduleEditor.map((slot, index) => (
+                  <div key={index} style={{ display: 'grid', gridTemplateColumns: '130px 110px minmax(160px, 1fr) 80px auto', gap: 6, alignItems: 'center', background: 'var(--bg3)', borderRadius: 8, padding: 8 }}>
+                    <input type="date" value={slot.date} onChange={e => updateScheduleSlot(index, 'date', e.target.value)} style={adminInputStyle} />
+                    <select value={slot.part} onChange={e => updateScheduleSlot(index, 'part', e.target.value)} style={adminInputStyle}>
+                      {['morning', 'afternoon', 'evening'].map(part => <option key={part} value={part}>{part}</option>)}
+                    </select>
+                    <select value={slot.gameId} onChange={e => { const game = eventGames.find(item => String(item.game_id) === e.target.value); updateScheduleSlot(index, 'gameId', e.target.value); updateScheduleSlot(index, 'gameName', game?.game_name || slot.gameName); updateScheduleSlot(index, 'thumbnail', game?.game_data?.thumbnail || slot.thumbnail) }} style={adminInputStyle}>
+                      <option value="">Select game</option>
+                      {eventGames.map(game => <option key={game.game_id} value={game.game_id}>{game.game_name}</option>)}
+                    </select>
+                    <input type="number" min="1" value={slot.gameDuration || 90} onChange={e => updateScheduleSlot(index, 'gameDuration', Number(e.target.value))} style={adminInputStyle} />
+                    <Btn small danger onClick={() => removeScheduleSlot(index)}>Remove</Btn>
+                    <select multiple value={(slot.players || []).map(player => String(player.id))} onChange={e => updateScheduleSlot(index, 'players', Array.from(e.target.selectedOptions).map(option => { const participant = participants.find(p => String(p.id) === option.value); return { id: participant.id, name: participant.name } }))} style={{ ...adminInputStyle, gridColumn: '1 / -1', minHeight: 60 }}>
+                      {participants.map(participant => <option key={participant.id} value={participant.id}>{participant.name}</option>)}
+                    </select>
+                  </div>
+                ))}
+                {scheduleEditor.length === 0 && <p style={{ fontSize: 12, color: 'var(--text3)' }}>No slots. Add one to create a manual schedule.</p>}
+              </div>
+            ) : <p style={{ fontSize: 12, color: 'var(--text3)' }}>Edit dates, time blocks, games, durations, and players. Changes use the same JSON schedule structure as imports.</p>}
+          </Card>
+        )}
 
         {/* Schedule params (visible in preferences + scheduled) */}
         {(event.status === 'preferences' || event.status === 'scheduled') && (
@@ -783,7 +915,22 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
 function mergeCollections(eventCol, localCol) {
   const map = new Map()
   for (const g of (eventCol || [])) map.set(g.id, g)
-  for (const g of (localCol || [])) if (!map.has(g.id)) map.set(g.id, g)
+  for (const g of (localCol || [])) {
+    if (!map.has(g.id)) {
+      map.set(g.id, g)
+      continue
+    }
+    const existing = map.get(g.id)
+    map.set(g.id, {
+      ...existing,
+      details: existing.details || g.details,
+      averageweight: existing.averageweight || g.averageweight,
+      categories: existing.categories || g.categories,
+      themes: existing.themes || g.themes,
+      mechanics: existing.mechanics || g.mechanics,
+      designers: existing.designers || g.designers,
+    })
+  }
   return Array.from(map.values())
 }
 
