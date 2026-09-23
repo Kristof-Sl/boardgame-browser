@@ -98,6 +98,7 @@ function parseThingItem(item) {
   var averageWeight = stats ? parseFloat(getAttr(stats.querySelector('averageweight'), 'value')) || 0 : 0
   var themes = Array.from(item.querySelectorAll('link[type="boardgamecategory"]')).map(function(link) { return getAttr(link, 'value') }).filter(Boolean)
   var mechanics = Array.from(item.querySelectorAll('link[type="boardgamemechanic"]')).map(function(link) { return getAttr(link, 'value') }).filter(Boolean)
+  var designers = Array.from(item.querySelectorAll('link[type="boardgamedesigner"]')).map(function(link) { return getAttr(link, 'value') }).filter(Boolean)
   var rank = stats ? stats.querySelector('ranks rank[name="boardgame"]') : null
   var suggested = { best: [], recommended: [], notRecommended: [] }
   var poll = item.querySelector('poll[name="suggested_numplayers"]')
@@ -144,8 +145,10 @@ function parseThingItem(item) {
     minAge: parseInt(getText('minage')) || 0,
     rating: Math.round(rating * 10) / 10,
     averageweight: averageWeight,
+    categories: themes,
     themes: themes,
     mechanics: mechanics,
+    designers: designers,
     theme: themes[0] || 'Unknown',
     mechanic: mechanics[0] || 'Unknown',
     bggRank: rank && getAttr(rank, 'value') !== 'Not Ranked' ? parseInt(getAttr(rank, 'value')) : null,

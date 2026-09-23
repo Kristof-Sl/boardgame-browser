@@ -267,6 +267,10 @@ export function GameDetailsPanel({ game, onClose }) {
     : detail.rating >= 6 ? 'var(--text2)'
     : 'var(--text3)'
   const userStatuses = Object.entries(game.ownerStatuses || {})
+  const categories = detail.categories || detail.themes || game.categories || game.themes || []
+  const mechanics = detail.mechanics || game.mechanics || []
+  const designers = detail.designers || game.designers || []
+  const weight = Number(detail.averageweight ?? detail.weight ?? game.averageweight ?? game.weight) || 0
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', padding: '20px' }}>
@@ -286,7 +290,13 @@ export function GameDetailsPanel({ game, onClose }) {
         {playerStr && <PopupRow label="Players">{playerStr}</PopupRow>}
         {timeStr && <PopupRow label="Playtime">{timeStr}</PopupRow>}
         {detail.minAge > 0 && <PopupRow label="Min. age">{detail.minAge}+</PopupRow>}
+        {weight > 0 && <PopupRow label="Weight">{weight.toFixed(2)} / 5</PopupRow>}
       </div>
+      {(categories.length > 0 || mechanics.length > 0 || designers.length > 0) && <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {categories.length > 0 && <PopupRow label="Categories">{categories.join(', ')}</PopupRow>}
+        {mechanics.length > 0 && <PopupRow label="Mechanisms">{mechanics.join(', ')}</PopupRow>}
+        {designers.length > 0 && <PopupRow label="Designers">{designers.join(', ')}</PopupRow>}
+      </div>}
       {userStatuses.length > 0 && <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {userStatuses.map(([username, status]) => <div key={username} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ fontSize: 11, color: 'var(--text2)' }}>{username}</span><div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>{status.owned && <StatusPill type="owned" />}{status.wishlist && <StatusPill type="wishlist" />}{status.wantToPlay && <StatusPill type="wantToPlay" />}{!status.owned && status.prevOwned && <StatusPill type="prevOwned" />}</div></div>)}
       </div>}
