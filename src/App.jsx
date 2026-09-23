@@ -60,7 +60,7 @@ export default function App() {
   const [toast, setToast] = useState(null)
   const [isAdmin, setIsAdmin] = useState(sessionStorage.getItem('admin_auth') === '1')
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  const [detailsMode, setDetailsMode] = useState(false)
+  const [detailsMode, setDetailsMode] = useState(true)
   const [selectedGame, setSelectedGame] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'original')
   const importRef = useRef()
