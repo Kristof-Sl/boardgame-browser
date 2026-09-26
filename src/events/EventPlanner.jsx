@@ -32,6 +32,38 @@ function pdfDate(date) {
   return Number.isNaN(parsed.getTime()) ? date : parsed.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
+function loadPdfImage(url) {
+  if (!url) return Promise.resolve(null)
+  return new Promise(resolve => {
+    const image = new Image()
+    const timeout = setTimeout(() => resolve(null), 6000)
+    image.crossOrigin = 'anonymous'
+    image.onload = () => {
+      clearTimeout(timeout)
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = image.naturalWidth
+        canvas.height = image.naturalHeight
+        canvas.getContext('2d').drawImage(image, 0, 0)
+        resolve({ data: canvas.toDataURL('image/jpeg', 0.86), width: image.naturalWidth, height: image.naturalHeight })
+      } catch {
+        resolve(null)
+      }
+    }
+    image.onerror = () => {
+      clearTimeout(timeout)
+      resolve(null)
+    }
+    image.src = url
+  })
+}
+
+function chunkItems(items, size) {
+  const chunks = []
+  for (let index = 0; index < items.length; index += size) chunks.push(items.slice(index, index + size))
+  return chunks
+}
+
 async function downloadEventSchedulePdf({ event, schedule, eventGames, participants, prefs, mergedCollection }) {
   const { jsPDF } = await import('jspdf')
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
@@ -39,7 +71,7 @@ async function downloadEventSchedulePdf({ event, schedule, eventGames, participa
   const pageHeight = pdf.internal.pageSize.getHeight()
   const margin = 12
   const contentWidth = pageWidth - margin * 2
-  const contentTop = 30
+  const contentTop = 31
   const contentBottom = pageHeight - 13
   const partOrder = Object.fromEntries(PDF_PARTS.map((part, index) => [part, index]))
   const sortedSchedule = [...schedule].sort((a, b) =>
@@ -57,9 +89,17 @@ async function downloadEventSchedulePdf({ event, schedule, eventGames, participa
       id,
       name: slot.gameName || eventGame?.game_name || id,
       owners: localGame?.actualOwners || localGame?.owners || [],
+      thumbnail: slot.thumbnail || eventGame?.game_data?.thumbnail || eventGame?.game_data?.image || localGame?.thumbnail || localGame?.image || null,
     })
   }
   const scheduledGames = [...gamesById.values()]
+  const imageUrls = new Map()
+  for (const slot of sortedSchedule) {
+    const game = gamesById.get(String(slot.gameId))
+    const url = slot.thumbnail || game?.thumbnail
+    if (url) imageUrls.set(String(slot.gameId), url)
+  }
+  const pdfImages = new Map(await Promise.all([...imageUrls].map(async ([id, url]) => [id, await loadPdfImage(url)])))
   const prefMap = new Map()
   for (const pref of prefs || []) {
     const gameId = String(pref.game_id)
@@ -68,27 +108,41 @@ async function downloadEventSchedulePdf({ event, schedule, eventGames, participa
   }
 
   const addHeader = (title, subtitle) => {
-    pdf.setTextColor(34, 42, 43)
+    pdf.setFillColor(36, 50, 54)
+    pdf.rect(0, 0, pageWidth, 26, 'F')
+    pdf.setFillColor(226, 116, 73)
+    pdf.rect(0, 26, pageWidth, 1.2, 'F')
+    pdf.setTextColor(255, 255, 255)
     pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(17)
+    pdf.setFontSize(15)
     pdf.text(title, margin, 13)
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(8)
-    pdf.setTextColor(98, 105, 105)
-    pdfText(pdf, subtitle, margin, 20, contentWidth, 8)
-    pdf.setDrawColor(205, 211, 209)
-    pdf.line(margin, 24, pageWidth - margin, 24)
+    pdf.setTextColor(219, 226, 225)
+    pdfText(pdf, subtitle, margin, 19, contentWidth, 8)
   }
   const addFooter = page => {
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(7)
     pdf.setTextColor(120, 126, 125)
-    pdf.text(`${event.name || 'Event'}  |  ${page} / 4`, pageWidth - margin, pageHeight - 5, { align: 'right' })
+    pdf.text(`${event.name || 'Event'}  |  PAGE ${String(page).padStart(2, '0')}`, pageWidth - margin, pageHeight - 5, { align: 'right' })
   }
-  const addPage = (title, subtitle, pageNumber) => {
-    if (pageNumber > 1) pdf.addPage()
+  let pageNumber = 0
+  const addPage = (title, subtitle) => {
+    if (pageNumber > 0) pdf.addPage()
+    pageNumber += 1
     addHeader(title, subtitle)
     addFooter(pageNumber)
+  }
+  const drawThumbnail = (gameId, x, y, size) => {
+    pdf.setFillColor(235, 239, 236)
+    pdf.roundedRect(x, y, size, size, 1, 1, 'F')
+    const image = pdfImages.get(String(gameId))
+    if (!image) return
+    const scale = Math.min(size / image.width, size / image.height)
+    const width = image.width * scale
+    const height = image.height * scale
+    pdf.addImage(image.data, 'JPEG', x + (size - width) / 2, y + (size - height) / 2, width, height)
   }
   const setBodyText = (size = 8, color = [51, 59, 58], style = 'normal') => {
     pdf.setFont('helvetica', style)
@@ -97,209 +151,243 @@ async function downloadEventSchedulePdf({ event, schedule, eventGames, participa
   }
   const eventDescription = [event.location, event.start_date && event.end_date ? `${event.start_date} to ${event.end_date}` : event.start_date || event.end_date].filter(Boolean).join('  |  ')
 
-  // Page 1: visual timetable
-  addPage('EVENT SCHEDULE', eventDescription || 'Visual overview of all scheduled game sessions', 1)
+  // Page 1+: visual timetable, split by date to preserve card size.
   const dateKeys = [...new Set(sortedSchedule.map(slot => slot.date))]
   const dateColumn = 28
   const partWidth = (contentWidth - dateColumn) / PDF_PARTS.length
   const tableTop = contentTop
-  const tableHeaderHeight = 8
+  const tableHeaderHeight = 9
   const rowsTop = tableTop + tableHeaderHeight
-  const rowHeight = dateKeys.length ? (contentBottom - rowsTop) / dateKeys.length : contentBottom - rowsTop
-  pdf.setFillColor(43, 57, 56)
-  pdf.rect(margin, tableTop, contentWidth, tableHeaderHeight, 'F')
-  setBodyText(7.5, [255, 255, 255], 'bold')
-  pdf.text('DATE', margin + 2, tableTop + 5.3)
-  PDF_PARTS.forEach((part, index) => {
-    const x = margin + dateColumn + partWidth * index
-    pdf.text(part.toUpperCase(), x + 2, tableTop + 5.3)
-  })
-  if (dateKeys.length === 0) {
-    setBodyText(10, [100, 106, 105])
-    pdf.text('No games are scheduled.', margin + 2, rowsTop + 10)
-  }
-  dateKeys.forEach((date, rowIndex) => {
-    const y = rowsTop + rowHeight * rowIndex
-    pdf.setFillColor(rowIndex % 2 ? 248 : 255, rowIndex % 2 ? 249 : 255, rowIndex % 2 ? 247 : 255)
-    pdf.rect(margin, y, contentWidth, rowHeight, 'F')
-    pdf.setDrawColor(218, 222, 220)
-    pdf.rect(margin, y, contentWidth, rowHeight)
-    setBodyText(Math.max(5, Math.min(8, rowHeight * 0.22)), [54, 62, 61], 'bold')
-    pdfText(pdf, pdfDate(date), margin + 2, y + Math.min(7, rowHeight * 0.45), dateColumn - 4, Math.max(5, Math.min(8, rowHeight * 0.22)))
-    PDF_PARTS.forEach((part, partIndex) => {
-      const x = margin + dateColumn + partWidth * partIndex
-      const slots = sortedSchedule.filter(slot => slot.date === date && slot.part === part)
-      pdf.setDrawColor(218, 222, 220)
-      pdf.line(x, y, x, y + rowHeight)
-      if (!slots.length) return
-      const gap = 1.2
-      const tileHeight = Math.max(2, (rowHeight - 3 - gap * (slots.length - 1)) / slots.length)
-      slots.forEach((slot, slotIndex) => {
-        const tileY = y + 1.5 + slotIndex * (tileHeight + gap)
-        const [red, green, blue] = PDF_PART_COLORS[part] || [235, 238, 237]
-        pdf.setFillColor(red, green, blue)
-        pdf.roundedRect(x + 1.5, tileY, partWidth - 3, tileHeight, 1, 1, 'F')
-        const smallTile = tileHeight < 13
-        const titleSize = Math.max(4.5, Math.min(8, tileHeight * 0.38))
-        setBodyText(titleSize, [37, 48, 47], 'bold')
-        pdfText(pdf, slot.gameName, x + 3, tileY + Math.min(tileHeight - 1, smallTile ? tileHeight * 0.65 : 5), partWidth - 7, titleSize)
-        if (!smallTile) {
-          const players = (slot.players || []).map(player => player.name).filter(Boolean).join(', ')
-          setBodyText(Math.max(5, Math.min(6.5, tileHeight * 0.25)), [81, 89, 87])
-          pdfText(pdf, `${slot.gameDuration || '?'} min  |  ${players || 'No players listed'}`, x + 3, tileY + 9, partWidth - 7, Math.max(5, Math.min(6.5, tileHeight * 0.25)))
-        }
+  const datesPerPage = Math.max(1, Math.floor((contentBottom - rowsTop) / 24))
+  const datePages = chunkItems(dateKeys, datesPerPage)
+  if (!datePages.length) datePages.push([])
+  datePages.forEach((dates, pageIndex) => {
+    addPage('EVENT SCHEDULE', `${eventDescription || 'Visual overview'}  |  ${dateKeys.length} event days${datePages.length > 1 ? `  |  Dates ${pageIndex * datesPerPage + 1}-${Math.min((pageIndex + 1) * datesPerPage, dateKeys.length)}` : ''}`)
+    const rowHeight = dates.length ? (contentBottom - rowsTop) / dates.length : 0
+    pdf.setFillColor(36, 50, 54)
+    pdf.rect(margin, tableTop, dateColumn, tableHeaderHeight, 'F')
+    setBodyText(7, [255, 255, 255], 'bold')
+    pdf.text('DATE', margin + 2, tableTop + 6)
+    PDF_PARTS.forEach((part, index) => {
+      const x = margin + dateColumn + partWidth * index
+      const colors = { morning: [79, 145, 176], afternoon: [209, 143, 50], evening: [77, 137, 99] }
+      pdf.setFillColor(...colors[part])
+      pdf.rect(x, tableTop, partWidth, tableHeaderHeight, 'F')
+      setBodyText(7, [255, 255, 255], 'bold')
+      pdf.text(part.toUpperCase(), x + 2, tableTop + 6)
+    })
+    if (!dates.length) {
+      setBodyText(10, [100, 106, 105])
+      pdf.text('No games are scheduled.', margin + 2, rowsTop + 10)
+    }
+    dates.forEach((date, rowIndex) => {
+      const y = rowsTop + rowHeight * rowIndex
+      pdf.setFillColor(rowIndex % 2 ? 248 : 255, rowIndex % 2 ? 250 : 255, rowIndex % 2 ? 249 : 255)
+      pdf.rect(margin, y, contentWidth, rowHeight, 'F')
+      pdf.setDrawColor(218, 225, 222)
+      pdf.rect(margin, y, contentWidth, rowHeight)
+      setBodyText(7.5, [54, 62, 61], 'bold')
+      pdfText(pdf, pdfDate(date), margin + 2, y + 7, dateColumn - 4, 7.5)
+      PDF_PARTS.forEach((part, partIndex) => {
+        const x = margin + dateColumn + partWidth * partIndex
+        const slots = sortedSchedule.filter(slot => slot.date === date && slot.part === part)
+        pdf.setDrawColor(218, 225, 222)
+        pdf.line(x, y, x, y + rowHeight)
+        if (!slots.length) return
+        const gap = 1.2
+        const tileHeight = (rowHeight - 3 - gap * (slots.length - 1)) / slots.length
+        slots.forEach((slot, slotIndex) => {
+          const tileY = y + 1.5 + slotIndex * (tileHeight + gap)
+          const [red, green, blue] = PDF_PART_COLORS[part] || [235, 238, 237]
+          pdf.setFillColor(red, green, blue)
+          pdf.roundedRect(x + 1.5, tileY, partWidth - 3, tileHeight, 1.2, 1.2, 'F')
+          const thumbSize = Math.min(9, tileHeight - 2)
+          drawThumbnail(slot.gameId, x + 2.5, tileY + (tileHeight - thumbSize) / 2, thumbSize)
+          const textX = x + thumbSize + 4
+          const textWidth = partWidth - thumbSize - 8
+          const titleSize = Math.max(5.5, Math.min(8, tileHeight * 0.34))
+          setBodyText(titleSize, [37, 48, 47], 'bold')
+          pdfText(pdf, slot.gameName, textX, tileY + Math.min(tileHeight - 1.5, tileHeight < 13 ? tileHeight * 0.65 : 5), textWidth, titleSize)
+          if (tileHeight >= 15) {
+            const players = (slot.players || []).map(player => player.name).filter(Boolean).join(', ')
+            setBodyText(6, [67, 82, 79])
+            pdfText(pdf, `${slot.gameDuration || '?'} min  ·  ${players || 'No players listed'}`, textX, tileY + 10, textWidth, 6)
+          }
+        })
       })
     })
   })
 
-  // Page 2: complete slot listing
-  addPage('SCHEDULE LIST', `${sortedSchedule.length} game sessions, sorted by date and time block`, 2)
+  // Schedule listing pages
   const listColumns = [
     { label: 'DATE', width: 29 },
     { label: 'TIME BLOCK', width: 27 },
-    { label: 'GAME', width: 72 },
+    { label: 'GAME', width: 80 },
     { label: 'DURATION', width: 24 },
   ]
   const playersWidth = contentWidth - listColumns.reduce((sum, column) => sum + column.width, 0)
   listColumns.push({ label: 'PLAYERS', width: playersWidth })
   const listHeaderHeight = 8
-  const listRowHeight = (contentBottom - contentTop - listHeaderHeight) / Math.max(sortedSchedule.length, 1)
-  pdf.setFillColor(43, 57, 56)
-  pdf.rect(margin, contentTop, contentWidth, listHeaderHeight, 'F')
-  setBodyText(7, [255, 255, 255], 'bold')
-  let columnX = margin
-  listColumns.forEach(column => {
-    pdf.text(column.label, columnX + 2, contentTop + 5.3)
-    columnX += column.width
-  })
-  if (!sortedSchedule.length) {
-    setBodyText(9, [100, 106, 105])
-    pdf.text('No games are scheduled.', margin + 2, contentTop + 18)
-  }
-  sortedSchedule.forEach((slot, index) => {
-    const y = contentTop + listHeaderHeight + index * listRowHeight
-    pdf.setFillColor(index % 2 ? 248 : 255, index % 2 ? 249 : 255, index % 2 ? 247 : 255)
-    pdf.rect(margin, y, contentWidth, listRowHeight, 'F')
-    pdf.setDrawColor(225, 228, 226)
-    pdf.line(margin, y + listRowHeight, margin + contentWidth, y + listRowHeight)
-    const fontSize = Math.max(4.5, Math.min(8, listRowHeight * 0.52))
-    setBodyText(fontSize)
-    const baseline = y + Math.max(fontSize * 0.45, (listRowHeight + fontSize * 0.32) / 2)
-    const values = [pdfDate(slot.date), slot.part, slot.gameName, `${slot.gameDuration || '?'} min`, (slot.players || []).map(player => player.name).filter(Boolean).join(', ') || 'No players listed']
-    columnX = margin
-    listColumns.forEach((column, valueIndex) => {
-      pdfText(pdf, values[valueIndex], columnX + 2, baseline, column.width - 4, fontSize)
+  const listChunks = chunkItems(sortedSchedule, 17)
+  if (!listChunks.length) listChunks.push([])
+  listChunks.forEach((slots, pageIndex) => {
+    addPage('SCHEDULE LIST', `${sortedSchedule.length} game sessions  |  Sorted by date and time block${listChunks.length > 1 ? `  |  Sessions ${pageIndex * 17 + 1}-${Math.min((pageIndex + 1) * 17, sortedSchedule.length)}` : ''}`)
+    const listRowHeight = (contentBottom - contentTop - listHeaderHeight) / Math.max(slots.length, 1)
+    pdf.setFillColor(36, 50, 54)
+    pdf.rect(margin, contentTop, contentWidth, listHeaderHeight, 'F')
+    setBodyText(7, [255, 255, 255], 'bold')
+    let columnX = margin
+    listColumns.forEach(column => {
+      pdf.text(column.label, columnX + 2, contentTop + 5.3)
       columnX += column.width
     })
-  })
-
-  // Page 3: bring checklist, one row per scheduled game
-  addPage('WHO BRINGS WHAT', `${scheduledGames.length} unique games in the schedule`, 3)
-  const bringHeaderHeight = 8
-  const bringRowHeight = (contentBottom - contentTop - bringHeaderHeight) / Math.max(scheduledGames.length, 1)
-  const checkWidth = 10
-  const gameWidth = 112
-  const ownerWidth = contentWidth - checkWidth - gameWidth
-  pdf.setFillColor(43, 57, 56)
-  pdf.rect(margin, contentTop, contentWidth, bringHeaderHeight, 'F')
-  setBodyText(7, [255, 255, 255], 'bold')
-  pdf.text('BRING', margin + 2, contentTop + 5.3)
-  pdf.text('GAME', margin + checkWidth + 2, contentTop + 5.3)
-  pdf.text('OWNER / BRINGER', margin + checkWidth + gameWidth + 2, contentTop + 5.3)
-  if (!scheduledGames.length) {
-    setBodyText(9, [100, 106, 105])
-    pdf.text('No scheduled games to bring.', margin + 2, contentTop + 18)
-  }
-  scheduledGames.forEach((game, index) => {
-    const y = contentTop + bringHeaderHeight + index * bringRowHeight
-    pdf.setFillColor(index % 2 ? 248 : 255, index % 2 ? 249 : 255, index % 2 ? 247 : 255)
-    pdf.rect(margin, y, contentWidth, bringRowHeight, 'F')
-    pdf.setDrawColor(225, 228, 226)
-    pdf.line(margin, y + bringRowHeight, margin + contentWidth, y + bringRowHeight)
-    const fontSize = Math.max(4.5, Math.min(8.5, bringRowHeight * 0.52))
-    const baseline = y + Math.max(fontSize * 0.45, (bringRowHeight + fontSize * 0.32) / 2)
-    pdf.setDrawColor(125, 133, 130)
-    const boxSize = Math.min(4, Math.max(2, bringRowHeight - 1.5))
-    pdf.rect(margin + 3, y + (bringRowHeight - boxSize) / 2, boxSize, boxSize)
-    setBodyText(fontSize, [48, 56, 54], 'bold')
-    pdfText(pdf, game.name, margin + checkWidth + 2, baseline, gameWidth - 4, fontSize)
-    setBodyText(fontSize, game.owners.length ? [49, 117, 59] : [164, 55, 55])
-    pdfText(pdf, game.owners.length ? game.owners.join(', ') : 'No owner recorded', margin + checkWidth + gameWidth + 2, baseline, ownerWidth - 4, fontSize)
-  })
-
-  // Page 4: preferences for scheduled games only
-  addPage('PARTICIPANT PREFERENCES', 'Preference overview for scheduled games only; RW = really want, W = want, N = neutral, DW = do not want, - = not rated', 4)
-  const gameColumnWidth = Math.min(62, contentWidth * 0.25)
-  const participantColumnWidth = participants.length ? (contentWidth - gameColumnWidth) / participants.length : 0
-  const prefHeaderHeight = 34
-  const prefTableTop = contentTop
-  const prefRowsTop = prefTableTop + prefHeaderHeight
-  const legendHeight = 16
-  const prefRowsBottom = contentBottom - legendHeight
-  const prefRowHeight = (prefRowsBottom - prefRowsTop) / Math.max(scheduledGames.length, 1)
-  pdf.setFillColor(43, 57, 56)
-  pdf.rect(margin, prefTableTop, contentWidth, prefHeaderHeight, 'F')
-  setBodyText(7, [255, 255, 255], 'bold')
-  pdf.text('GAME', margin + 2, prefTableTop + 6)
-  if (participants.length === 0) {
-    setBodyText(7, [255, 255, 255])
-    pdf.text('No participants', margin + gameColumnWidth + 2, prefTableTop + 6)
-  }
-  participants.forEach((participant, index) => {
-    const x = margin + gameColumnWidth + participantColumnWidth * index
-    pdf.setDrawColor(95, 108, 105)
-    pdf.line(x, prefTableTop, x, prefRowsBottom)
-    const nameWidth = Math.max(2, prefHeaderHeight - 5)
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(Math.max(4, Math.min(7, participantColumnWidth * 0.45)))
-    pdf.setTextColor(255, 255, 255)
-    let name = String(participant.name || '')
-    while (name.length && pdf.getTextWidth(name) > nameWidth) name = name.slice(0, -1)
-    pdf.text(name, x + participantColumnWidth / 2, prefTableTop + prefHeaderHeight - 3, { angle: 270, align: 'center' })
-  })
-  if (!scheduledGames.length) {
-    setBodyText(9, [100, 106, 105])
-    pdf.text('No scheduled games to rate.', margin + 2, prefRowsTop + 8)
-  }
-  scheduledGames.forEach((game, gameIndex) => {
-    const y = prefRowsTop + gameIndex * prefRowHeight
-    pdf.setFillColor(gameIndex % 2 ? 248 : 255, gameIndex % 2 ? 249 : 255, gameIndex % 2 ? 247 : 255)
-    pdf.rect(margin, y, contentWidth, prefRowHeight, 'F')
-    pdf.setDrawColor(225, 228, 226)
-    pdf.line(margin, y + prefRowHeight, margin + contentWidth, y + prefRowHeight)
-    const fontSize = Math.max(4.5, Math.min(8, prefRowHeight * 0.5))
-    setBodyText(fontSize, [48, 56, 54], 'bold')
-    pdfText(pdf, game.name, margin + 2, y + Math.max(fontSize * 0.45, (prefRowHeight + fontSize * 0.32) / 2), gameColumnWidth - 4, fontSize)
-    participants.forEach((participant, participantIndex) => {
-      const x = margin + gameColumnWidth + participantColumnWidth * participantIndex
-      const preference = prefMap.get(game.id)?.get(String(participant.id))
-      const display = PDF_PREFS[preference]
-      const fill = display?.fill || [244, 245, 244]
-      pdf.setFillColor(...fill)
-      pdf.rect(x, y, participantColumnWidth, prefRowHeight, 'F')
-      pdf.setDrawColor(225, 228, 226)
-      pdf.rect(x, y, participantColumnWidth, prefRowHeight)
-      setBodyText(Math.max(4, Math.min(7, participantColumnWidth * 0.45, prefRowHeight * 0.48)), display?.text || [145, 150, 148], 'bold')
-      pdf.text(display?.code || '-', x + participantColumnWidth / 2, y + Math.max(fontSize * 0.45, (prefRowHeight + fontSize * 0.32) / 2), { align: 'center' })
+    if (!slots.length) {
+      setBodyText(9, [100, 106, 105])
+      pdf.text('No games are scheduled.', margin + 2, contentTop + 18)
+    }
+    slots.forEach((slot, index) => {
+      const y = contentTop + listHeaderHeight + index * listRowHeight
+      pdf.setFillColor(index % 2 ? 246 : 255, index % 2 ? 249 : 255, index % 2 ? 247 : 255)
+      pdf.rect(margin, y, contentWidth, listRowHeight, 'F')
+      pdf.setDrawColor(225, 231, 228)
+      pdf.line(margin, y + listRowHeight, margin + contentWidth, y + listRowHeight)
+      const fontSize = 7.2
+      const baseline = y + listRowHeight / 2 + 2
+      const values = [pdfDate(slot.date), slot.part, slot.gameName, `${slot.gameDuration || '?'} min`, (slot.players || []).map(player => player.name).filter(Boolean).join(', ') || 'No players listed']
+      let x = margin
+      listColumns.forEach((column, valueIndex) => {
+        if (valueIndex === 2) {
+          drawThumbnail(slot.gameId, x + 1.5, y + (listRowHeight - 8) / 2, 8)
+          setBodyText(fontSize, [37, 48, 47], 'bold')
+          pdfText(pdf, values[valueIndex], x + 12, baseline, column.width - 14, fontSize)
+        } else {
+          setBodyText(fontSize, valueIndex === 1 ? [77, 112, 119] : [51, 59, 58])
+          pdfText(pdf, values[valueIndex], x + 2, baseline, column.width - 4, fontSize)
+        }
+        x += column.width
+      })
     })
   })
-  let legendX = margin
-  setBodyText(6.5, [65, 73, 71])
-  for (const pref of Object.values(PDF_PREFS)) {
-    pdf.setFillColor(...pref.fill)
+
+  // Bring checklist pages
+  const bringHeaderHeight = 8
+  const checkWidth = 10
+  const thumbWidth = 14
+  const gameWidth = 98
+  const bringGameWidth = gameWidth + thumbWidth
+  const ownerWidth = contentWidth - checkWidth - bringGameWidth
+  const bringChunks = chunkItems(scheduledGames, 18)
+  if (!bringChunks.length) bringChunks.push([])
+  bringChunks.forEach((games, pageIndex) => {
+    addPage('WHO BRINGS WHAT', `${scheduledGames.length} unique games  |  Tick off games as they are packed${bringChunks.length > 1 ? `  |  Games ${pageIndex * 18 + 1}-${Math.min((pageIndex + 1) * 18, scheduledGames.length)}` : ''}`)
+    const bringRowHeight = (contentBottom - contentTop - bringHeaderHeight) / Math.max(games.length, 1)
+    pdf.setFillColor(36, 50, 54)
+    pdf.rect(margin, contentTop, contentWidth, bringHeaderHeight, 'F')
+    setBodyText(7, [255, 255, 255], 'bold')
+    pdf.text('BRING', margin + 2, contentTop + 5.3)
+    pdf.text('GAME', margin + checkWidth + 2, contentTop + 5.3)
+    pdf.text('OWNER / BRINGER', margin + checkWidth + bringGameWidth + 2, contentTop + 5.3)
+    if (!games.length) {
+      setBodyText(9, [100, 106, 105])
+      pdf.text('No scheduled games to bring.', margin + 2, contentTop + 18)
+    }
+    games.forEach((game, index) => {
+      const y = contentTop + bringHeaderHeight + index * bringRowHeight
+      pdf.setFillColor(index % 2 ? 246 : 255, index % 2 ? 249 : 255, index % 2 ? 247 : 255)
+      pdf.rect(margin, y, contentWidth, bringRowHeight, 'F')
+      pdf.setDrawColor(225, 231, 228)
+      pdf.line(margin, y + bringRowHeight, margin + contentWidth, y + bringRowHeight)
+      const fontSize = 8
+      const baseline = y + bringRowHeight / 2 + 2
+      pdf.setDrawColor(125, 133, 130)
+      pdf.rect(margin + 3, y + (bringRowHeight - 4) / 2, 4, 4)
+      drawThumbnail(game.id, margin + checkWidth + 1, y + (bringRowHeight - 9) / 2, 9)
+      setBodyText(fontSize, [48, 56, 54], 'bold')
+      pdfText(pdf, game.name, margin + checkWidth + thumbWidth + 1, baseline, gameWidth - 4, fontSize)
+      setBodyText(fontSize, game.owners.length ? [49, 117, 59] : [164, 55, 55])
+      pdfText(pdf, game.owners.length ? game.owners.join(', ') : 'No owner recorded', margin + checkWidth + bringGameWidth + 2, baseline, ownerWidth - 4, fontSize)
+    })
+  })
+
+  // Preference matrix pages, splitting both games and participants when needed.
+  const gameColumnWidth = 63
+  const participantPages = participants.length ? chunkItems(participants, 12) : [[]]
+  const gamePages = chunkItems(scheduledGames, 14)
+  if (!gamePages.length) gamePages.push([])
+  const prefHeaderHeight = 34
+  const legendHeight = 16
+  gamePages.forEach((games, gamePageIndex) => participantPages.forEach((participantGroup, participantPageIndex) => {
+    const participantColumnWidth = participantGroup.length ? (contentWidth - gameColumnWidth) / participantGroup.length : contentWidth - gameColumnWidth
+    const prefTableTop = contentTop
+    const prefRowsTop = prefTableTop + prefHeaderHeight
+    const prefRowsBottom = contentBottom - legendHeight
+    const prefRowHeight = (prefRowsBottom - prefRowsTop) / Math.max(games.length, 1)
+    addPage('PARTICIPANT PREFERENCES', `Scheduled games only  |  ${games.length ? `Games ${gamePageIndex * 14 + 1}-${Math.min((gamePageIndex + 1) * 14, scheduledGames.length)}` : 'No scheduled games'}${participants.length ? `  |  Participants ${participantPageIndex * 12 + 1}-${Math.min((participantPageIndex + 1) * 12, participants.length)} of ${participants.length}` : '  |  No participants'}`)
+    pdf.setFillColor(36, 50, 54)
+    pdf.rect(margin, prefTableTop, contentWidth, prefHeaderHeight, 'F')
+    setBodyText(7, [255, 255, 255], 'bold')
+    pdf.text('GAME', margin + 2, prefTableTop + 6)
+    if (!participantGroup.length) {
+      setBodyText(7, [255, 255, 255])
+      pdf.text('No participants', margin + gameColumnWidth + 2, prefTableTop + 6)
+    }
+    participantGroup.forEach((participant, index) => {
+      const x = margin + gameColumnWidth + participantColumnWidth * index
+      pdf.setDrawColor(95, 108, 105)
+      pdf.line(x, prefTableTop, x, prefRowsBottom)
+      const nameWidth = Math.max(2, prefHeaderHeight - 5)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(Math.max(4, Math.min(7, participantColumnWidth * 0.45)))
+      pdf.setTextColor(255, 255, 255)
+      let name = String(participant.name || '')
+      while (name.length && pdf.getTextWidth(name) > nameWidth) name = name.slice(0, -1)
+      pdf.text(name, x + participantColumnWidth / 2, prefTableTop + prefHeaderHeight - 3, { angle: 270, align: 'center' })
+    })
+    if (!games.length) {
+      setBodyText(9, [100, 106, 105])
+      pdf.text('No scheduled games to rate.', margin + 2, prefRowsTop + 8)
+    }
+    games.forEach((game, gameIndex) => {
+      const y = prefRowsTop + gameIndex * prefRowHeight
+      pdf.setFillColor(gameIndex % 2 ? 248 : 255, gameIndex % 2 ? 250 : 255, gameIndex % 2 ? 249 : 255)
+      pdf.rect(margin, y, gameColumnWidth, prefRowHeight, 'F')
+      pdf.setDrawColor(225, 228, 226)
+      pdf.line(margin, y + prefRowHeight, margin + contentWidth, y + prefRowHeight)
+      const fontSize = 7.2
+      const thumbSize = Math.min(8, prefRowHeight - 1)
+      drawThumbnail(game.id, margin + 1.5, y + (prefRowHeight - thumbSize) / 2, thumbSize)
+      setBodyText(fontSize, [48, 56, 54], 'bold')
+      pdfText(pdf, game.name, margin + thumbSize + 4, y + prefRowHeight / 2 + 2, gameColumnWidth - thumbSize - 6, fontSize)
+      participantGroup.forEach((participant, participantIndex) => {
+        const x = margin + gameColumnWidth + participantColumnWidth * participantIndex
+        const preference = prefMap.get(game.id)?.get(String(participant.id))
+        const display = PDF_PREFS[preference]
+        const fill = display?.fill || [244, 247, 246]
+        pdf.setFillColor(...fill)
+        pdf.rect(x, y, participantColumnWidth, prefRowHeight, 'F')
+        pdf.setDrawColor(225, 228, 226)
+        pdf.rect(x, y, participantColumnWidth, prefRowHeight)
+        setBodyText(Math.max(4.5, Math.min(7, participantColumnWidth * 0.45)), display?.text || [145, 150, 148], 'bold')
+        pdf.text(display?.code || '-', x + participantColumnWidth / 2, y + prefRowHeight / 2 + 2, { align: 'center' })
+      })
+    })
+    let legendX = margin
+    for (const pref of Object.values(PDF_PREFS)) {
+      pdf.setFillColor(...pref.fill)
+      pdf.roundedRect(legendX, contentBottom - 8, 8, 5, 1, 1, 'F')
+      setBodyText(6.5, pref.text, 'bold')
+      pdf.text(pref.code, legendX + 4, contentBottom - 4.5, { align: 'center' })
+      setBodyText(6.5, [65, 73, 71])
+      pdf.text(pref.label, legendX + 10, contentBottom - 4.5)
+      legendX += 10 + pdf.getTextWidth(pref.label) + 7
+    }
+    pdf.setFillColor(244, 247, 246)
     pdf.roundedRect(legendX, contentBottom - 8, 8, 5, 1, 1, 'F')
-    setBodyText(6.5, pref.text, 'bold')
-    pdf.text(pref.code, legendX + 4, contentBottom - 4.5, { align: 'center' })
+    setBodyText(6.5, [145, 150, 148], 'bold')
+    pdf.text('-', legendX + 4, contentBottom - 4.5, { align: 'center' })
     setBodyText(6.5, [65, 73, 71])
-    pdf.text(pref.label, legendX + 10, contentBottom - 4.5)
-    legendX += 10 + pdf.getTextWidth(pref.label) + 7
-  }
-  pdf.setFillColor(244, 245, 244)
-  pdf.roundedRect(legendX, contentBottom - 8, 8, 5, 1, 1, 'F')
-  setBodyText(6.5, [145, 150, 148], 'bold')
-  pdf.text('-', legendX + 4, contentBottom - 4.5, { align: 'center' })
-  setBodyText(6.5, [65, 73, 71])
-  pdf.text('Not rated', legendX + 10, contentBottom - 4.5)
+    pdf.text('Not rated', legendX + 10, contentBottom - 4.5)
+  }))
 
   const safeName = String(event.name || 'event').replace(/[^a-z0-9-_]+/gi, '-').replace(/^-|-$/g, '')
   pdf.save(`${safeName || 'event'}-schedule.pdf`)
