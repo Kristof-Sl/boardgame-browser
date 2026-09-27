@@ -944,6 +944,8 @@ function AdminGameFiles({ localCollection, onBack }) {
   const [newFileUrl, setNewFileUrl] = useState('')
   const [fileError, setFileError] = useState('')
   const [search, setSearch] = useState('')
+  const [gameSearch, setGameSearch] = useState('')
+  const [gamePickerOpen, setGamePickerOpen] = useState(false)
 
   const reload = useCallback(async () => {
     try {
@@ -970,6 +972,13 @@ function AdminGameFiles({ localCollection, onBack }) {
     row.game_name.toLowerCase().includes(search.toLowerCase()) ||
     row.game_id.toLowerCase().includes(search.toLowerCase())
   )
+  const matchingGames = (localCollection || []).filter(game => {
+    const query = gameSearch.trim().toLowerCase()
+    return query && (
+      String(game.name || '').toLowerCase().includes(query) ||
+      String(game.id || '').toLowerCase().includes(query)
+    )
+  })
 
   const handleEdit = (file) => {
     setEditing({
@@ -978,19 +987,22 @@ function AdminGameFiles({ localCollection, onBack }) {
       game_name: gamesById[file.game_id]?.name || `Game ${file.game_id}`,
       files: Array.isArray(file.files) ? [...file.files] : [],
     })
+    setGameSearch('')
+    setGamePickerOpen(false)
     setNewFileName('')
     setNewFileUrl('')
     setFileError('')
   }
 
   const handleCreate = () => {
-    const firstGame = (localCollection || [])[0]
     setEditing({
       mode: 'create',
-      game_id: firstGame?.id || '',
-      game_name: firstGame?.name || '',
+      game_id: '',
+      game_name: '',
       files: [],
     })
+    setGameSearch('')
+    setGamePickerOpen(true)
     setNewFileName('')
     setNewFileUrl('')
     setFileError('')
@@ -1044,6 +1056,9 @@ function AdminGameFiles({ localCollection, onBack }) {
   const handleSelectGame = (gameId) => {
     const game = gamesById[gameId]
     setEditing({ ...editing, game_id: gameId, game_name: game?.name || `Game ${gameId}` })
+    setGameSearch('')
+    setGamePickerOpen(false)
+    setFileError('')
   }
 
   if (loading) return <p style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading…</p>
@@ -1120,18 +1135,53 @@ function AdminGameFiles({ localCollection, onBack }) {
             </div>
 
             <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text3)' }}>
-                Game
-                <select
-                  value={editing.game_id}
-                  onChange={e => handleSelectGame(e.target.value)}
-                  style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg3)', padding: '10px 12px', color: 'var(--text)' }}
-                >
-                  {(localCollection || []).map(game => (
-                    <option key={game.id} value={game.id}>{game.name}</option>
-                  ))}
-                </select>
-              </label>
+              <div>
+                <label htmlFor="game-file-game-search" style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text3)' }}>
+                  Game
+                  <input
+                    id="game-file-game-search"
+                    type="search"
+                    value={gameSearch}
+                    autoFocus={editing.mode === 'create'}
+                    onChange={e => { setGameSearch(e.target.value); setGamePickerOpen(true); setFileError('') }}
+                    onFocus={() => setGamePickerOpen(true)}
+                    placeholder="Type a game name to search…"
+                    autoComplete="off"
+                    style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg3)', padding: '10px 12px', color: 'var(--text)' }}
+                  />
+                </label>
+                {editing.game_id && !gamePickerOpen && (
+                  <div style={{ fontSize: 12, color: 'var(--text)', marginTop: 7 }}>
+                    Selected: <strong>{editing.game_name}</strong>
+                  </div>
+                )}
+                {gamePickerOpen && (
+                  <div role="listbox" aria-label="Matching games" style={{ marginTop: 6, maxHeight: 220, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)' }}>
+                    {!gameSearch.trim() ? (
+                      <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)' }}>Type a game name or ID to search your collection.</div>
+                    ) : matchingGames.length === 0 ? (
+                      <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)' }}>No matching games.</div>
+                    ) : (
+                      <>
+                        {matchingGames.slice(0, 10).map(game => (
+                          <button
+                            key={game.id}
+                            type="button"
+                            role="option"
+                            aria-selected={String(game.id) === String(editing.game_id)}
+                            onClick={() => handleSelectGame(String(game.id))}
+                            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', border: 0, borderBottom: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: 'pointer' }}
+                          >
+                            <span style={{ display: 'block', fontSize: 13 }}>{game.name}</span>
+                            <span style={{ display: 'block', fontSize: 10, color: 'var(--text3)', marginTop: 3 }}>{game.id}</span>
+                          </button>
+                        ))}
+                        {matchingGames.length > 10 && <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--text3)' }}>Showing 10 of {matchingGames.length} matches. Refine your search.</div>}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 220px' }}>
