@@ -1193,18 +1193,32 @@ function AdminGameFiles({ localCollection, onBack }) {
 function AdminBggDetails({ localCollection, onBack }) {
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
+  const [progress, setProgress] = useState({ completed: 0, total: 0 })
+  const [logs, setLogs] = useState([])
+
+  const addLog = message => {
+    setLogs(current => [...current, `${new Date().toLocaleTimeString()} ${message}`].slice(-80))
+  }
 
   const handleExport = async () => {
     const games = localCollection || []
+    const requestedCount = new Set(games.map(game => String(game.id)).filter(Boolean)).size
     if (games.length === 0) {
       setStatus('There are no games in the current collection.')
       return
     }
 
     setBusy(true)
+    setProgress({ completed: 0, total: requestedCount })
+    setLogs([])
     setStatus(`Loading details for ${games.length} games…`)
+    addLog(`Starting export for ${games.length} games.`)
     try {
-      const details = await fetchGameDetails(games.map(game => game.id))
+      const details = await fetchGameDetails(games.map(game => game.id), update => {
+        setProgress({ completed: update.completed, total: update.total })
+        setStatus(update.message)
+        addLog(update.message)
+      })
       const exportedAt = new Date().toISOString()
       const payload = {
         version: 1,
@@ -1223,8 +1237,11 @@ function AdminBggDetails({ localCollection, onBack }) {
       link.click()
       URL.revokeObjectURL(url)
       setStatus(`Downloaded details for ${details.length} of ${games.length} games.`)
+      setProgress({ completed: requestedCount, total: requestedCount })
+      addLog(`Download complete: ${details.length} of ${games.length} games.`)
     } catch (error) {
       setStatus(`Export failed: ${error.message || error}`)
+      addLog(`Export failed: ${error.message || error}`)
     } finally {
       setBusy(false)
     }
@@ -1248,6 +1265,26 @@ function AdminBggDetails({ localCollection, onBack }) {
           {busy ? 'Fetching BGG details…' : 'Download JSON'}
         </Btn>
         {status && <p style={{ fontSize: 12, color: status.startsWith('Export failed') ? 'var(--red)' : 'var(--text3)', marginTop: 14 }}>{status}</p>}
+        {progress.total > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <div
+              role="progressbar"
+              aria-label="BGG game details download progress"
+              aria-valuemin={0}
+              aria-valuemax={progress.total}
+              aria-valuenow={progress.completed}
+              style={{ height: 8, overflow: 'hidden', borderRadius: 4, background: 'var(--border)' }}
+            >
+              <div style={{ width: `${Math.round(progress.completed / progress.total * 100)}%`, height: '100%', background: 'var(--accent)', transition: 'width 180ms ease' }} />
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 5 }}>{progress.completed} / {progress.total} games</p>
+          </div>
+        )}
+        {logs.length > 0 && (
+          <div aria-label="Download log" aria-live="polite" style={{ marginTop: 12, maxHeight: 180, overflowY: 'auto', padding: 10, border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg)', fontFamily: 'monospace', fontSize: 11, lineHeight: 1.5, color: 'var(--text3)' }}>
+            {logs.slice().reverse().map((line, index) => <div key={index}>{line}</div>)}
+          </div>
+        )}
       </Card>
     </div>
   )
