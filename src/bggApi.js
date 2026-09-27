@@ -157,20 +157,51 @@ function parseThingItem(item) {
   }
 }
 
-export async function fetchGameDetails(gameIds) {
+export async function fetchGameDetails(gameIds, onProgress) {
   var uniqueIds = Array.from(new Set(gameIds.map(String).filter(Boolean)))
   var details = []
   var batchSize = 20
+  var batchDelay = 2500
+  var totalBatches = Math.ceil(uniqueIds.length / batchSize)
 
   for (var start = 0; start < uniqueIds.length; start += batchSize) {
     var batch = uniqueIds.slice(start, start + batchSize)
-    var doc = await fetchXML('thing', { id: batch.join(','), stats: '1' })
-    var errorEl = doc.querySelector('error')
-    if (errorEl) {
-      var message = errorEl.querySelector('message')
-      throw new Error(message ? message.textContent.trim() : 'BGG returned an error while loading game details.')
+    var batchNumber = Math.floor(start / batchSize) + 1
+    if (batchNumber > 1) await wait(batchDelay)
+
+    if (onProgress) {
+      onProgress({ completed: start, total: uniqueIds.length, batch: batchNumber, batches: totalBatches, message: 'Loading batch ' + batchNumber + ' of ' + totalBatches + ' (' + batch.length + ' games).' })
     }
+
+    var doc
+    for (var attempt = 0; ; attempt++) {
+      try {
+        doc = await fetchXML('thing', { id: batch.join(','), stats: '1' })
+        var errorEl = doc.querySelector('error')
+        if (errorEl) {
+          var message = errorEl.querySelector('message')
+          throw new Error(message ? message.textContent.trim() : 'BGG returned an error while loading game details.')
+        }
+        var pendingMessage = doc.querySelector('message')
+        if (pendingMessage) throw new Error(pendingMessage.textContent.trim())
+        break
+      } catch (error) {
+        var errorMessage = String(error.message || error).toLowerCase()
+        var retryable = errorMessage.includes('rate limit') || errorMessage.includes('429') || errorMessage.includes('queued') || errorMessage.includes('queue') || errorMessage.includes('try again')
+        if (!retryable || attempt >= 5) throw error
+
+        var retryDelay = Math.min(5000 * Math.pow(2, attempt), 60000)
+        if (onProgress) {
+          onProgress({ completed: start, total: uniqueIds.length, batch: batchNumber, batches: totalBatches, message: 'BGG is rate-limiting or queueing requests. Retrying batch ' + batchNumber + ' in ' + Math.ceil(retryDelay / 1000) + 's (attempt ' + (attempt + 1) + '/5).' })
+        }
+        await wait(retryDelay)
+      }
+    }
+
     details = details.concat(Array.from(doc.querySelectorAll('item')).map(parseThingItem))
+    if (onProgress) {
+      onProgress({ completed: Math.min(start + batch.length, uniqueIds.length), total: uniqueIds.length, batch: batchNumber, batches: totalBatches, message: 'Completed batch ' + batchNumber + ' of ' + totalBatches + ' (' + details.length + ' of ' + uniqueIds.length + ' games).' })
+    }
   }
 
   return details
