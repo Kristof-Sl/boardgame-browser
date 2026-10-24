@@ -1614,6 +1614,8 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
     preferenceMap
   )
   const [myGamesOnly, setMyGamesOnly] = useState(false)
+  const [scheduleView, setScheduleView] = useState('detailed')
+  const [expandedGameId, setExpandedGameId] = useState(null)
   const [showBringList, setShowBringList] = useState(false)
   const [selectedGame, setSelectedGame] = useState(null)
   const [pdfBusy, setPdfBusy] = useState(false)
@@ -1649,6 +1651,16 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
   }
 
   const partColors = { morning: 'var(--blue)', afternoon: 'var(--accent)', evening: 'var(--green)' }
+  const orderedDates = [...new Set(visibleSchedule.map(slot => slot.date))].sort()
+
+  const handleScheduleGameDetails = slot => {
+    const game = { ...(gameDataMap[slot.gameId] || {}), id: slot.gameId, name: slot.gameName }
+    if (detailsMode) setSelectedGame(game)
+    else {
+      setExpandedGameId(String(slot.gameId))
+      setScheduleView('detailed')
+    }
+  }
 
   // Build bring list enriched with ownership from mergedCollection
   const scheduledGameIds = new Set(schedule.map(s => s.gameId))
@@ -1836,6 +1848,19 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <Pill label="All games" active={!myGamesOnly} onClick={() => setMyGamesOnly(false)} />
           <Pill label="My games only" active={myGamesOnly} onClick={() => setMyGamesOnly(true)} />
+          <div role="group" aria-label="Schedule view" style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 7, padding: 2, background: 'var(--bg3)' }}>
+            {[
+              ['detailed', 'Detailed'],
+              ['compact', 'Compact'],
+              ['overview', 'Overview'],
+            ].map(([mode, label]) => (
+              <button key={mode} aria-pressed={scheduleView === mode} onClick={() => setScheduleView(mode)} style={{
+                border: `1px solid ${scheduleView === mode ? 'var(--accent)' : 'transparent'}`,
+                borderRadius: 5, padding: '5px 8px', background: scheduleView === mode ? 'var(--accent-bg)' : 'transparent',
+                color: scheduleView === mode ? 'var(--accent)' : 'var(--text2)', fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap',
+              }}>{label}</button>
+            ))}
+          </div>
           <span style={{ marginLeft: 'auto' }}>
             <Btn small onClick={handleDownloadPdf} disabled={pdfBusy}>
               {pdfBusy ? 'Preparing PDF...' : '⬇ Download schedule PDF'}
@@ -1877,7 +1902,7 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
       )}
 
       {/* Schedule grid */}
-      {Object.values(grouped).map(block => (
+      {scheduleView === 'detailed' && Object.values(grouped).map(block => (
         <div key={`${block.date}_${block.part}`}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <span style={{ fontSize: 11, fontWeight: 500, color: partColors[block.part], textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -1895,11 +1920,62 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
                 me={me}
                 detailsMode={detailsMode}
                 onDetails={setSelectedGame}
+                openDetailsOnMount={expandedGameId === String(slot.gameId)}
               />
             ))}
           </div>
         </div>
       ))}
+      {scheduleView === 'compact' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 10 }}>
+          {Object.values(grouped).map(block => (
+            <section key={`${block.date}_${block.part}`} style={{ minWidth: 0, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)', padding: '10px 12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 7 }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: partColors[block.part], textTransform: 'uppercase' }}>{block.part}</span>
+                <span style={{ fontSize: 11, color: 'var(--text3)' }}>{block.date}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {block.games.map((slot, index) => (
+                  <div key={`${slot.gameId}-${index}`} style={{ display: 'grid', gridTemplateColumns: '32px minmax(0, 1fr) auto', alignItems: 'center', gap: 8 }}>
+                    {slot.thumbnail
+                      ? <img src={slot.thumbnail} alt="" style={{ width: 32, height: 32, borderRadius: 4, objectFit: 'cover' }} />
+                      : <span aria-hidden="true" style={{ width: 32, height: 32, display: 'grid', placeItems: 'center', background: 'var(--bg3)', borderRadius: 4 }}>🎲</span>}
+                    <div style={{ minWidth: 0 }}>
+                      <button onClick={() => handleScheduleGameDetails(slot)} style={{ display: 'block', maxWidth: '100%', padding: 0, border: 0, background: 'none', color: 'var(--text)', textAlign: 'left', fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>{slot.gameName}</button>
+                      <span style={{ display: 'block', color: 'var(--text3)', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{slot.players.map(player => player.name).join(', ')}</span>
+                    </div>
+                    <span style={{ color: 'var(--text3)', fontSize: 10, whiteSpace: 'nowrap' }}>{slot.gameDuration}m</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+      {scheduleView === 'overview' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 8 }}>
+          {orderedDates.map(date => (
+            <section key={date} style={{ minWidth: 0, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)', padding: '9px 10px' }}>
+              <h3 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 7 }}>{date}</h3>
+              {['morning', 'afternoon', 'evening'].map(part => {
+                const slots = visibleSchedule.filter(slot => slot.date === date && slot.part === part)
+                return (
+                  <div key={part} style={{ display: 'grid', gridTemplateColumns: '62px minmax(0, 1fr)', gap: 6, padding: '5px 0', borderTop: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: partColors[part], textTransform: 'uppercase' }}>{part}</span>
+                    <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {slots.length ? slots.map((slot, index) => (
+                        <button key={`${slot.gameId}-${index}`} onClick={() => handleScheduleGameDetails(slot)} title={`${slot.gameName}: ${slot.players.map(player => player.name).join(', ')}`} style={{ minWidth: 0, padding: 0, border: 0, background: 'none', color: 'var(--text)', textAlign: 'left', fontSize: 10, lineHeight: 1.3, overflowWrap: 'anywhere', cursor: 'pointer' }}>
+                          {slot.gameName}{slot.players.length ? ` · ${slot.players.length} players` : ''}
+                        </button>
+                      )) : <span style={{ fontSize: 10, color: 'var(--text3)' }}>—</span>}
+                    </div>
+                  </div>
+                )
+              })}
+            </section>
+          ))}
+        </div>
+      )}
       {detailsMode && selectedGame && (
         <aside style={{
           position: 'fixed', top: 'var(--app-header-height, 56px)', right: 0, bottom: 0, width: 340,
@@ -2012,8 +2088,8 @@ function PreferencesOverview({ eventGames, participants, prefs, me }) {
   )
 }
 
-function ScheduleGameCard({ slot, gameData, me, detailsMode, onDetails }) {
-  const [detailsOpen, setDetailsOpen] = useState(false)
+function ScheduleGameCard({ slot, gameData, me, detailsMode, onDetails, openDetailsOnMount = false }) {
+  const [detailsOpen, setDetailsOpen] = useState(openDetailsOnMount)
   const [imgErr, setImgErr] = useState(false)
 
   const isMe = slot.players && slot.players.some(p => p.id === me.id)
