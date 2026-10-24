@@ -5,11 +5,10 @@ import GameCard from './GameCard'
 import SettingsPage from './SettingsPage'
 
 export default function MobileLayout({
-  accounts, collections, allGames, filteredGames, filters, 
-  handleFilterChange, handleAddAccount, handleRefreshAccounts, handleReloadDefaultCollection, handleRemoveAccount, 
-  handleUploadXml, handleUploadCombinedXml, handleExport, 
-  handleExportDefault, handleImportFile, anyLoading, tab, setTab,
-  importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, Analyzer, showToast, handleAuthChange,
+  accounts, collections, allGames, sharedGames, filteredGames, filters,
+  handleFilterChange, handleAddAccount, handleRefreshAccounts, handleReloadDefaultCollection, handleRemoveAccount,
+  handleExport, handleImportFile, anyLoading, tab, setTab,
+  importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, Analyzer, showToast, handleAuthChange, handleDatabaseChanged,
   theme, onThemeChange
 }) {
   const [showFilters, setShowFilters] = useState(false)
@@ -30,7 +29,7 @@ export default function MobileLayout({
         No collection loaded
       </h2>
       <p style={{ fontSize: 14, color: 'var(--text2)', maxWidth: 280, lineHeight: 1.6 }}>
-        Add a BGG account or upload an XML file to get started.
+        Add a BGG account for your local view, or import a collection.
       </p>
       <div style={{ display: 'flex', gap: 12, marginTop: 16, width: '100%', flexDirection: 'column' }}>
         <button
@@ -167,8 +166,6 @@ export default function MobileLayout({
             onRefresh={handleRefreshAccounts}
             onReloadDefault={handleReloadDefaultCollection}
             onRemove={handleRemoveAccount}
-            onUploadXml={handleUploadXml}
-            onUploadCombinedXml={handleUploadCombinedXml}
             loading={anyLoading}
           />
         </div>
@@ -280,7 +277,7 @@ export default function MobileLayout({
 
         {tab === 'events' && (
           <div style={{ padding: '16px' }}>
-            <EventPlanner collection={allGames} />
+            <EventPlanner collection={sharedGames} />
           </div>
         )}
 
@@ -292,7 +289,7 @@ export default function MobileLayout({
 
         {tab === 'admin' && (
           <div style={{ padding: '16px' }}>
-            <AdminPage localCollection={allGames} onAuthChange={handleAuthChange} />
+            <AdminPage localCollection={sharedGames} onAuthChange={handleAuthChange} onDatabaseChange={handleDatabaseChanged} />
           </div>
         )}
 

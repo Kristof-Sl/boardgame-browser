@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { db, isConfigured } from './supabase'
 import { generateSchedule, scheduleStats, getSlots } from './scheduler'
 import { GameDetailsPanel } from '../components/GameCard'
+import { loadEventCollection, loadEventGames } from '../databaseCollections'
+import { expandSchedule } from './eventData'
 
 const PDF_PARTS = ['morning', 'afternoon', 'evening']
 const PDF_PART_COLORS = {
@@ -772,14 +774,7 @@ function CreateEvent({ onCreated, collection }) {
     setSaving(true); setError('')
     try {
       const id = Math.random().toString(36).substring(2, 8).toUpperCase()
-      const col = attachCollection && collection.length
-        ? collection.map(g => ({
-            id: g.id, name: g.name, thumbnail: g.thumbnail,
-            minPlayers: g.minPlayers, maxPlayers: g.maxPlayers,
-            minPlaytime: g.minPlaytime, maxPlaytime: g.maxPlaytime,
-            rating: g.rating, bggRank: g.bggRank, yearPublished: g.yearPublished,
-          }))
-        : []
+      const col = attachCollection && collection.length ? collection.map(game => String(game.id)) : []
       const [event] = await db.insert('events', {
         id, name: name.trim(), location: location.trim(),
         start_date: startDate, end_date: endDate,
@@ -856,20 +851,22 @@ function EventDashboard({ initialEvent, localCollection }) {
 
   const reload = useCallback(async () => {
     try {
-      const [p, v, eg, pr, gf] = await Promise.all([
+      const [p, v, eg, pr, gf, eventCollection] = await Promise.all([
         db.select('participants', { filter: `event_id=eq.${event.id}`, order: 'created_at.asc' }),
         db.select('game_votes', { filter: `event_id=eq.${event.id}` }),
-        db.select('event_games', { filter: `event_id=eq.${event.id}` }),
+        loadEventGames(event.id, localCollection),
         db.select('game_preferences', { filter: `event_id=eq.${event.id}` }),
         db.select('game_files'),
+        loadEventCollection(event.collection || [], localCollection),
       ])
       setParticipants(p); setVotes(v); setEventGames(eg); setPrefs(pr)
+      setEvent(current => ({ ...current, collection: eventCollection }))
       const fileMap = {}
       gf.forEach(f => fileMap[f.game_id] = f.files)
       setGameFiles(fileMap)
     } catch (e) { setError(e.message) }
     finally { setLoading(false) }
-  }, [event.id])
+  }, [event.id, localCollection])
 
   useEffect(() => { reload() }, [reload])
   useEffect(() => {
@@ -879,7 +876,7 @@ function EventDashboard({ initialEvent, localCollection }) {
 
   const refreshEvent = async () => {
     const [ev] = await db.select('events', { filter: `id=eq.${event.id}` })
-    if (ev) setEvent(ev)
+    if (ev) setEvent({ ...ev, collection: await loadEventCollection(ev.collection || [], localCollection) })
   }
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading event…</div>
@@ -915,14 +912,19 @@ function EventDashboard({ initialEvent, localCollection }) {
 
 function mergeCollections(eventCol, localCol) {
   const map = new Map()
-  // Start with event collection (basic game data from Supabase)
-  for (const g of (eventCol || [])) map.set(g.id, g)
+  const localById = new Map((localCol || []).map(game => [String(game.id), game]))
+  for (const entry of (eventCol || [])) {
+    const id = String(typeof entry === 'object' ? entry.id : entry)
+    const game = localById.get(id)
+    if (game) map.set(id, game)
+  }
   // Layer in local collection — always copy ownership fields even if game already exists,
   // because the event collection never has ownerStatuses/actualOwners (those are browser-only)
   for (const g of (localCol || [])) {
-    if (map.has(g.id)) {
-      const existing = map.get(g.id)
-      map.set(g.id, {
+    const id = String(g.id)
+    if (map.has(id)) {
+      const existing = map.get(id)
+      map.set(id, {
         ...existing,
         ownerStatuses: g.ownerStatuses || existing.ownerStatuses,
         actualOwners:  g.actualOwners  || existing.actualOwners,
@@ -941,7 +943,7 @@ function mergeCollections(eventCol, localCol) {
         details:      existing.details      || g.details,
       })
     } else {
-      map.set(g.id, g)
+      map.set(id, g)
     }
   }
   return Array.from(map.values())
@@ -1578,7 +1580,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
 function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, mergedCollection }) {
-  const schedule = event.schedule || []
+  const schedule = expandSchedule(event.schedule || [], eventGames, participants)
   const params = event.schedule_params || {}
   const [myGamesOnly, setMyGamesOnly] = useState(false)
   const [showBringList, setShowBringList] = useState(false)

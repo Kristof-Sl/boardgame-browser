@@ -1,5 +1,18 @@
 -- Run this SQL in your Supabase project: Dashboard → SQL Editor → New query
 
+-- Shared BGG collections and detailed game library
+create table if not exists game_library (
+  game_id text primary key,
+  game_data jsonb not null default '{}',
+  updated_at timestamptz default now()
+);
+
+create table if not exists game_collection (
+  username text primary key,
+  games jsonb not null default '[]',
+  updated_at timestamptz default now()
+);
+
 -- Events table
 create table if not exists events (
   id text primary key default lower(substring(md5(random()::text), 1, 6)),
@@ -8,8 +21,8 @@ create table if not exists events (
   start_date date not null,
   end_date date not null,
   status text not null default 'voting',  -- voting | preferences | scheduled | closed
-  collection jsonb default '[]',          -- base game collection attached by organizer
-  schedule jsonb default '[]',            -- generated schedule
+  collection jsonb default '[]',          -- game IDs attached by organizer
+  schedule jsonb default '[]',            -- date/part/game ID/duration/participant IDs
   schedule_params jsonb default '{}',     -- parameters used for scheduling
   created_at timestamptz default now()
 );
@@ -53,12 +66,9 @@ create table if not exists game_preferences (
 
 -- Selected games for the event (chosen by organizer after voting)
 create table if not exists event_games (
-  id uuid primary key default gen_random_uuid(),
   event_id text references events(id) on delete cascade,
   game_id text not null,
-  game_name text not null,
-  game_data jsonb default '{}',
-  unique(event_id, game_id)
+  primary key(event_id, game_id)
 );
 
 -- Game files (global, not per event)
@@ -92,6 +102,8 @@ alter publication supabase_realtime add table game_preferences;
 alter publication supabase_realtime add table event_games;
 alter publication supabase_realtime add table game_files;
 alter publication supabase_realtime add table play_logs;
+alter publication supabase_realtime add table game_library;
+alter publication supabase_realtime add table game_collection;
 
 -- Allow public access (no auth required — event code acts as the key)
 alter table events enable row level security;
@@ -99,6 +111,8 @@ alter table participants enable row level security;
 alter table game_votes enable row level security;
 alter table game_preferences enable row level security;
 alter table event_games enable row level security;
+alter table game_library enable row level security;
+alter table game_collection enable row level security;
 
 create policy "public read events" on events for select using (true);
 create policy "public insert events" on events for insert with check (true);
@@ -123,6 +137,14 @@ create policy "public delete prefs" on game_preferences for delete using (true);
 create policy "public read event_games" on event_games for select using (true);
 create policy "public insert event_games" on event_games for insert with check (true);
 create policy "public delete event_games" on event_games for delete using (true);
+
+create policy "public read game_library" on game_library for select using (true);
+create policy "public insert game_library" on game_library for insert with check (true);
+create policy "public update game_library" on game_library for update using (true);
+create policy "public delete game_library" on game_library for delete using (true);
+
+create policy "public read game_collection" on game_collection for select using (true);
+create policy "public update game_collection" on game_collection for update using (true);
 
 create policy "public read game_files" on game_files for select using (true);
 create policy "public insert game_files" on game_files for insert with check (true);

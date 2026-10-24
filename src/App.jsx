@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
-import { fetchCollection, mergeCollections, parseCollectionXml, parseCombinedXml } from './bggApi'
-import { exportState, parseStateFile, loadDefaultCollection, loadGameDetails } from './stateManager'
+import { fetchCollection, mergeCollections } from './bggApi'
+import { exportState, parseStateFile } from './stateManager'
 import GameCard, { GameDetailsPanel } from './components/GameCard'
 import FilterBar from './components/FilterBar'
 import AccountManager from './components/AccountManager'
@@ -11,6 +11,7 @@ import MobileLayout from './components/MobileLayout'
 import SettingsPage from './components/SettingsPage'
 import Analyzer from './components/Analyzer'
 import { db, isConfigured } from './events/supabase'
+import { loadDatabaseSnapshot, refreshDatabaseCollections } from './databaseCollections'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -45,22 +46,26 @@ function loadFromStorage() {
 function saveToStorage(accounts, collections) {
   try {
     const savedAccounts = accounts
-      .filter(a => !a.loading && !a.error)
-      .map(a => ({ username: a.username, count: a.count, fromFile: a.fromFile || false }))
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ accounts: savedAccounts, collections }))
+      .filter(a => a.source === 'local' && !a.loading && !a.error)
+      .map(a => ({ username: a.username, count: a.count, source: 'local' }))
+    const savedCollections = Object.fromEntries(savedAccounts.map(account => [account.username, collections[account.username] || []]))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ accounts: savedAccounts, collections: savedCollections }))
   } catch {}
 }
 
 export default function App() {
   const saved = useMemo(() => loadFromStorage(), [])
-  const [accounts, setAccounts] = useState(saved?.accounts || [])
-  const [collections, setCollections] = useState(saved?.collections || {})
+  const localAccounts = (saved?.accounts || []).map(account => ({ ...account, source: 'local' }))
+  const localCollections = Object.fromEntries(localAccounts.map(account => [account.username, saved?.collections?.[account.username] || []]))
+  const [accounts, setAccounts] = useState(localAccounts)
+  const [collections, setCollections] = useState(localCollections)
   const [gameDetails, setGameDetails] = useState({})
   const [gameFiles, setGameFiles] = useState({})
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
   const [tab, setTab] = useState('collection')
   const [defaultLoaded, setDefaultLoaded] = useState(false)
+  const [databaseLoading, setDatabaseLoading] = useState(isConfigured())
   const [toast, setToast] = useState(null)
   const [isAdmin, setIsAdmin] = useState(sessionStorage.getItem('admin_auth') === '1')
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -84,25 +89,28 @@ export default function App() {
     return () => observer.disconnect()
   }, [isMobile])
 
-  // On mount: if nothing in localStorage, try default-collection.json
+  // The shared collection and game details are loaded from Supabase.
   useEffect(() => {
-    const stored = loadFromStorage()
-    if (stored?.accounts?.length > 0) {
+    if (!isConfigured()) {
       setDefaultLoaded(true)
-    } else {
-      loadDefaultCollection().then(state => {
-        if (state) {
-          setAccounts(state.accounts)
-          setCollections(state.collections)
-          showToast('Default collection loaded', 'ok')
-        }
-        setDefaultLoaded(true)
-      })
+      return
     }
-  }, [])
-
-  useEffect(() => {
-    loadGameDetails().then(setGameDetails)
+    loadDatabaseSnapshot().then(snapshot => {
+      const sharedNames = new Set(snapshot.accounts.map(account => account.username.toLowerCase()))
+      const personalAccounts = localAccounts.filter(account => !sharedNames.has(account.username.toLowerCase()))
+      setAccounts([...snapshot.accounts, ...personalAccounts])
+      setCollections({
+        ...snapshot.collections,
+        ...Object.fromEntries(personalAccounts.map(account => [account.username, localCollections[account.username] || []])),
+      })
+      setGameDetails(snapshot.gameDetails)
+    }).catch(error => {
+      console.warn('Failed to load collection from Supabase:', error)
+      showToast('Could not load the shared collection from the database', 'err')
+    }).finally(() => {
+      setDatabaseLoading(false)
+      setDefaultLoaded(true)
+    })
   }, [])
 
   // Handle window resize for mobile/desktop detection
@@ -162,6 +170,11 @@ export default function App() {
       files: gameFiles[game.id] || game.files || []
     }))
   }, [collections, gameDetails, gameFiles])
+
+  const sharedGames = useMemo(() => {
+    const sharedNames = new Set(accounts.filter(account => account.source === 'database').map(account => account.username))
+    return allGames.filter(game => game.owners?.some(owner => sharedNames.has(owner)))
+  }, [accounts, allGames])
 
   const filteredGames = useMemo(() => {
     let games = [...allGames]
@@ -269,12 +282,12 @@ export default function App() {
   }, [])
 
   const handleAddAccount = useCallback(async (username) => {
-    setAccounts(prev => [...prev, { username, loading: true, error: null, count: null }])
+    setAccounts(prev => [...prev, { username, loading: true, error: null, count: null, source: 'local' }])
     try {
       const games = await fetchCollection(username)
       setCollections(prev => ({ ...prev, [username]: games }))
       setAccounts(prev => prev.map(a =>
-        a.username === username ? { ...a, loading: false, count: games.length } : a
+        a.username === username ? { ...a, loading: false, count: games.length, source: 'local' } : a
       ))
       return null
     } catch (err) {
@@ -286,96 +299,53 @@ export default function App() {
   }, [])
 
   const handleRefreshAccounts = useCallback(async () => {
-    const apiAccounts = accounts.filter(account => !account.fromFile)
-    if (apiAccounts.length === 0) return
-
-    setAccounts(prev => prev.map(account =>
-      !account.fromFile ? { ...account, loading: true, error: null } : account
+    const localAccounts = accounts.filter(account => account.source === 'local')
+    setAccounts(prev => prev.map(account => account.source === 'database'
+      ? { ...account, loading: true, error: null }
+      : account
     ))
-
-    const results = await Promise.allSettled(
-      apiAccounts.map(async account => ({
-        username: account.username,
-        games: await fetchCollection(account.username),
-      }))
-    )
-
-    results.forEach(result => {
-      if (result.status === 'fulfilled') {
-        setCollections(prev => ({ ...prev, [result.value.username]: result.value.games }))
-      }
-    })
-
-    setAccounts(prev => prev.map(account => {
-      if (account.fromFile) return account
-      const result = results.find(item =>
-        item.status === 'fulfilled'
-          ? item.value.username === account.username
-          : false
-      )
-      if (result?.status === 'fulfilled') {
-        return { ...account, loading: false, error: null, count: result.value.games.length }
-      }
-      const failedIndex = apiAccounts.findIndex(item => item.username === account.username)
-      const failed = results[failedIndex]
-      return {
-        ...account,
-        loading: false,
-        error: failed?.reason?.message || 'Failed to refresh collection',
-      }
-    }))
+    try {
+      const snapshot = await refreshDatabaseCollections()
+      setAccounts([...snapshot.accounts, ...localAccounts])
+      setCollections(prev => ({ ...snapshot.collections, ...Object.fromEntries(localAccounts.map(account => [account.username, prev[account.username] || []])) }))
+      setGameDetails(snapshot.gameDetails)
+    } catch (error) {
+      showToast(`Could not refresh database collections: ${error.message}`, 'err')
+      setAccounts(prev => prev.map(account => ({ ...account, loading: false })))
+    }
   }, [accounts])
 
   const handleReloadDefaultCollection = useCallback(async () => {
-    const state = await loadDefaultCollection()
-    if (!state) return 'Could not load public/default-collection.json.'
-    setAccounts(state.accounts)
-    setCollections(state.collections)
-    return null
+    try {
+      const snapshot = await loadDatabaseSnapshot()
+      setAccounts(snapshot.accounts)
+      setCollections(snapshot.collections)
+      setGameDetails(snapshot.gameDetails)
+      return null
+    } catch (error) {
+      return `Could not load the database collection: ${error.message}`
+    }
   }, [])
+
+  const handleDatabaseChanged = useCallback(async () => {
+    const snapshot = await loadDatabaseSnapshot()
+    const sharedNames = new Set(snapshot.accounts.map(account => account.username.toLowerCase()))
+    setAccounts(current => [...snapshot.accounts, ...current.filter(account => account.source === 'local' && !sharedNames.has(account.username.toLowerCase()))])
+    setCollections(current => ({
+      ...snapshot.collections,
+      ...Object.fromEntries(accounts.filter(account => account.source === 'local' && !sharedNames.has(account.username.toLowerCase())).map(account => [account.username, current[account.username] || []])),
+    }))
+    setGameDetails(snapshot.gameDetails)
+  }, [accounts])
 
   const handleRemoveAccount = useCallback((username) => {
-    setAccounts(prev => prev.filter(a => a.username !== username))
+    setAccounts(prev => prev.filter(a => a.username !== username || a.source !== 'local'))
     setCollections(prev => {
       const next = { ...prev }
-      delete next[username]
+      if (!accounts.find(account => account.username === username && account.source === 'database')) delete next[username]
       return next
     })
-  }, [])
-
-  const handleUploadXml = useCallback(async (username, xmlText) => {
-    try {
-      const games = parseCollectionXml(xmlText, username)
-      setCollections(prev => ({ ...prev, [username]: games }))
-      setAccounts(prev => [...prev, { username, loading: false, error: null, count: games.length, fromFile: true }])
-      return null
-    } catch (err) {
-      return err.message
-    }
-  }, [])
-
-  const handleUploadCombinedXml = useCallback(async (xmlText) => {
-    try {
-      const gamesByOwner = parseCombinedXml(xmlText)
-      const newOwners = Object.keys(gamesByOwner)
-      setCollections(prev => ({ ...prev, ...gamesByOwner }))
-      setAccounts(prev => {
-        const next = [...prev]
-        newOwners.forEach(owner => {
-          const idx = next.findIndex(a => a.username === owner)
-          if (idx === -1) {
-            next.push({ username: owner, loading: false, error: null, count: gamesByOwner[owner].length, fromFile: true })
-          } else {
-            next[idx].count = gamesByOwner[owner].length
-          }
-        })
-        return next
-      })
-      return null
-    } catch (err) {
-      return err.message
-    }
-  }, [])
+  }, [accounts])
 
   const handleUpdateGameFiles = useCallback(async (gameId, files) => {
     // Update local state
@@ -417,13 +387,6 @@ export default function App() {
     showToast('Collection exported', 'ok')
   }, [accounts, collections, allGames])
 
-  // Export as default-collection.json (commit to public/ in repo)
-  const handleExportDefault = useCallback(() => {
-    if (allGames.length === 0) return
-    exportState(accounts, collections, 'default-collection.json')
-    showToast('Saved — commit default-collection.json to public/ in your repo', 'ok')
-  }, [accounts, collections, allGames])
-
   // Import a state JSON file
   const handleImportFile = useCallback(async (e) => {
     const file = e.target.files[0]
@@ -431,7 +394,7 @@ export default function App() {
     try {
       const text = await file.text()
       const state = parseStateFile(text)
-      setAccounts(state.accounts)
+      setAccounts(state.accounts.map(account => ({ ...account, source: 'local' })))
       setCollections(state.collections)
       showToast(`Loaded ${Object.keys(state.collections).length} collection(s)`, 'ok')
     } catch (err) {
@@ -442,11 +405,12 @@ export default function App() {
 
   const handleAdminLogout = useCallback(() => {
     sessionStorage.removeItem('admin_auth')
+    sessionStorage.removeItem('admin_password')
     setIsAdmin(false)
     setTab('collection')
   }, [])
 
-  const anyLoading = accounts.some(a => a.loading)
+  const anyLoading = databaseLoading || accounts.some(a => a.loading)
 
   // Mobile layout
   if (isMobile) {
@@ -455,6 +419,7 @@ export default function App() {
         accounts={accounts}
         collections={collections}
         allGames={allGames}
+        sharedGames={sharedGames}
         filteredGames={filteredGames}
         filters={filters}
         handleFilterChange={handleFilterChange}
@@ -462,10 +427,7 @@ export default function App() {
         handleRefreshAccounts={handleRefreshAccounts}
         handleReloadDefaultCollection={handleReloadDefaultCollection}
         handleRemoveAccount={handleRemoveAccount}
-        handleUploadXml={handleUploadXml}
-        handleUploadCombinedXml={handleUploadCombinedXml}
         handleExport={handleExport}
-        handleExportDefault={handleExportDefault}
         handleImportFile={handleImportFile}
         anyLoading={anyLoading}
         tab={tab}
@@ -478,6 +440,7 @@ export default function App() {
         Analyzer={Analyzer}
         showToast={showToast}
         handleAuthChange={setIsAdmin}
+        handleDatabaseChanged={handleDatabaseChanged}
         theme={theme}
         onThemeChange={setTheme}
       />
@@ -552,14 +515,6 @@ export default function App() {
             </HeaderBtn>
           )}
 
-          {/* Save as default */}
-          {allGames.length > 0 && (
-            <HeaderBtn onClick={handleExportDefault} accent
-              title="Download as default-collection.json — commit this file to public/ so every visitor loads it automatically">
-              ★ Save as default
-            </HeaderBtn>
-          )}
-
           <button
             onClick={() => setSidebarOpen(o => !o)}
             style={{
@@ -600,7 +555,7 @@ export default function App() {
         {/* Events tab */}
         {tab === 'events' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
-            <EventPlanner collection={allGames} />
+            <EventPlanner collection={sharedGames} />
           </div>
         )}
 
@@ -614,7 +569,7 @@ export default function App() {
         {/* Admin tab */}
         {tab === 'admin' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
-            <AdminPage localCollection={allGames} onAuthChange={setIsAdmin} />
+            <AdminPage localCollection={sharedGames} onAuthChange={setIsAdmin} onDatabaseChange={handleDatabaseChanged} />
           </div>
         )}
 
@@ -644,8 +599,6 @@ export default function App() {
               onRefresh={handleRefreshAccounts}
               onReloadDefault={handleReloadDefaultCollection}
               onRemove={handleRemoveAccount}
-              onUploadXml={handleUploadXml}
-              onUploadCombinedXml={handleUploadCombinedXml}
               loading={anyLoading}
             />
             {allGames.length > 0 && (
@@ -785,7 +738,7 @@ function EmptyState({ onImport }) {
         No collection loaded
       </h2>
       <p style={{ fontSize: 15, color: 'var(--text2)', maxWidth: 420, lineHeight: 1.7 }}>
-        Add a BGG account or upload an XML file in the sidebar, or import a previously exported collection.
+        Add a BGG account for your local view, or import a previously exported collection.
       </p>
       <button
         onClick={onImport}

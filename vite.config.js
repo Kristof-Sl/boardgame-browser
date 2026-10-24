@@ -1,11 +1,52 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import adminCollectionHandler from './api/admin-collection.js'
+
+function localAdminCollectionApi() {
+  return {
+    name: 'local-admin-collection-api',
+    configureServer(server) {
+      server.middlewares.use('/api/admin-collection', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'Method not allowed.' }))
+          return
+        }
+
+        try {
+          const chunks = []
+          for await (const chunk of req) chunks.push(chunk)
+          const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')
+          const response = {
+            status(code) {
+              res.statusCode = code
+              return this
+            },
+            json(value) {
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify(value))
+              return this
+            },
+          }
+          await adminCollectionHandler({ method: req.method, body }, response)
+        } catch (error) {
+          res.statusCode = 400
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: error.message || 'Invalid request.' }))
+        }
+      })
+    },
+  }
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  for (const key of ['VITE_SUPABASE_URL', 'ADMIN_PASSWORD', 'SUPABASE_SERVICE_ROLE_KEY']) {
+    if (env[key]) process.env[key] = env[key]
+  }
 
   return {
-    plugins: [react()],
+    plugins: [react(), localAdminCollectionApi()],
     server: {
       proxy: {
         '/api/bgg': {

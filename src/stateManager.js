@@ -8,7 +8,7 @@ export function exportState(accounts, collections, filename = 'boardgame-collect
     exportedAt: new Date().toISOString(),
     accounts: accounts
       .filter(a => !a.loading && !a.error)
-      .map(a => ({ username: a.username, count: a.count, fromFile: a.fromFile || false })),
+      .map(a => ({ username: a.username, count: a.count })),
     collections,
   }
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })
@@ -33,38 +33,9 @@ export function parseStateFile(jsonText) {
   const accounts = (state.accounts || []).map(a => ({
     username: a.username,
     count: a.count,
-    fromFile: a.fromFile || false,
+    source: 'local',
     loading: false,
     error: null,
   }))
   return { accounts, collections: state.collections }
-}
-
-// Try to fetch /default-collection.json — returns null if not found
-export async function loadDefaultCollection() {
-  try {
-    const res = await fetch('/default-collection.json')
-    if (!res.ok) return null
-    const text = await res.text()
-    return parseStateFile(text)
-  } catch {
-    return null
-  }
-}
-
-// Try to fetch optional detailed BGG game data from public/bgg-game-details.json
-export async function loadGameDetails() {
-  try {
-    const res = await fetch('/bgg-game-details.json')
-    if (!res.ok) return {}
-    const payload = await res.json()
-    const details = Array.isArray(payload) ? payload : payload.games
-    if (!Array.isArray(details)) return {}
-    return details.reduce((byId, game) => {
-      if (game && game.id != null) byId[String(game.id)] = game
-      return byId
-    }, {})
-  } catch {
-    return {}
-  }
 }
