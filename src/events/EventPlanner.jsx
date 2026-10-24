@@ -1598,7 +1598,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
-function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule }) {
+function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule, reload }) {
   const schedule = expandSchedule(selectedSchedule?.schedule || [], eventGames, participants)
   const params = selectedSchedule?.schedule_params || {}
   const [myGamesOnly, setMyGamesOnly] = useState(false)
