@@ -124,8 +124,8 @@ export default function FilterBar({ filters, onChange, games, availableAccounts 
                   : [...selected, account]
                 onChange('accounts', next)
               }
-              const selectAll = () => onChange('accounts', allAccounts)
-              const isAllSelected = selected.length === allAccounts.length
+              const selectAll = () => onChange('accounts', [])
+              const isAllSelected = selected.length === 0
               
               return (
                 <>

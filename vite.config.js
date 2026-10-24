@@ -1,5 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import adminCollectionHandler from './api/admin-collection.js'
 
 function localAdminCollectionApi() {
@@ -41,12 +43,18 @@ function localAdminCollectionApi() {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const root = process.cwd()
+  const htmlInputs = { index: resolve(root, 'index.html') }
+  const meepleMapHtml = resolve(root, 'meeplemap.html')
+  if (existsSync(meepleMapHtml)) htmlInputs.meeplemap = meepleMapHtml
+
   for (const key of ['VITE_SUPABASE_URL', 'ADMIN_PASSWORD', 'SUPABASE_SERVICE_ROLE_KEY']) {
     if (env[key]) process.env[key] = env[key]
   }
 
   return {
     plugins: [react(), localAdminCollectionApi()],
+    build: { rollupOptions: { input: htmlInputs } },
     server: {
       proxy: {
         '/api/bgg': {
