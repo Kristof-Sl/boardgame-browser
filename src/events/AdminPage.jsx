@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { db } from './supabase'
-import { fetchGameDetails } from '../bggApi'
+import { fetchCollection } from '../bggApi'
+import { importLegacyJsonToDatabase, loadEventCollection, loadEventGames, updateGameLibrary } from '../databaseCollections'
+import { compactSchedule, expandSchedule } from './eventData'
 import { generateSchedule, scheduleStats, validateScheduleCoverage } from './scheduler'
 // ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
 import DevTestingWorkflow from './DevTestingWorkflow'
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
 //test
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 
@@ -69,7 +70,7 @@ function scheduleTemplate(eventId = 'EVENT_ID') {
   return {
     format: 'boardgame-browser-event-schedule', version: 1, eventId,
     description: 'Replace the example slot with one object per scheduled game session.',
-    schedule: [{ date: 'YYYY-MM-DD', part: 'morning', gameId: 'GAME_ID', gameName: 'Game name', gameDuration: 90, players: [{ id: 'PARTICIPANT_ID', name: 'Participant name' }], thumbnail: null }],
+    schedule: [{ date: 'YYYY-MM-DD', part: 'morning', gameId: 'GAME_ID', gameDuration: 90, players: ['PARTICIPANT_ID'] }],
   }
 }
 
@@ -78,11 +79,11 @@ function validateImportedSchedule(payload, eventId) {
   if (!Array.isArray(schedule)) throw new Error('The file must contain a schedule array.')
   if (payload?.eventId && payload.eventId !== eventId) throw new Error(`This schedule belongs to event ${payload.eventId}, not ${eventId}.`)
   schedule.forEach((slot, index) => {
-    if (!slot || !slot.date || !slot.part || !slot.gameId || !slot.gameName) throw new Error(`Schedule slot ${index + 1} needs date, part, gameId, and gameName.`)
+    if (!slot || !slot.date || !slot.part || !slot.gameId) throw new Error(`Schedule slot ${index + 1} needs date, part, and gameId.`)
     if (!['morning', 'afternoon', 'evening'].includes(slot.part)) throw new Error(`Schedule slot ${index + 1} has an invalid part.`)
     if (!Array.isArray(slot.players)) throw new Error(`Schedule slot ${index + 1} needs a players array.`)
   })
-  return schedule
+  return compactSchedule(schedule)
 }
 
 const adminInputStyle = {
@@ -90,23 +91,47 @@ const adminInputStyle = {
   borderRadius: 6, padding: '6px 8px', color: 'var(--text)', fontSize: 11,
 }
 
+async function adminCollectionRequest(action, values = {}) {
+  const response = await fetch('/api/admin-collection', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action,
+      ...values,
+      password: sessionStorage.getItem('admin_password'),
+    }),
+  })
+  const result = await response.json()
+  if (!response.ok) throw new Error(result.error || 'Admin collection request failed.')
+  return result
+}
+
 // ─── Login gate ───────────────────────────────────────────────────────────────
 
 function AdminLogin({ onLogin }) {
   const [pw, setPw] = useState('')
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  const attempt = () => {
-    if (!ADMIN_PASSWORD) {
-      setError('VITE_ADMIN_PASSWORD is not set in environment variables.')
-      return
-    }
-    if (pw === ADMIN_PASSWORD) {
+  const attempt = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      const response = await fetch('/api/admin-collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'authorize', password: pw }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Admin authorization failed.')
       sessionStorage.setItem('admin_auth', '1')
+      sessionStorage.setItem('admin_password', pw)
       onLogin()
-    } else {
-      setError('Incorrect password.')
+    } catch (loginError) {
+      setError(loginError.message)
       setPw('')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -134,7 +159,7 @@ function AdminLogin({ onLogin }) {
             }}
           />
           {error && <p style={{ fontSize: 12, color: 'var(--red)' }}>{error}</p>}
-          <Btn onClick={attempt} accent style={{ padding: '10px', fontSize: 14 }}>Login</Btn>
+          <Btn onClick={attempt} accent disabled={busy} style={{ padding: '10px', fontSize: 14 }}>{busy ? 'Verifying…' : 'Login'}</Btn>
         </div>
       </Card>
     </div>
@@ -246,22 +271,24 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
 
   const reload = useCallback(async () => {
     try {
-      const [p, v, eg, pr] = await Promise.all([
+      const [p, v, eg, pr, eventCollection] = await Promise.all([
         db.select('participants', { filter: `event_id=eq.${event.id}`, order: 'created_at.asc' }),
         db.select('game_votes', { filter: `event_id=eq.${event.id}` }),
-        db.select('event_games', { filter: `event_id=eq.${event.id}` }),
+        loadEventGames(event.id, localCollection),
         db.select('game_preferences', { filter: `event_id=eq.${event.id}` }),
+        loadEventCollection(event.collection || [], localCollection),
       ])
       setParticipants(p); setVotes(v); setEventGames(eg); setPrefs(pr)
+      setEvent(current => ({ ...current, collection: eventCollection }))
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
-  }, [event.id])
+  }, [event.id, localCollection])
 
   useEffect(() => { reload() }, [reload])
 
   const refreshEvent = async () => {
     const [ev] = await db.select('events', { filter: `id=eq.${event.id}` })
-    if (ev) setEvent(ev)
+    if (ev) setEvent({ ...ev, collection: await loadEventCollection(ev.collection || [], localCollection) })
   }
 
   const setStatus = async (status) => {
@@ -288,12 +315,20 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
       }
       const toAdd = Object.entries(tallies)
         .filter(([, t]) => t.want > 0)
-        .map(([gid, t]) => ({
-          event_id: event.id,
-          game_id: gid,
-          game_name: t.data.game_name,
-          game_data: t.data.game_data || {},
-        }))
+        .map(([gid]) => ({ event_id: event.id, game_id: gid }))
+
+      const selectedIds = toAdd.map(game => game.game_id)
+      if (selectedIds.length) {
+        const libraryRows = await db.select('game_library', { filter: `game_id=in.(${selectedIds.join(',')})` })
+        const knownIds = new Set(libraryRows.map(row => String(row.game_id)))
+        const missingRows = Object.entries(tallies)
+          .filter(([id, tally]) => tally.want > 0 && !knownIds.has(String(id)))
+          .map(([id, tally]) => ({
+            game_id: String(id),
+            game_data: { id: String(id), name: tally.data.game_name, ...(tally.data.game_data || {}) },
+          }))
+        if (missingRows.length) await db.upsert('game_library', missingRows, 'game_id')
+      }
 
       await Promise.all(toAdd.map(g => db.insert('event_games', g).catch(() => {})))
       await db.update('events', { status: 'preferences' }, `id=eq.${event.id}`)
@@ -309,17 +344,6 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
       await db.insert('event_games', {
         event_id: event.id,
         game_id: game.id,
-        game_name: game.name,
-        game_data: {
-          description: game.description,
-          thumbnail: game.thumbnail, rating: game.rating,
-          minPlayers: game.minPlayers, maxPlayers: game.maxPlayers,
-          minPlaytime: game.minPlaytime, maxPlaytime: game.maxPlaytime,
-          minAge: game.minAge, yearPublished: game.yearPublished,
-          averageweight: game.averageweight, categories: game.categories || game.themes,
-          themes: game.themes, mechanics: game.mechanics, designers: game.designers,
-          suggestedPlayerCounts: game.suggestedPlayerCounts,
-        },
       })
       await reload()
     } catch (e) {
@@ -412,7 +436,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
 
       await db.update('events', {
         status: 'scheduled',
-        schedule,
+        schedule: compactSchedule(schedule),
         schedule_params: {
           ...schedParams,
           generatedAt: new Date().toISOString(),
@@ -458,6 +482,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     const localGame = mergedCollection.find(game => String(game.id) === String(eg.game_id))
     return { id: eg.game_id, name: eg.game_name, ...localGame, ...(eg.game_data || {}), details: localGame?.details || eg.game_data?.details || null }
   })
+  const hydratedSchedule = expandSchedule(event.schedule || [], eventGames, participants)
 
   const handleExportEventData = () => downloadJson(`event-${event.id}-data.json`, {
     format: 'boardgame-browser-event-data', version: 1, exportedAt: new Date().toISOString(),
@@ -482,7 +507,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     finally { setBusy(false) }
   }
 
-  const beginScheduleEditor = () => setScheduleEditor(JSON.parse(JSON.stringify(event.schedule || [])))
+  const beginScheduleEditor = () => setScheduleEditor(JSON.parse(JSON.stringify(hydratedSchedule)))
   const updateScheduleSlot = (index, key, value) => setScheduleEditor(slots => slots.map((slot, i) => i === index ? { ...slot, [key]: value } : slot))
   const removeScheduleSlot = index => setScheduleEditor(slots => slots.filter((_, i) => i !== index))
   const addScheduleSlot = () => setScheduleEditor(slots => [...slots, { date: event.start_date || '', part: 'morning', gameId: eventGames[0]?.game_id || '', gameName: eventGames[0]?.game_name || '', gameDuration: 90, players: [], thumbnail: eventGames[0]?.game_data?.thumbnail || null }])
@@ -490,7 +515,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     try {
       const schedule = validateImportedSchedule({ schedule: scheduleEditor }, event.id)
       setBusy(true)
-      await db.update('events', { status: 'scheduled', schedule, schedule_params: { ...(event.schedule_params || {}), manuallyEditedAt: new Date().toISOString() } }, `id=eq.${event.id}`)
+      await db.update('events', { status: 'scheduled', schedule: compactSchedule(scheduleEditor), schedule_params: { ...(event.schedule_params || {}), manuallyEditedAt: new Date().toISOString() } }, `id=eq.${event.id}`)
       await refreshEvent()
       setScheduleEditor(null)
       setScheduleMessage('Manual schedule changes saved.')
@@ -886,7 +911,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
-              {event.schedule.map((slot, i) => (
+              {hydratedSchedule.map((slot, i) => (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   background: 'var(--bg3)', borderRadius: 8, padding: '8px 12px',
@@ -914,14 +939,20 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
 
 function mergeCollections(eventCol, localCol) {
   const map = new Map()
-  for (const g of (eventCol || [])) map.set(g.id, g)
+  const localById = new Map((localCol || []).map(game => [String(game.id), game]))
+  for (const entry of (eventCol || [])) {
+    const id = String(typeof entry === 'object' ? entry.id : entry)
+    const game = localById.get(id)
+    if (game) map.set(id, game)
+  }
   for (const g of (localCol || [])) {
-    if (!map.has(g.id)) {
-      map.set(g.id, g)
+    const id = String(g.id)
+    if (!map.has(id)) {
+      map.set(id, g)
       continue
     }
-    const existing = map.get(g.id)
-    map.set(g.id, {
+    const existing = map.get(id)
+    map.set(id, {
       ...existing,
       details: existing.details || g.details,
       averageweight: existing.averageweight || g.averageweight,
@@ -1240,7 +1271,85 @@ function AdminGameFiles({ localCollection, onBack }) {
   )
 }
 
-function AdminBggDetails({ localCollection, onBack }) {
+function AdminCollectionManager({ onBack, onDatabaseChange }) {
+  const [accounts, setAccounts] = useState([])
+  const [username, setUsername] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const reload = useCallback(async () => {
+    try {
+      setAccounts(await db.select('game_collection', { order: 'username.asc' }))
+    } catch (loadError) {
+      setError(loadError.message)
+    }
+  }, [])
+
+  useEffect(() => { reload() }, [reload])
+
+  const handleAdd = async () => {
+    const accountName = username.trim()
+    if (!accountName || accounts.some(account => account.username.toLowerCase() === accountName.toLowerCase())) return
+    setBusy(true)
+    setError('')
+    try {
+      const games = await fetchCollection(accountName)
+      await adminCollectionRequest('upsert', { username: accountName, games })
+      setUsername('')
+      await reload()
+      await onDatabaseChange?.()
+    } catch (addError) {
+      setError(addError.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleRemove = async account => {
+    if (!confirm(`Remove ${account.username} from the shared collection?`)) return
+    setBusy(true)
+    setError('')
+    try {
+      await adminCollectionRequest('remove', { username: account.username })
+      await reload()
+      await onDatabaseChange?.()
+    } catch (removeError) {
+      setError(removeError.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <button onClick={onBack} style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>Shared BGG accounts</h2>
+      </div>
+      <Card>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={username} onChange={event => setUsername(event.target.value)}
+            onKeyDown={event => event.key === 'Enter' && handleAdd()} placeholder="BGG username"
+            disabled={busy} style={{ flex: 1, minWidth: 0, background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', color: 'var(--text)', fontSize: 13 }} />
+          <Btn accent onClick={handleAdd} disabled={busy || !username.trim()}>{busy ? 'Loading…' : 'Add account'}</Btn>
+        </div>
+        {error && <p style={{ color: 'var(--red)', fontSize: 12, marginTop: 10 }}>{error}</p>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+          {accounts.map(account => (
+            <div key={account.username} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 12px', background: 'var(--bg3)', borderRadius: 8 }}>
+              <span style={{ flex: 1, color: 'var(--text)', fontSize: 13 }}>{account.username}</span>
+              <span style={{ color: 'var(--text3)', fontSize: 11 }}>{account.games?.length || 0} games</span>
+              <Btn small danger onClick={() => handleRemove(account)} disabled={busy}>Remove</Btn>
+            </div>
+          ))}
+          {!accounts.length && <p style={{ color: 'var(--text3)', fontSize: 13 }}>No shared accounts.</p>}
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState({ completed: 0, total: 0 })
@@ -1250,48 +1359,40 @@ function AdminBggDetails({ localCollection, onBack }) {
     setLogs(current => [...current, `${new Date().toLocaleTimeString()} ${message}`].slice(-80))
   }
 
-  const handleExport = async () => {
+  const handleImportLegacy = async () => {
+    setBusy(true)
+    setStatus('Importing the legacy collection and game details…')
+    try {
+      await importLegacyJsonToDatabase()
+      await onDatabaseChange?.()
+      setStatus('Legacy collection and game details imported into Supabase.')
+    } catch (error) {
+      setStatus(`Import failed: ${error.message || error}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleSyncLibrary = async () => {
     const games = localCollection || []
-    const requestedCount = new Set(games.map(game => String(game.id)).filter(Boolean)).size
-    if (games.length === 0) {
+    const ids = Array.from(new Set(games.map(game => String(game.id)).filter(Boolean)))
+    if (!ids.length) {
       setStatus('There are no games in the current collection.')
       return
     }
-
     setBusy(true)
-    setProgress({ completed: 0, total: requestedCount })
+    setProgress({ completed: 0, total: ids.length })
     setLogs([])
-    setStatus(`Loading details for ${games.length} games…`)
-    addLog(`Starting export for ${games.length} games.`)
     try {
-      const details = await fetchGameDetails(games.map(game => game.id), update => {
+      const details = await updateGameLibrary(ids, update => {
         setProgress({ completed: update.completed, total: update.total })
         setStatus(update.message)
         addLog(update.message)
       })
-      const exportedAt = new Date().toISOString()
-      const payload = {
-        version: 1,
-        exportedAt: exportedAt,
-        source: 'BoardGameGeek XML API v2',
-        games: details.map(detail => ({
-          ...detail,
-          collectionName: games.find(game => game.id === detail.id)?.name || detail.name,
-        })),
-      }
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `bgg-game-details-${exportedAt.slice(0, 10)}.json`
-      link.click()
-      URL.revokeObjectURL(url)
-      setStatus(`Downloaded details for ${details.length} of ${games.length} games.`)
-      setProgress({ completed: requestedCount, total: requestedCount })
-      addLog(`Download complete: ${details.length} of ${games.length} games.`)
+      await onDatabaseChange?.()
+      setStatus(`Saved details for ${details.length} games to game_library.`)
     } catch (error) {
-      setStatus(`Export failed: ${error.message || error}`)
-      addLog(`Export failed: ${error.message || error}`)
+      setStatus(`Library update failed: ${error.message || error}`)
     } finally {
       setBusy(false)
     }
@@ -1302,19 +1403,20 @@ function AdminBggDetails({ localCollection, onBack }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <button onClick={onBack} style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
         <div style={{ fontSize: 24 }}>📊</div>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>BGG Game Details</h2>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>Game library</h2>
       </div>
       <Card>
         <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 8 }}>
-          Export detailed BGG data for the {localCollection?.length || 0} games currently in the collection.
+          Maintain detailed BGG data for the {localCollection?.length || 0} games currently in the collection.
         </p>
         <p style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 16 }}>
-          The export includes ratings, images, descriptions, player counts, and BGG poll results for best, recommended, and not recommended player counts.
+          Import the bundled JSON once to seed Supabase, or refresh game details from BGG into game_library.
         </p>
-        <Btn onClick={handleExport} accent disabled={busy || !localCollection?.length}>
-          {busy ? 'Fetching BGG details…' : 'Download JSON'}
-        </Btn>
-        {status && <p style={{ fontSize: 12, color: status.startsWith('Export failed') ? 'var(--red)' : 'var(--text3)', marginTop: 14 }}>{status}</p>}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Btn onClick={handleImportLegacy} disabled={busy}>Import bundled JSON into database</Btn>
+          <Btn onClick={handleSyncLibrary} accent disabled={busy || !localCollection?.length}>Refresh game details</Btn>
+        </div>
+        {status && <p style={{ fontSize: 12, color: status.includes('failed') ? 'var(--red)' : 'var(--text3)', marginTop: 14 }}>{status}</p>}
         {progress.total > 0 && (
           <div style={{ marginTop: 12 }}>
             <div
@@ -1342,9 +1444,9 @@ function AdminBggDetails({ localCollection, onBack }) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function AdminPage({ localCollection, onAuthChange }) {
-  const [authed, setAuthed] = useState(sessionStorage.getItem('admin_auth') === '1')
-  const [view, setView] = useState('events')  // events | files | bggDetails
+export default function AdminPage({ localCollection, onAuthChange, onDatabaseChange }) {
+  const [authed, setAuthed] = useState(sessionStorage.getItem('admin_auth') === '1' && Boolean(sessionStorage.getItem('admin_password')))
+  const [view, setView] = useState('events')  // events | collection | files | bggDetails
   const [currentEvent, setCurrentEvent] = useState(null)
   const [keepAliveStatus, setKeepAliveStatus] = useState('')
   const [keepAliveBusy, setKeepAliveBusy] = useState(false)
@@ -1356,6 +1458,7 @@ export default function AdminPage({ localCollection, onAuthChange }) {
 
   const handleLogout = () => {
     sessionStorage.removeItem('admin_auth')
+    sessionStorage.removeItem('admin_password')
     setAuthed(false)
     onAuthChange?.(false)
   }
@@ -1423,8 +1526,12 @@ export default function AdminPage({ localCollection, onAuthChange }) {
     return <AdminGameFiles localCollection={localCollection} onBack={() => setView('events')} />
   }
 
+  if (view === 'collection') {
+    return <AdminCollectionManager onBack={() => setView('events')} onDatabaseChange={onDatabaseChange} />
+  }
+
   if (view === 'bggDetails') {
-    return <AdminBggDetails localCollection={localCollection} onBack={() => setView('events')} />
+    return <AdminBggDetails localCollection={localCollection} onBack={() => setView('events')} onDatabaseChange={onDatabaseChange} />
   }
 
   return (
@@ -1449,6 +1556,18 @@ export default function AdminPage({ localCollection, onAuthChange }) {
               Events
             </button>
             <button
+              onClick={() => setView('collection')}
+              style={{
+                padding: '6px 12px', borderRadius: 6, fontSize: 13,
+                border: `1px solid ${view === 'collection' ? 'var(--accent)' : 'var(--border)'}`,
+                background: view === 'collection' ? 'var(--accent-bg)' : 'transparent',
+                color: view === 'collection' ? 'var(--accent)' : 'var(--text3)',
+                cursor: 'pointer',
+              }}
+            >
+              Collection accounts
+            </button>
+            <button
               onClick={() => setView('files')}
               style={{
                 padding: '6px 12px', borderRadius: 6, fontSize: 13,
@@ -1470,7 +1589,7 @@ export default function AdminPage({ localCollection, onAuthChange }) {
                 cursor: 'pointer',
               }}
             >
-              BGG Details
+              Game Library
             </button>
             <button
               onClick={handleKeepAlive}
