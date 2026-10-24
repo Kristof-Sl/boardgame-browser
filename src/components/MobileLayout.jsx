@@ -207,19 +207,11 @@ export default function MobileLayout({
               {filteredGames.length}/{allGames.length}
             </span>
           )}
-          <button
-            onClick={() => importRef.current?.click()}
-            title="Import"
-            style={{
-              padding: '8px 12px', borderRadius: 6, fontSize: 13, fontWeight: 500,
-              border: '1px solid var(--border)',
-              background: 'transparent',
-              color: 'var(--text2)',
-              cursor: 'pointer', transition: 'all 140ms',
-            }}
-          >
-            ↑
-          </button>
+          <a href="/meeplemap.html" title="Open MeepleMap" style={{
+            padding: '8px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+            border: '1px solid var(--green)', background: 'var(--green-bg)',
+            color: 'var(--green)', textDecoration: 'none', whiteSpace: 'nowrap', letterSpacing: '0.04em',
+          }}>MEEPLEMAP</a>
           <button
             onClick={() => setTab('settings')}
             aria-label="Open settings"
@@ -277,7 +269,7 @@ export default function MobileLayout({
 
         {tab === 'events' && (
           <div style={{ padding: '16px' }}>
-            <EventPlanner collection={sharedGames} />
+            <EventPlanner collection={sharedGames} detailsMode={false} />
           </div>
         )}
 

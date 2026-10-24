@@ -137,26 +137,6 @@ export default function App() {
     if (defaultLoaded) saveToStorage(accounts, collections)
   }, [accounts, collections, defaultLoaded])
 
-  // Initialize accounts filter with all available accounts when accounts are added
-  // Only set on initial load (when no accounts are selected yet)
-  const prevAccountsRef = useRef(null)
-  useEffect(() => {
-    const activeAccounts = accounts.filter(a => !a.loading && !a.error)
-    const accountNames = activeAccounts.map(a => a.username).sort()
-    
-    // Track if we've initialized already
-    if (accountNames.length > 0 && prevAccountsRef.current === null) {
-      prevAccountsRef.current = accountNames
-      setFilters(prev => {
-        // Only initialize if filter is still empty
-        if (!prev.accounts || prev.accounts.length === 0) {
-          return { ...prev, accounts: accountNames }
-        }
-        return prev
-      })
-    }
-  }, [accounts])
-
   const showToast = (message, type = 'ok') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
@@ -494,12 +474,14 @@ export default function App() {
             </span>
           )}
 
-          {/* Import */}
-          <HeaderBtn onClick={() => importRef.current?.click()} title="Import a previously exported collection JSON">
-            ↑ Import
-          </HeaderBtn>
           <input ref={importRef} type="file" accept=".json,application/json"
             onChange={handleImportFile} style={{ display: 'none' }} />
+
+          <a href="/meeplemap.html" title="Open MeepleMap" style={{
+            display: 'inline-flex', alignItems: 'center', padding: '5px 10px', borderRadius: 6,
+            border: '1px solid var(--green)', background: 'var(--green-bg)', color: 'var(--green)',
+            textDecoration: 'none', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap',
+          }}>MEEPLEMAP</a>
 
           {/* Export */}
           {allGames.length > 0 && (
@@ -555,7 +537,7 @@ export default function App() {
         {/* Events tab */}
         {tab === 'events' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
-            <EventPlanner collection={sharedGames} />
+            <EventPlanner collection={sharedGames} detailsMode={detailsMode} />
           </div>
         )}
 
