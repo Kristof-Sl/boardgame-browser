@@ -252,6 +252,8 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
   const [busy, setBusy] = useState(false)
   const [scheduleEditor, setScheduleEditor] = useState(null)
   const [scheduleMessage, setScheduleMessage] = useState('')
+  const [scheduleVersionsOpen, setScheduleVersionsOpen] = useState(true)
+  const [scheduleParamsOpen, setScheduleParamsOpen] = useState(true)
   const scheduleImportRef = React.useRef()
 
   // For adding games (phase preferences)
@@ -306,6 +308,35 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
       await reload()
     } catch (e) { alert(e.message) }
     finally { setBusy(false) }
+  }
+
+  const handleSetDefaultSchedule = async schedule => {
+    if (!confirm(`Set "${schedule.label}" as the default schedule for this event?`)) return
+    setBusy(true)
+    setScheduleMessage('')
+    try {
+      await adminCollectionRequest('set-schedule-default', { eventId: event.id, scheduleId: schedule.id })
+      await reload()
+    } catch (error) {
+      setScheduleMessage(`Could not set default schedule: ${error.message || error}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleDeleteSchedule = async schedule => {
+    const defaultNote = schedule.is_default ? ' The newest remaining version will become the default.' : ''
+    if (!confirm(`Delete "${schedule.label}"? This cannot be undone.${defaultNote}`)) return
+    setBusy(true)
+    setScheduleMessage('')
+    try {
+      await adminCollectionRequest('delete-schedule', { eventId: event.id, scheduleId: schedule.id })
+      await reload()
+    } catch (error) {
+      setScheduleMessage(`Could not delete schedule: ${error.message || error}`)
+    } finally {
+      setBusy(false)
+    }
   }
 
   // Close voting: auto-select games with ≥1 want vote
@@ -637,6 +668,37 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
           {scheduleMessage && <p style={{ fontSize: 12, color: scheduleMessage.includes('failed') || scheduleMessage.includes('Could not') ? 'var(--red)' : 'var(--green)', marginTop: 8 }}>{scheduleMessage}</p>}
         </Card>
 
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: scheduleVersionsOpen ? 12 : 0 }}>
+            <p style={{ flex: 1, fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Schedule versions ({eventSchedules.length})
+            </p>
+            <button onClick={() => setScheduleVersionsOpen(open => !open)} aria-expanded={scheduleVersionsOpen}
+              style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: 12, cursor: 'pointer' }}>
+              {scheduleVersionsOpen ? 'Collapse' : 'Expand'}
+            </button>
+          </div>
+          {scheduleVersionsOpen && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {eventSchedules.map(schedule => (
+                <div key={schedule.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--bg3)', borderRadius: 8, padding: '9px 12px' }}>
+                  <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                    <p style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>{schedule.label}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>
+                      Version {schedule.version} · {schedule.schedule?.length || 0} slots
+                      {schedule.created_at ? ` · ${new Date(schedule.created_at).toLocaleString()}` : ''}
+                    </p>
+                  </div>
+                  {schedule.is_default && <span style={{ color: 'var(--green)', fontSize: 11, fontWeight: 500 }}>Default</span>}
+                  {!schedule.is_default && <Btn small onClick={() => handleSetDefaultSchedule(schedule)} disabled={busy}>Set default</Btn>}
+                  <Btn small danger onClick={() => handleDeleteSchedule(schedule)} disabled={busy}>Delete</Btn>
+                </div>
+              ))}
+              {eventSchedules.length === 0 && <p style={{ color: 'var(--text3)', fontSize: 13 }}>No schedule versions yet.</p>}
+            </div>
+          )}
+        </Card>
+
         {defaultSchedule?.schedule?.length > 0 && (
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -672,8 +734,14 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
         {/* Schedule params (visible in preferences + scheduled) */}
         {(event.status === 'preferences' || event.status === 'scheduled') && (
           <Card>
-            <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>Schedule parameters</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: scheduleParamsOpen ? 14 : 0 }}>
+              <p style={{ flex: 1, fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Schedule parameters</p>
+              <button onClick={() => setScheduleParamsOpen(open => !open)} aria-expanded={scheduleParamsOpen}
+                style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: 12, cursor: 'pointer' }}>
+                {scheduleParamsOpen ? 'Collapse' : 'Expand'}
+              </button>
+            </div>
+            {scheduleParamsOpen && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 8 }}>
               {[
                 ['hoursPerPart', 'Hours per time block', 0.5, 1, 8],
                 ['durationMultiplier', 'Duration multiplier (×BGG)', 0.1, 1, 4],
@@ -710,7 +778,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
                   />
                 </div>
               ))}
-            </div>
+            </div>}
           </Card>
         )}
 
@@ -792,11 +860,11 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
         {(event.status === 'preferences' || event.status === 'scheduled' || event.status === 'closed') && (
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: selectedGamesOpen ? 14 : 0 }}>
-              <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <p style={{ flex: 1, fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Selected games ({eventGames.length})
               </p>
               {event.status === 'preferences' && (
-                <Btn small accent onClick={() => setShowGamePicker(v => !v)}>
+                <Btn small accent onClick={() => { setSelectedGamesOpen(true); setShowGamePicker(v => !v) }}>
                   {showGamePicker ? '✕ Close' : '+ Add game'}
                 </Btn>
               )}

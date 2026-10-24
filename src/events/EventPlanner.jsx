@@ -1732,8 +1732,6 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {scheduleImportControl}
-        {importMessage && <p style={{ fontSize: 12, color: importMessage.startsWith('Import failed') ? 'var(--red)' : 'var(--green)' }}>{importMessage}</p>}
           <button onClick={() => setShowBringList(false)} style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>
             ← Back to schedule
           </button>
@@ -1777,17 +1775,21 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        {schedulePicker}
-        {scheduleImportControl}
-        <Pill label="All games" active={!myGamesOnly} onClick={() => setMyGamesOnly(false)} />
-        <Pill label="My games only" active={myGamesOnly} onClick={() => setMyGamesOnly(true)} />
-        <span style={{ marginLeft: 'auto' }}>
-          <Btn small onClick={handleDownloadPdf} disabled={pdfBusy}>
-            {pdfBusy ? 'Preparing PDF...' : '⬇ Download schedule PDF'}
-          </Btn>
-          <Btn small onClick={() => setShowBringList(true)} style={{ marginLeft: 8 }}>🎒 What to bring</Btn>
-        </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {schedulePicker}
+          {scheduleImportControl}
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Pill label="All games" active={!myGamesOnly} onClick={() => setMyGamesOnly(false)} />
+          <Pill label="My games only" active={myGamesOnly} onClick={() => setMyGamesOnly(true)} />
+          <span style={{ marginLeft: 'auto' }}>
+            <Btn small onClick={handleDownloadPdf} disabled={pdfBusy}>
+              {pdfBusy ? 'Preparing PDF...' : '⬇ Download schedule PDF'}
+            </Btn>
+            <Btn small onClick={() => setShowBringList(true)} style={{ marginLeft: 8 }}>🎒 What to bring</Btn>
+          </span>
+        </div>
       </div>
       {importMessage && <p style={{ fontSize: 12, color: importMessage.startsWith('Import failed') ? 'var(--red)' : 'var(--green)' }}>{importMessage}</p>}
 

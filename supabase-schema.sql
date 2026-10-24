@@ -83,6 +83,57 @@ $$;
 
 grant execute on function create_event_schedule(text, jsonb, jsonb, text, boolean) to anon, authenticated;
 
+create or replace function admin_set_event_schedule_default(p_event_id text, p_schedule_id uuid)
+returns void
+language plpgsql
+as $$
+begin
+  perform 1 from events where id = p_event_id for update;
+  if not found then raise exception 'Event % was not found', p_event_id; end if;
+
+  perform 1 from event_schedules where id = p_schedule_id and event_id = p_event_id;
+  if not found then raise exception 'Schedule % was not found for event %', p_schedule_id, p_event_id; end if;
+
+  update event_schedules set is_default = false
+  where event_id = p_event_id and is_default;
+  update event_schedules set is_default = true
+  where id = p_schedule_id and event_id = p_event_id;
+end;
+$$;
+
+create or replace function admin_delete_event_schedule(p_event_id text, p_schedule_id uuid)
+returns void
+language plpgsql
+as $$
+declare
+  deleted_was_default boolean;
+  replacement_id uuid;
+begin
+  perform 1 from events where id = p_event_id for update;
+  if not found then raise exception 'Event % was not found', p_event_id; end if;
+
+  select is_default into deleted_was_default
+  from event_schedules
+  where id = p_schedule_id and event_id = p_event_id
+  for update;
+  if not found then raise exception 'Schedule % was not found for event %', p_schedule_id, p_event_id; end if;
+
+  delete from event_schedules where id = p_schedule_id and event_id = p_event_id;
+  if deleted_was_default then
+    select id into replacement_id from event_schedules
+    where event_id = p_event_id order by version desc limit 1;
+    if replacement_id is not null then
+      update event_schedules set is_default = true where id = replacement_id;
+    end if;
+  end if;
+end;
+$$;
+
+revoke all on function admin_set_event_schedule_default(text, uuid) from public, anon, authenticated;
+revoke all on function admin_delete_event_schedule(text, uuid) from public, anon, authenticated;
+grant execute on function admin_set_event_schedule_default(text, uuid) to service_role;
+grant execute on function admin_delete_event_schedule(text, uuid) to service_role;
+
 -- Participants
 create table if not exists participants (
   id uuid primary key default gen_random_uuid(),
