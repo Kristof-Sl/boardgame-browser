@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { db } from './supabase'
 import { fetchCollection } from '../bggApi'
 import { importLegacyJsonToDatabase, loadEventCollection, loadEventGames, updateGameLibrary } from '../databaseCollections'
-import { compactSchedule, expandSchedule } from './eventData'
+import { compactSchedule, createScheduleExport, expandSchedule, validateImportedSchedule } from './eventData'
 import { generateSchedule, scheduleStats, validateScheduleCoverage } from './scheduler'
 // ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
 import DevTestingWorkflow from './DevTestingWorkflow'
@@ -72,18 +72,6 @@ function scheduleTemplate(eventId = 'EVENT_ID') {
     description: 'Replace the example slot with one object per scheduled game session.',
     schedule: [{ date: 'YYYY-MM-DD', part: 'morning', gameId: 'GAME_ID', gameDuration: 90, players: ['PARTICIPANT_ID'] }],
   }
-}
-
-function validateImportedSchedule(payload, eventId) {
-  const schedule = Array.isArray(payload) ? payload : payload?.schedule
-  if (!Array.isArray(schedule)) throw new Error('The file must contain a schedule array.')
-  if (payload?.eventId && payload.eventId !== eventId) throw new Error(`This schedule belongs to event ${payload.eventId}, not ${eventId}.`)
-  schedule.forEach((slot, index) => {
-    if (!slot || !slot.date || !slot.part || !slot.gameId) throw new Error(`Schedule slot ${index + 1} needs date, part, and gameId.`)
-    if (!['morning', 'afternoon', 'evening'].includes(slot.part)) throw new Error(`Schedule slot ${index + 1} has an invalid part.`)
-    if (!Array.isArray(slot.players)) throw new Error(`Schedule slot ${index + 1} needs a players array.`)
-  })
-  return compactSchedule(schedule)
 }
 
 const adminInputStyle = {
@@ -490,6 +478,11 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     schedule: event.schedule || [], scheduleParams: event.schedule_params || {},
   })
 
+  const handleExportScheduleData = () => downloadJson(
+    `event-${event.id}-schedule.json`,
+    createScheduleExport(event.id, event.schedule || [])
+  )
+
   const handleExportScheduleTemplate = () => downloadJson(`event-${event.id}-schedule-template.json`, scheduleTemplate(event.id))
 
   const handleImportSchedule = async eventTarget => {
@@ -498,7 +491,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     if (!file) return
     try {
       const payload = JSON.parse(await file.text())
-      const schedule = validateImportedSchedule(payload, event.id)
+      const schedule = validateImportedSchedule(payload, event.id, eventGames, participants)
       setBusy(true)
       await db.update('events', { status: 'scheduled', schedule, schedule_params: { ...(event.schedule_params || {}), importedAt: new Date().toISOString(), importSource: file.name } }, `id=eq.${event.id}`)
       await refreshEvent()
@@ -513,7 +506,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
   const addScheduleSlot = () => setScheduleEditor(slots => [...slots, { date: event.start_date || '', part: 'morning', gameId: eventGames[0]?.game_id || '', gameName: eventGames[0]?.game_name || '', gameDuration: 90, players: [], thumbnail: eventGames[0]?.game_data?.thumbnail || null }])
   const saveScheduleEditor = async () => {
     try {
-      const schedule = validateImportedSchedule({ schedule: scheduleEditor }, event.id)
+      const schedule = validateImportedSchedule({ schedule: scheduleEditor }, event.id, eventGames, participants)
       setBusy(true)
       await db.update('events', { status: 'scheduled', schedule: compactSchedule(scheduleEditor), schedule_params: { ...(event.schedule_params || {}), manuallyEditedAt: new Date().toISOString() } }, `id=eq.${event.id}`)
       await refreshEvent()
@@ -569,6 +562,9 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
                 <Btn accent onClick={handleGenerate} disabled={busy}>
                   ✨ Generate schedule
                 </Btn>
+                <Btn onClick={() => setStatus('scheduled')} disabled={busy}>
+                  Mark scheduled without generating
+                </Btn>
                 <Btn onClick={() => setStatus('voting')} disabled={busy}>
                   ← Reopen voting
                 </Btn>
@@ -597,6 +593,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
           <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Event data</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Btn accent onClick={handleExportEventData}>Download complete event data</Btn>
+            <Btn onClick={handleExportScheduleData}>Download schedule data</Btn>
             <Btn onClick={handleExportScheduleTemplate}>Download schedule template</Btn>
             <Btn onClick={() => scheduleImportRef.current?.click()} disabled={busy}>Import schedule JSON</Btn>
             <input ref={scheduleImportRef} type="file" accept="application/json,.json" onChange={e => handleImportSchedule(e.target)} style={{ display: 'none' }} />
