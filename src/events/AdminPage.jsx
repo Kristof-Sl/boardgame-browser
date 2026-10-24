@@ -4,6 +4,8 @@ import { fetchCollection } from '../bggApi'
 import { importLegacyJsonToDatabase, loadEventCollection, loadEventGames, updateGameLibrary } from '../databaseCollections'
 import { createScheduleExport, expandSchedule, validateImportedSchedule } from './eventData'
 import { createEventSchedule } from './eventScheduleApi'
+import MeepleMapImportDialog from './MeepleMapImportDialog'
+import { getMeepleMapPlayerNames } from './meepleMapSchedule'
 import { generateSchedule, scheduleStats, validateScheduleCoverage } from './scheduler'
 // ⚠️ DEV ONLY — remove this import together with DevTestingWorkflow.jsx when no longer needed
 import DevTestingWorkflow from './DevTestingWorkflow'
@@ -252,9 +254,11 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
   const [busy, setBusy] = useState(false)
   const [scheduleEditor, setScheduleEditor] = useState(null)
   const [scheduleMessage, setScheduleMessage] = useState('')
+  const [meepleMapPayload, setMeepleMapPayload] = useState(null)
   const [scheduleVersionsOpen, setScheduleVersionsOpen] = useState(true)
   const [scheduleParamsOpen, setScheduleParamsOpen] = useState(true)
   const scheduleImportRef = React.useRef()
+  const meepleMapImportRef = React.useRef()
 
   // For adding games (phase preferences)
   const [gameSearch, setGameSearch] = useState('')
@@ -557,6 +561,41 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     finally { setBusy(false) }
   }
 
+  const handleMeepleMapFile = async eventTarget => {
+    const file = eventTarget.files?.[0]
+    eventTarget.value = ''
+    if (!file) return
+    try {
+      const payload = JSON.parse(await file.text())
+      getMeepleMapPlayerNames(payload)
+      setScheduleMessage('')
+      setMeepleMapPayload(payload)
+    } catch (error) {
+      setScheduleMessage(`MeepleMap import failed: ${error.message || error}`)
+    }
+  }
+
+  const handleMeepleMapImport = async (schedule, description) => {
+    setBusy(true)
+    try {
+      await createEventSchedule(event.id, schedule, {
+        importedAt: new Date().toISOString(),
+        importSource: 'MeepleMap JSON',
+        importedBy: 'admin',
+      }, description)
+      await db.update('events', { status: 'scheduled' }, `id=eq.${event.id}`)
+      await refreshEvent()
+      await reload()
+      setMeepleMapPayload(null)
+      setScheduleMessage(`Imported ${schedule.length} slots as default schedule "${description}".`)
+    } catch (error) {
+      setScheduleMessage(`MeepleMap import failed: ${error.message || error}`)
+      throw error
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const beginScheduleEditor = () => setScheduleEditor(JSON.parse(JSON.stringify(hydratedSchedule)))
   const updateScheduleSlot = (index, key, value) => setScheduleEditor(slots => slots.map((slot, i) => i === index ? { ...slot, [key]: value } : slot))
   const removeScheduleSlot = index => setScheduleEditor(slots => slots.filter((_, i) => i !== index))
@@ -660,7 +699,9 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
             <Btn onClick={handleExportScheduleData}>Download schedule data</Btn>
             <Btn onClick={handleExportScheduleTemplate}>Download schedule template</Btn>
             <Btn onClick={() => scheduleImportRef.current?.click()} disabled={busy}>Import schedule JSON</Btn>
+            <Btn onClick={() => meepleMapImportRef.current?.click()} disabled={busy}>Import MeepleMap JSON</Btn>
             <input ref={scheduleImportRef} type="file" accept="application/json,.json" onChange={e => handleImportSchedule(e.target)} style={{ display: 'none' }} />
+            <input ref={meepleMapImportRef} type="file" accept="application/json,.json" onChange={e => handleMeepleMapFile(e.target)} style={{ display: 'none' }} />
           </div>
           <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 9 }}>
             Complete data includes attendance, votes, preferences, selected games, detailed BGG data, and the current schedule.
@@ -1039,6 +1080,16 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
           </Card>
         )}
       </div>
+
+      {meepleMapPayload && (
+        <MeepleMapImportDialog
+          payload={meepleMapPayload}
+          participants={participants}
+          eventGames={eventGames}
+          onCancel={() => setMeepleMapPayload(null)}
+          onImport={handleMeepleMapImport}
+        />
+      )}
 
       {/* ⚠️ DEV ONLY — remove the line below together with DevTestingWorkflow.jsx */}
       <DevTestingWorkflow event={event} participants={participants} eventGames={eventGames} onRefresh={reload} />

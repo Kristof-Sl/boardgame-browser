@@ -5,6 +5,8 @@ import { GameDetailsPanel } from '../components/GameCard'
 import { loadEventCollection, loadEventGames } from '../databaseCollections'
 import { expandSchedule, validateImportedSchedule } from './eventData'
 import { createEventSchedule } from './eventScheduleApi'
+import MeepleMapImportDialog from './MeepleMapImportDialog'
+import { getMeepleMapPlayerNames } from './meepleMapSchedule'
 
 const PDF_PARTS = ['morning', 'afternoon', 'evening']
 const PDF_PART_COLORS = {
@@ -1608,6 +1610,8 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
   const [importBusy, setImportBusy] = useState(false)
   const [importMessage, setImportMessage] = useState('')
   const scheduleImportRef = React.useRef(null)
+  const meepleMapImportRef = React.useRef(null)
+  const [meepleMapPayload, setMeepleMapPayload] = useState(null)
 
   const schedulePicker = (eventSchedules.length > 1 || (eventSchedules.length === 1 && !eventSchedules[0].is_default)) && (
     <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text3)', fontSize: 12 }}>
@@ -1622,15 +1626,6 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
       </select>
     </label>
   )
-
-  if (!schedule.length) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {schedulePicker}
-        <Card><p style={{ color: 'var(--text3)' }}>{eventSchedules.length && !selectedSchedule ? 'No default schedule is available. Select a version above to view it.' : eventSchedules.length ? 'This schedule version has no slots.' : 'No schedule generated yet.'}</p></Card>
-      </div>
-    )
-  }
 
   const visibleSchedule = myGamesOnly
     ? schedule.filter(slot => slot.players && slot.players.some(p => p.id === me.id))
@@ -1718,12 +1713,57 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
     }
   }
 
+  const handleMeepleMapFile = async eventTarget => {
+    const file = eventTarget.files?.[0]
+    eventTarget.value = ''
+    if (!file) return
+    try {
+      const payload = JSON.parse(await file.text())
+      getMeepleMapPlayerNames(payload)
+      setImportMessage('')
+      setMeepleMapPayload(payload)
+    } catch (error) {
+      setImportMessage(`MeepleMap import failed: ${error.message || error}`)
+    }
+  }
+
+  const handleMeepleMapImport = async (importedSchedule, description) => {
+    setImportBusy(true)
+    setImportMessage('')
+    try {
+      const created = await createEventSchedule(event.id, importedSchedule, {
+        importedAt: new Date().toISOString(),
+        importSource: 'MeepleMap JSON',
+        importedBy: me.id,
+      }, `${me.name}: ${description}`, false)
+      await reload()
+      if (created?.id) onSelectSchedule(created.id)
+      setMeepleMapPayload(null)
+      setImportMessage(`Imported ${importedSchedule.length} slots as your schedule version. It did not change the default.`)
+    } catch (error) {
+      setImportMessage(`MeepleMap import failed: ${error.message || error}`)
+      throw error
+    } finally {
+      setImportBusy(false)
+    }
+  }
+
   const scheduleImportControl = (
     <>
       <input ref={scheduleImportRef} type="file" accept="application/json,.json"
         onChange={event => handleImportSchedule(event.target)} style={{ display: 'none' }} />
       <Btn small onClick={() => scheduleImportRef.current?.click()} disabled={importBusy}>
         {importBusy ? 'Importing…' : 'Import schedule JSON'}
+      </Btn>
+    </>
+  )
+
+  const meepleMapImportControl = (
+    <>
+      <input ref={meepleMapImportRef} type="file" accept="application/json,.json"
+        onChange={event => handleMeepleMapFile(event.target)} style={{ display: 'none' }} />
+      <Btn small onClick={() => meepleMapImportRef.current?.click()} disabled={importBusy}>
+        {importBusy ? 'Importing…' : 'Import MeepleMap JSON'}
       </Btn>
     </>
   )
@@ -1779,6 +1819,7 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           {schedulePicker}
           {scheduleImportControl}
+          {meepleMapImportControl}
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <Pill label="All games" active={!myGamesOnly} onClick={() => setMyGamesOnly(false)} />
@@ -1792,6 +1833,11 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
         </div>
       </div>
       {importMessage && <p style={{ fontSize: 12, color: importMessage.startsWith('Import failed') ? 'var(--red)' : 'var(--green)' }}>{importMessage}</p>}
+      {meepleMapPayload && <MeepleMapImportDialog payload={meepleMapPayload} participants={participants} eventGames={eventGames} onCancel={() => setMeepleMapPayload(null)} onImport={handleMeepleMapImport} />}
+
+      {!schedule.length && (
+        <Card><p style={{ color: 'var(--text3)' }}>{eventSchedules.length && !selectedSchedule ? 'No default schedule is available. Select a version above to view it.' : eventSchedules.length ? 'This schedule version has no slots.' : 'No schedule generated yet.'}</p></Card>
+      )}
 
       {/* Stats */}
       {params.stats && (
@@ -1812,7 +1858,7 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
         <PreferencesOverview eventGames={eventGames} participants={participants} prefs={prefs} me={me} />
       )}
 
-      {Object.keys(grouped).length === 0 && (
+      {schedule.length > 0 && Object.keys(grouped).length === 0 && (
         <p style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)', fontSize: 14 }}>
           You are not participating in any scheduled games.
         </p>
