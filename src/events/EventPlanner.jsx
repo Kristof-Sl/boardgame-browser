@@ -3,7 +3,8 @@ import { db, isConfigured } from './supabase'
 import { generateSchedule, scheduleStats, getSlots } from './scheduler'
 import { GameDetailsPanel } from '../components/GameCard'
 import { loadEventCollection, loadEventGames } from '../databaseCollections'
-import { expandSchedule } from './eventData'
+import { expandSchedule, validateImportedSchedule } from './eventData'
+import { createEventSchedule } from './eventScheduleApi'
 
 const PDF_PARTS = ['morning', 'afternoon', 'evening']
 const PDF_PART_COLORS = {
@@ -843,6 +844,8 @@ function EventDashboard({ initialEvent, localCollection }) {
   const [participants, setParticipants] = useState([])
   const [votes, setVotes] = useState([])
   const [eventGames, setEventGames] = useState([])
+  const [eventSchedules, setEventSchedules] = useState([])
+  const [selectedScheduleId, setSelectedScheduleId] = useState(() => localStorage.getItem(`event-schedule-${initialEvent.id}`))
   const [prefs, setPrefs] = useState([])
   const [gameFiles, setGameFiles] = useState({})
   const [me, setMe] = useState(null)
@@ -851,15 +854,17 @@ function EventDashboard({ initialEvent, localCollection }) {
 
   const reload = useCallback(async () => {
     try {
-      const [p, v, eg, pr, gf, eventCollection] = await Promise.all([
+      const [p, v, eg, pr, gf, eventCollection, schedules] = await Promise.all([
         db.select('participants', { filter: `event_id=eq.${event.id}`, order: 'created_at.asc' }),
         db.select('game_votes', { filter: `event_id=eq.${event.id}` }),
         loadEventGames(event.id, localCollection),
         db.select('game_preferences', { filter: `event_id=eq.${event.id}` }),
         db.select('game_files'),
         loadEventCollection(event.collection || [], localCollection),
+        db.select('event_schedules', { filter: `event_id=eq.${event.id}`, order: 'version.desc' }),
       ])
       setParticipants(p); setVotes(v); setEventGames(eg); setPrefs(pr)
+      setEventSchedules(schedules)
       setEvent(current => ({ ...current, collection: eventCollection }))
       const fileMap = {}
       gf.forEach(f => fileMap[f.game_id] = f.files)
@@ -869,6 +874,17 @@ function EventDashboard({ initialEvent, localCollection }) {
   }, [event.id, localCollection])
 
   useEffect(() => { reload() }, [reload])
+  useEffect(() => {
+    if (loading) return
+    if (eventSchedules.some(schedule => schedule.id === selectedScheduleId)) return
+    const preferred = eventSchedules.find(schedule => schedule.is_default)
+    setSelectedScheduleId(preferred?.id || null)
+  }, [eventSchedules, loading, selectedScheduleId])
+  useEffect(() => {
+    const key = `event-schedule-${event.id}`
+    if (selectedScheduleId) localStorage.setItem(key, selectedScheduleId)
+    else localStorage.removeItem(key)
+  }, [event.id, selectedScheduleId])
   useEffect(() => {
     const interval = setInterval(reload, 8000)
     return () => clearInterval(interval)
@@ -886,7 +902,10 @@ function EventDashboard({ initialEvent, localCollection }) {
   }
 
   const mergedCollection = mergeCollections(event.collection || [], localCollection)
-  const commonProps = { event, participants, me, votes, eventGames, prefs, gameFiles, reload, refreshEvent, mergedCollection }
+  const selectedSchedule = eventSchedules.find(schedule => schedule.id === selectedScheduleId)
+    || eventSchedules.find(schedule => schedule.is_default)
+    || null
+  const commonProps = { event, participants, me, votes, eventGames, prefs, gameFiles, reload, refreshEvent, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule: setSelectedScheduleId }
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
@@ -1579,16 +1598,38 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
-function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, mergedCollection }) {
-  const schedule = expandSchedule(event.schedule || [], eventGames, participants)
-  const params = event.schedule_params || {}
+function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule, reload }) {
+  const schedule = expandSchedule(selectedSchedule?.schedule || [], eventGames, participants)
+  const params = selectedSchedule?.schedule_params || {}
   const [myGamesOnly, setMyGamesOnly] = useState(false)
   const [showBringList, setShowBringList] = useState(false)
   const [selectedGame, setSelectedGame] = useState(null)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [importBusy, setImportBusy] = useState(false)
+  const [importMessage, setImportMessage] = useState('')
+  const scheduleImportRef = React.useRef(null)
+
+  const schedulePicker = (eventSchedules.length > 1 || (eventSchedules.length === 1 && !eventSchedules[0].is_default)) && (
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text3)', fontSize: 12 }}>
+      Schedule
+      <select value={selectedSchedule?.id || ''} onChange={event => onSelectSchedule(event.target.value)} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 8px', color: 'var(--text)', fontSize: 12 }}>
+        {!selectedSchedule && <option value="">Select schedule</option>}
+        {eventSchedules.map(version => (
+          <option key={version.id} value={version.id}>
+            {version.label} (v{version.version}){version.is_default ? ' · default' : ''}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
 
   if (!schedule.length) {
-    return <Card><p style={{ color: 'var(--text3)' }}>No schedule generated yet.</p></Card>
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {schedulePicker}
+        <Card><p style={{ color: 'var(--text3)' }}>{eventSchedules.length && !selectedSchedule ? 'No default schedule is available. Select a version above to view it.' : eventSchedules.length ? 'This schedule version has no slots.' : 'No schedule generated yet.'}</p></Card>
+      </div>
+    )
   }
 
   const visibleSchedule = myGamesOnly
@@ -1649,6 +1690,44 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
     }
   }
 
+  const handleImportSchedule = async eventTarget => {
+    const file = eventTarget.files?.[0]
+    eventTarget.value = ''
+    if (!file) return
+    try {
+      const payload = JSON.parse(await file.text())
+      const importedSchedule = validateImportedSchedule(payload, event.id, eventGames, participants)
+      const description = window.prompt('Enter a description for your schedule:', `Imported from ${file.name}`)
+      if (description === null) return
+      if (!description.trim()) throw new Error('A schedule description is required.')
+
+      setImportBusy(true)
+      setImportMessage('')
+      const created = await createEventSchedule(event.id, importedSchedule, {
+        importedAt: new Date().toISOString(),
+        importSource: file.name,
+        importedBy: me.id,
+      }, `${me.name}: ${description.trim()}`, false)
+      await reload()
+      if (created?.id) onSelectSchedule(created.id)
+      setImportMessage(`Imported ${importedSchedule.length} slots as a personal schedule version. It did not change the default.`)
+    } catch (error) {
+      setImportMessage(`Import failed: ${error.message || error}`)
+    } finally {
+      setImportBusy(false)
+    }
+  }
+
+  const scheduleImportControl = (
+    <>
+      <input ref={scheduleImportRef} type="file" accept="application/json,.json"
+        onChange={event => handleImportSchedule(event.target)} style={{ display: 'none' }} />
+      <Btn small onClick={() => scheduleImportRef.current?.click()} disabled={importBusy}>
+        {importBusy ? 'Importing…' : 'Import schedule JSON'}
+      </Btn>
+    </>
+  )
+
   if (showBringList) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1696,16 +1775,23 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        <Pill label="All games" active={!myGamesOnly} onClick={() => setMyGamesOnly(false)} />
-        <Pill label="My games only" active={myGamesOnly} onClick={() => setMyGamesOnly(true)} />
-        <span style={{ marginLeft: 'auto' }}>
-          <Btn small onClick={handleDownloadPdf} disabled={pdfBusy}>
-            {pdfBusy ? 'Preparing PDF...' : '⬇ Download schedule PDF'}
-          </Btn>
-          <Btn small onClick={() => setShowBringList(true)} style={{ marginLeft: 8 }}>🎒 What to bring</Btn>
-        </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {schedulePicker}
+          {scheduleImportControl}
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Pill label="All games" active={!myGamesOnly} onClick={() => setMyGamesOnly(false)} />
+          <Pill label="My games only" active={myGamesOnly} onClick={() => setMyGamesOnly(true)} />
+          <span style={{ marginLeft: 'auto' }}>
+            <Btn small onClick={handleDownloadPdf} disabled={pdfBusy}>
+              {pdfBusy ? 'Preparing PDF...' : '⬇ Download schedule PDF'}
+            </Btn>
+            <Btn small onClick={() => setShowBringList(true)} style={{ marginLeft: 8 }}>🎒 What to bring</Btn>
+          </span>
+        </div>
       </div>
+      {importMessage && <p style={{ fontSize: 12, color: importMessage.startsWith('Import failed') ? 'var(--red)' : 'var(--green)' }}>{importMessage}</p>}
 
       {/* Stats */}
       {params.stats && (

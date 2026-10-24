@@ -101,6 +101,16 @@ class SupabaseClient {
     return await res.json()
   }
 
+  async rpc(functionName, params) {
+    const res = await fetch(`${this.url}/rest/v1/rpc/${functionName}`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(params),
+    })
+    if (!res.ok) throw new Error(`Supabase RPC error: ${await res.text()}`)
+    return await res.json()
+  }
+
   // Real-time subscription via Supabase Realtime websocket
   subscribe(table, filter, callback) {
     const wsUrl = this.url.replace('https://', 'wss://').replace('http://', 'ws://')

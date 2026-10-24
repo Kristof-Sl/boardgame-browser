@@ -22,10 +22,117 @@ create table if not exists events (
   end_date date not null,
   status text not null default 'voting',  -- voting | preferences | scheduled | closed
   collection jsonb default '[]',          -- game IDs attached by organizer
-  schedule jsonb default '[]',            -- date/part/game ID/duration/participant IDs
-  schedule_params jsonb default '{}',     -- parameters used for scheduling
   created_at timestamptz default now()
 );
+
+-- Versioned schedules for each event; creating a version marks it as the default.
+create table if not exists event_schedules (
+  id uuid primary key default gen_random_uuid(),
+  event_id text not null references events(id) on delete cascade,
+  version integer not null,
+  label text not null,
+  schedule jsonb not null default '[]',
+  schedule_params jsonb not null default '{}',
+  is_default boolean not null default false,
+  created_at timestamptz default now(),
+  unique(event_id, version)
+);
+
+create unique index if not exists one_default_schedule_per_event
+  on event_schedules(event_id) where is_default;
+
+create or replace function create_event_schedule(
+  p_event_id text,
+  p_schedule jsonb,
+  p_schedule_params jsonb,
+  p_label text default null,
+  p_is_default boolean default true
+)
+returns setof event_schedules
+language plpgsql
+as $$
+declare
+  next_version integer;
+begin
+  perform 1 from events where id = p_event_id for update;
+  if not found then
+    raise exception 'Event % was not found', p_event_id;
+  end if;
+
+  if p_is_default then
+    update event_schedules set is_default = false
+    where event_id = p_event_id and is_default;
+  end if;
+
+  select coalesce(max(version), 0) + 1 into next_version
+  from event_schedules where event_id = p_event_id;
+
+  return query
+  insert into event_schedules (event_id, version, label, schedule, schedule_params, is_default)
+  values (
+    p_event_id,
+    next_version,
+    coalesce(nullif(p_label, ''), 'Schedule ' || next_version),
+    coalesce(p_schedule, '[]'::jsonb),
+    coalesce(p_schedule_params, '{}'::jsonb),
+    p_is_default
+  )
+  returning *;
+end;
+$$;
+
+grant execute on function create_event_schedule(text, jsonb, jsonb, text, boolean) to anon, authenticated;
+
+create or replace function admin_set_event_schedule_default(p_event_id text, p_schedule_id uuid)
+returns void
+language plpgsql
+as $$
+begin
+  perform 1 from events where id = p_event_id for update;
+  if not found then raise exception 'Event % was not found', p_event_id; end if;
+
+  perform 1 from event_schedules where id = p_schedule_id and event_id = p_event_id;
+  if not found then raise exception 'Schedule % was not found for event %', p_schedule_id, p_event_id; end if;
+
+  update event_schedules set is_default = false
+  where event_id = p_event_id and is_default;
+  update event_schedules set is_default = true
+  where id = p_schedule_id and event_id = p_event_id;
+end;
+$$;
+
+create or replace function admin_delete_event_schedule(p_event_id text, p_schedule_id uuid)
+returns void
+language plpgsql
+as $$
+declare
+  deleted_was_default boolean;
+  replacement_id uuid;
+begin
+  perform 1 from events where id = p_event_id for update;
+  if not found then raise exception 'Event % was not found', p_event_id; end if;
+
+  select is_default into deleted_was_default
+  from event_schedules
+  where id = p_schedule_id and event_id = p_event_id
+  for update;
+  if not found then raise exception 'Schedule % was not found for event %', p_schedule_id, p_event_id; end if;
+
+  delete from event_schedules where id = p_schedule_id and event_id = p_event_id;
+  if deleted_was_default then
+    select id into replacement_id from event_schedules
+    where event_id = p_event_id order by version desc limit 1;
+    if replacement_id is not null then
+      update event_schedules set is_default = true where id = replacement_id;
+    end if;
+  end if;
+end;
+$$;
+
+revoke all on function admin_set_event_schedule_default(text, uuid) from public, anon, authenticated;
+revoke all on function admin_delete_event_schedule(text, uuid) from public, anon, authenticated;
+grant execute on function admin_set_event_schedule_default(text, uuid) to service_role;
+grant execute on function admin_delete_event_schedule(text, uuid) to service_role;
 
 -- Participants
 create table if not exists participants (
@@ -104,6 +211,7 @@ alter publication supabase_realtime add table game_files;
 alter publication supabase_realtime add table play_logs;
 alter publication supabase_realtime add table game_library;
 alter publication supabase_realtime add table game_collection;
+alter publication supabase_realtime add table event_schedules;
 
 -- Allow public access (no auth required — event code acts as the key)
 alter table events enable row level security;
@@ -113,6 +221,7 @@ alter table game_preferences enable row level security;
 alter table event_games enable row level security;
 alter table game_library enable row level security;
 alter table game_collection enable row level security;
+alter table event_schedules enable row level security;
 
 create policy "public read events" on events for select using (true);
 create policy "public insert events" on events for insert with check (true);
@@ -145,6 +254,10 @@ create policy "public delete game_library" on game_library for delete using (tru
 
 create policy "public read game_collection" on game_collection for select using (true);
 create policy "public update game_collection" on game_collection for update using (true);
+
+create policy "public read event_schedules" on event_schedules for select using (true);
+create policy "public insert event_schedules" on event_schedules for insert with check (true);
+create policy "public update event_schedules" on event_schedules for update using (true);
 
 create policy "public read game_files" on game_files for select using (true);
 create policy "public insert game_files" on game_files for insert with check (true);

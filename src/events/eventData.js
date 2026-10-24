@@ -68,3 +68,4 @@ export function expandSchedule(schedule, games, participants) {
     }
   })
 }
+

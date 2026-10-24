@@ -10,7 +10,7 @@ function passwordMatches(candidate, configured) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed.' })
 
-  const { action, username, games, password } = req.body || {}
+  const { action, username, games, eventId, scheduleId, password } = req.body || {}
   if (!passwordMatches(password, process.env.ADMIN_PASSWORD)) {
     return res.status(401).json({ error: 'Admin authorization failed.' })
   }
@@ -48,6 +48,20 @@ export default async function handler(req, res) {
       const response = await fetch(`${supabaseUrl}/rest/v1/game_collection?username=eq.${encodeURIComponent(accountName)}`, {
         method: 'DELETE',
         headers,
+      })
+      if (!response.ok) return res.status(response.status).json({ error: await response.text() })
+      return res.status(200).json({ ok: true })
+    }
+
+    if (action === 'set-schedule-default' || action === 'delete-schedule') {
+      if (!eventId || !scheduleId) return res.status(400).json({ error: 'An event ID and schedule ID are required.' })
+      const functionName = action === 'set-schedule-default'
+        ? 'admin_set_event_schedule_default'
+        : 'admin_delete_event_schedule'
+      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${functionName}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ p_event_id: eventId, p_schedule_id: scheduleId }),
       })
       if (!response.ok) return res.status(response.status).json({ error: await response.text() })
       return res.status(200).json({ ok: true })

@@ -19,7 +19,7 @@ npm run dev
 
 ## Supabase Data Migration
 
-For a fresh Supabase project, run `supabase-schema.sql`. For an existing project, run `supabase-update.sql`; it creates `game_collection` and `game_library`, migrates legacy event data, and removes duplicated columns from `event_games`.
+For a fresh Supabase project, run `supabase-schema.sql`. For an existing project, run `supabase-update.sql`; it creates `game_collection`, `game_library`, and versioned `event_schedules`, migrates existing event schedule data, and removes the old schedule columns from `events` and duplicated columns from `event_games`.
 
 Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the app. Configure `ADMIN_PASSWORD` and `SUPABASE_SERVICE_ROLE_KEY` as server-only environment variables for protected admin account changes, both locally and in Vercel. Do not prefix either server-only variable with `VITE_`.
 
