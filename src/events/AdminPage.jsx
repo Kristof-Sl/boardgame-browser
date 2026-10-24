@@ -75,6 +75,16 @@ function scheduleTemplate(eventId = 'EVENT_ID') {
   }
 }
 
+function askScheduleDescription(defaultValue) {
+  const description = window.prompt('Enter a description for this schedule version:', defaultValue)
+  if (description === null) return null
+  if (!description.trim()) {
+    alert('A schedule description is required.')
+    return null
+  }
+  return description.trim()
+}
+
 const adminInputStyle = {
   width: '100%', background: 'var(--bg)', border: '1px solid var(--border)',
   borderRadius: 6, padding: '6px 8px', color: 'var(--text)', fontSize: 11,
@@ -247,6 +257,8 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
   // For adding games (phase preferences)
   const [gameSearch, setGameSearch] = useState('')
   const [showGamePicker, setShowGamePicker] = useState(false)
+  const [participantsOpen, setParticipantsOpen] = useState(true)
+  const [selectedGamesOpen, setSelectedGamesOpen] = useState(true)
 
   // Schedule params
   const [schedParams, setSchedParams] = useState({
@@ -373,7 +385,9 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
 
   // Generate schedule
   const handleGenerate = async () => {
-    if (!confirm('Generate schedule? The existing schedule (if any) will be replaced.')) return
+    const description = askScheduleDescription('Generated schedule')
+    if (description === null) return
+    if (!confirm('Generate a new schedule version and make it the default?')) return
     setBusy(true)
 
     // [DEBUG_LOG] Capture everything for the debug log
@@ -434,7 +448,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
         stats,
         warnings,
         log: schedParams.logSteps ? scheduleLog : [],
-      }, 'Generated')
+      }, description)
       await db.update('events', { status: 'scheduled' }, `id=eq.${event.id}`)
 
       // [DEBUG_LOG] Final success line then trigger download
@@ -496,12 +510,14 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
     try {
       const payload = JSON.parse(await file.text())
       const schedule = validateImportedSchedule(payload, event.id, eventGames, participants)
+      const description = askScheduleDescription(`Imported from ${file.name}`)
+      if (description === null) return
       setBusy(true)
       await createEventSchedule(event.id, schedule, {
         ...(defaultSchedule?.schedule_params || {}),
         importedAt: new Date().toISOString(),
         importSource: file.name,
-      }, `Imported: ${file.name}`)
+      }, description)
       await db.update('events', { status: 'scheduled' }, `id=eq.${event.id}`)
       await refreshEvent()
       await reload()
@@ -517,11 +533,13 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
   const saveScheduleEditor = async () => {
     try {
       const schedule = validateImportedSchedule({ schedule: scheduleEditor }, event.id, eventGames, participants)
+      const description = askScheduleDescription('Manual schedule edit')
+      if (description === null) return
       setBusy(true)
       await createEventSchedule(event.id, schedule, {
         ...(defaultSchedule?.schedule_params || {}),
         manuallyEditedAt: new Date().toISOString(),
-      }, 'Manual edit')
+      }, description)
       await db.update('events', { status: 'scheduled' }, `id=eq.${event.id}`)
       await refreshEvent()
       await reload()
@@ -698,10 +716,16 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
 
         {/* Participants & availability */}
         <Card>
-          <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-            Participants ({participants.length})
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: participantsOpen ? 12 : 0 }}>
+            <p style={{ flex: 1, fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Participants ({participants.length})
+            </p>
+            <button onClick={() => setParticipantsOpen(open => !open)} aria-expanded={participantsOpen}
+              style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: 12, cursor: 'pointer' }}>
+              {participantsOpen ? 'Collapse' : 'Expand'}
+            </button>
+          </div>
+          {participantsOpen && <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {participants.map(p => {
               const myVoteCount = votes.filter(v => v.participant_id === p.id).length
               const myPrefCount = prefs.filter(pr => pr.participant_id === p.id).length
@@ -731,7 +755,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
                 </div>
               )
             })}
-          </div>
+          </div>}
         </Card>
 
         {/* Voting results (voting phase) */}
@@ -767,7 +791,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
         {/* Selected games (preferences + scheduled phase) */}
         {(event.status === 'preferences' || event.status === 'scheduled' || event.status === 'closed') && (
           <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: selectedGamesOpen ? 14 : 0 }}>
               <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Selected games ({eventGames.length})
               </p>
@@ -776,8 +800,13 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
                   {showGamePicker ? '✕ Close' : '+ Add game'}
                 </Btn>
               )}
+              <button onClick={() => setSelectedGamesOpen(open => !open)} aria-expanded={selectedGamesOpen}
+                style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: 12, cursor: 'pointer' }}>
+                {selectedGamesOpen ? 'Collapse' : 'Expand'}
+              </button>
             </div>
 
+            {selectedGamesOpen && <>
             {/* Game picker */}
             {showGamePicker && event.status === 'preferences' && (
               <div style={{ marginBottom: 16, background: 'var(--bg3)', borderRadius: 10, padding: 14 }}>
@@ -873,6 +902,7 @@ function AdminEventManager({ initialEvent, localCollection, onBack }) {
               })}
               {eventGames.length === 0 && <p style={{ fontSize: 13, color: 'var(--text3)' }}>No games selected yet.</p>}
             </div>
+            </>}
           </Card>
         )}
 

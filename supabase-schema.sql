@@ -45,7 +45,8 @@ create or replace function create_event_schedule(
   p_event_id text,
   p_schedule jsonb,
   p_schedule_params jsonb,
-  p_label text default null
+  p_label text default null,
+  p_is_default boolean default true
 )
 returns setof event_schedules
 language plpgsql
@@ -58,8 +59,10 @@ begin
     raise exception 'Event % was not found', p_event_id;
   end if;
 
-  update event_schedules set is_default = false
-  where event_id = p_event_id and is_default;
+  if p_is_default then
+    update event_schedules set is_default = false
+    where event_id = p_event_id and is_default;
+  end if;
 
   select coalesce(max(version), 0) + 1 into next_version
   from event_schedules where event_id = p_event_id;
@@ -72,13 +75,13 @@ begin
     coalesce(nullif(p_label, ''), 'Schedule ' || next_version),
     coalesce(p_schedule, '[]'::jsonb),
     coalesce(p_schedule_params, '{}'::jsonb),
-    true
+    p_is_default
   )
   returning *;
 end;
 $$;
 
-grant execute on function create_event_schedule(text, jsonb, jsonb, text) to anon, authenticated;
+grant execute on function create_event_schedule(text, jsonb, jsonb, text, boolean) to anon, authenticated;
 
 -- Participants
 create table if not exists participants (
