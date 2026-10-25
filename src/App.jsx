@@ -63,7 +63,7 @@ export default function App() {
   const [gameFiles, setGameFiles] = useState({})
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
-  const [tab, setTab] = useState('collection')
+  const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).has('event') ? 'events' : 'collection')
   const [defaultLoaded, setDefaultLoaded] = useState(false)
   const [databaseLoading, setDatabaseLoading] = useState(isConfigured())
   const [toast, setToast] = useState(null)
