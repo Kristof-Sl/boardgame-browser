@@ -58,38 +58,6 @@ export async function refreshDatabaseCollections() {
   return loadDatabaseSnapshot()
 }
 
-export async function importLegacyJsonToDatabase() {
-  const [collectionResponse, detailsResponse] = await Promise.all([
-    fetch('/default-collection.json'),
-    fetch('/bgg-game-details.json'),
-  ])
-  if (!collectionResponse.ok || !detailsResponse.ok) {
-    throw new Error('Legacy collection JSON files could not be loaded.')
-  }
-
-  const [legacyCollection, legacyDetails] = await Promise.all([
-    collectionResponse.json(),
-    detailsResponse.json(),
-  ])
-  const accounts = legacyCollection.accounts || Object.keys(legacyCollection.collections || {})
-  for (const username of accounts) {
-    const accountName = typeof username === 'string' ? username : username.username
-    const response = await fetch('/api/admin-collection', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'upsert',
-        username: accountName,
-        games: legacyCollection.collections?.[accountName] || [],
-        password: sessionStorage.getItem('admin_password'),
-      }),
-    })
-    const result = await response.json()
-    if (!response.ok) throw new Error(result.error || `Could not import ${accountName}.`)
-  }
-  await saveGameLibrary(legacyDetails.games || [])
-}
-
 export async function updateGameLibrary(gameIds, onProgress) {
   const games = await fetchGameDetails(gameIds, onProgress)
   await saveGameLibrary(games)

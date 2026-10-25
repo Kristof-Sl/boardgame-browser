@@ -25,11 +25,13 @@ class SupabaseClient {
   }
 
   // SELECT
-  async select(table, { filter, order, single } = {}) {
+  async select(table, { filter, order, single, range } = {}) {
     let url = `${this.url}/rest/v1/${table}?select=*`
     if (filter) url += `&${filter}`
     if (order) url += `&order=${order}`
-    const res = await fetch(url, { headers: this.headers() })
+    const headers = this.headers()
+    if (range) headers.Range = range
+    const res = await fetch(url, { headers })
     if (!res.ok) throw new Error(`Supabase select error: ${await res.text()}`)
     const data = await res.json()
     return single ? data[0] : data
