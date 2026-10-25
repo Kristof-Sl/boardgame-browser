@@ -4,7 +4,7 @@ import { fetchCollection, fetchGameDetails } from './bggApi'
 export async function loadDatabaseSnapshot() {
   const [accountRows, libraryRows] = await Promise.all([
     db.select('game_collection', { order: 'username.asc' }),
-    db.select('game_library'),
+    db.selectAll('game_library'),
   ])
 
   const collections = {}

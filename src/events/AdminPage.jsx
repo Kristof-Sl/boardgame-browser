@@ -123,16 +123,6 @@ async function adminCollectionRequest(action, values = {}) {
   return result
 }
 
-async function selectAllRows(table, options = {}) {
-  const pageSize = 1000
-  const rows = []
-  for (let start = 0; ; start += pageSize) {
-    const page = await db.select(table, { ...options, range: `${start}-${start + pageSize - 1}` })
-    rows.push(...page)
-    if (page.length < pageSize) return rows
-  }
-}
-
 // ─── Login gate ───────────────────────────────────────────────────────────────
 
 function AdminLogin({ onLogin }) {
@@ -1581,9 +1571,9 @@ function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
 
   const reloadInventory = useCallback(async () => {
     const [collections, libraryRows, fileRows] = await Promise.all([
-      selectAllRows('game_collection'),
-      selectAllRows('game_library'),
-      selectAllRows('game_files'),
+      db.selectAll('game_collection'),
+      db.selectAll('game_library'),
+      db.selectAll('game_files'),
     ])
     const collectionGames = collections.flatMap(account => Array.isArray(account.games) ? account.games : [])
     const collectionIds = Array.from(new Set(collectionGames.map(game =>
@@ -1651,7 +1641,7 @@ function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
     setBusy(true)
     setStatus('Exporting detailed game library…')
     try {
-      const rows = await selectAllRows('game_library', { order: 'game_id.asc' })
+      const rows = await db.selectAll('game_library', { order: 'game_id.asc' })
       downloadJson(`game-library-${new Date().toISOString().slice(0, 10)}.json`, rows)
       setStatus(`Exported ${rows.length} game library records.`)
     } catch (error) {
@@ -1689,7 +1679,7 @@ function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
       const ids = new Set(rows.map(row => row.game_id))
       if (ids.size !== rows.length) throw new Error('The JSON contains duplicate game_id values.')
 
-      const existingRows = await selectAllRows('game_library')
+      const existingRows = await db.selectAll('game_library')
       if (importMode === 'replace') {
         if (!confirm(`Replace all ${existingRows.length} detailed game library records with ${rows.length} records from this file? This cannot be undone.`)) {
           setStatus('Library replacement canceled.')
