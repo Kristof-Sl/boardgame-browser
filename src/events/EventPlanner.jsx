@@ -42,8 +42,8 @@ function scheduleDateLabel(date) {
   const parsed = new Date(`${date}T12:00:00`)
   if (Number.isNaN(parsed.getTime())) return { weekday: '', date }
   return {
-    weekday: parsed.toLocaleDateString(undefined, { weekday: 'short' }),
-    date: parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    weekday: parsed.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase(),
+    date: parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
   }
 }
 
@@ -1945,9 +1945,11 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
               const dateLabel = scheduleDateLabel(date)
               return (
                 <div key={date} style={{ display: 'grid', gridTemplateColumns: '80px repeat(3, minmax(0, 1fr))', borderBottom: '1px solid var(--border)' }}>
-                  <div title={date} style={{ minHeight: 84, padding: '8px 4px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, textAlign: 'center' }}>
-                    <span style={{ color: 'var(--text)', fontSize: 12, fontWeight: 700 }}>{dateLabel.weekday}</span>
-                    <span style={{ color: 'var(--text2)', fontSize: 11, fontWeight: 500 }}>{dateLabel.date}</span>
+                  <div title={date} style={{ position: 'relative', minHeight: 84, padding: '8px 4px', borderRight: '1px solid var(--border)' }}>
+                    <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, whiteSpace: 'nowrap' }}>
+                      <span style={{ color: 'var(--text)', fontSize: 13, fontWeight: 700 }}>{dateLabel.weekday}</span>
+                      <span style={{ color: 'var(--text2)', fontSize: 11, fontWeight: 500 }}>{dateLabel.date}</span>
+                    </div>
                   </div>
                   {scheduleParts.map(part => {
                     const slots = visibleSchedule.filter(slot => slot.date === date && slot.part === part)
