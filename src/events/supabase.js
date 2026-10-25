@@ -37,6 +37,16 @@ class SupabaseClient {
     return single ? data[0] : data
   }
 
+  async selectAll(table, options = {}) {
+    const pageSize = 1000
+    const rows = []
+    for (let start = 0; ; start += pageSize) {
+      const page = await this.select(table, { ...options, range: `${start}-${start + pageSize - 1}` })
+      rows.push(...page)
+      if (page.length < pageSize) return rows
+    }
+  }
+
   // INSERT
   async insert(table, row) {
     const res = await fetch(`${this.url}/rest/v1/${table}`, {
