@@ -851,12 +851,13 @@ function CreateEvent({ onCreated, collection }) {
 
 // ─── Event dashboard (all phases) ─────────────────────────────────────────────
 
-function EventDashboard({ initialEvent, localCollection, detailsMode }) {
+function EventDashboard({ initialEvent, localCollection, detailsMode, onLogPlay }) {
   const [event, setEvent] = useState(initialEvent)
   const [participants, setParticipants] = useState([])
   const [votes, setVotes] = useState([])
   const [eventGames, setEventGames] = useState([])
   const [eventSchedules, setEventSchedules] = useState([])
+  const [eventPlayLogs, setEventPlayLogs] = useState([])
   const [selectedScheduleId, setSelectedScheduleId] = useState(null)
   const [prefs, setPrefs] = useState([])
   const [gameFiles, setGameFiles] = useState({})
@@ -866,7 +867,7 @@ function EventDashboard({ initialEvent, localCollection, detailsMode }) {
 
   const reload = useCallback(async () => {
     try {
-      const [p, v, eg, pr, gf, eventCollection, schedules] = await Promise.all([
+      const [p, v, eg, pr, gf, eventCollection, schedules, eventLogs] = await Promise.all([
         db.select('participants', { filter: `event_id=eq.${event.id}`, order: 'created_at.asc' }),
         db.select('game_votes', { filter: `event_id=eq.${event.id}` }),
         loadEventGames(event.id, localCollection),
@@ -874,9 +875,11 @@ function EventDashboard({ initialEvent, localCollection, detailsMode }) {
         db.select('game_files'),
         loadEventCollection(event.collection || [], localCollection),
         db.select('event_schedules', { filter: `event_id=eq.${event.id}`, order: 'version.desc' }),
+        db.selectAll('play_logs', { filter: `event_id=eq.${encodeURIComponent(event.id)}`, order: 'played_at.desc' }),
       ])
       setParticipants(p); setVotes(v); setEventGames(eg); setPrefs(pr)
       setEventSchedules(schedules)
+      setEventPlayLogs(eventLogs)
       setEvent(current => ({ ...current, collection: eventCollection }))
       const fileMap = {}
       gf.forEach(f => fileMap[f.game_id] = f.files)
@@ -907,7 +910,7 @@ function EventDashboard({ initialEvent, localCollection, detailsMode }) {
     || eventSchedules.find(schedule => schedule.is_default)
     || eventSchedules[0]
     || null
-  const commonProps = { event, participants, me, votes, eventGames, prefs, gameFiles, reload, refreshEvent, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule: setSelectedScheduleId, detailsMode }
+  const commonProps = { event, participants, me, votes, eventGames, prefs, gameFiles, reload, refreshEvent, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule: setSelectedScheduleId, detailsMode, eventPlayLogs, onLogPlay }
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
@@ -1605,7 +1608,7 @@ function PreferencesPhase({ event, participants, me, eventGames, prefs, reload, 
 
 // ─── Phase 3: Schedule view ───────────────────────────────────────────────────
 
-function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule, reload, detailsMode }) {
+function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule, reload, detailsMode, eventPlayLogs, onLogPlay }) {
   const schedule = expandSchedule(selectedSchedule?.schedule || [], eventGames, participants)
   const params = selectedSchedule?.schedule_params || {}
   const preferenceMap = {}
@@ -1623,6 +1626,7 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
   const [expandedGameId, setExpandedGameId] = useState(null)
   const [showBringList, setShowBringList] = useState(false)
   const [selectedGame, setSelectedGame] = useState(null)
+  const [selectedScheduleSlot, setSelectedScheduleSlot] = useState(null)
   const [pdfBusy, setPdfBusy] = useState(false)
   const [importBusy, setImportBusy] = useState(false)
   const [importMessage, setImportMessage] = useState('')
@@ -1661,12 +1665,24 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
 
   const handleScheduleGameDetails = slot => {
     const game = { ...(gameDataMap[slot.gameId] || {}), id: slot.gameId, name: slot.gameName }
-    if (detailsMode) setSelectedGame(game)
+    if (detailsMode) {
+      setSelectedGame(game)
+      setSelectedScheduleSlot(slot)
+    }
     else {
       setExpandedGameId(String(slot.gameId))
       setScheduleView('detailed')
     }
   }
+
+  const handleLogScheduledPlay = slot => onLogPlay?.({
+    gameId: String(slot.gameId),
+    gameName: slot.gameName,
+    playedAt: slot.date,
+    durationMinutes: slot.gameDuration,
+    eventId: event.id,
+    players: (slot.players || []).map(player => player.name),
+  })
 
   // Build bring list enriched with ownership from mergedCollection
   const scheduledGameIds = new Set(schedule.map(s => s.gameId))
@@ -1896,6 +1912,8 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
         </Card>
       )}
 
+      <EventPlayRankingOverview playLogs={eventPlayLogs} />
+
       {/* Preferences overview */}
       {eventGames.length > 0 && (
         <PreferencesOverview eventGames={eventGames} participants={participants} prefs={prefs} me={me} />
@@ -1925,7 +1943,8 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
                 gameData={gameDataMap[slot.gameId] || {}}
                 me={me}
                 detailsMode={detailsMode}
-                onDetails={setSelectedGame}
+                onDetails={game => { setSelectedGame(game); setSelectedScheduleSlot(slot) }}
+                onLogPlay={() => handleLogScheduledPlay(slot)}
                 openDetailsOnMount={expandedGameId === String(slot.gameId)}
               />
             ))}
@@ -2005,10 +2024,73 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
           maxWidth: '100vw', background: 'var(--surface)', borderLeft: '1px solid var(--border)',
           zIndex: 100, boxShadow: '-8px 0 32px rgba(0,0,0,0.28)', overflow: 'hidden',
         }}>
-          <GameDetailsPanel game={selectedGame} onClose={() => setSelectedGame(null)} />
+          <GameDetailsPanel
+            game={selectedGame}
+            onClose={() => { setSelectedGame(null); setSelectedScheduleSlot(null) }}
+            action={selectedScheduleSlot && <button onClick={() => handleLogScheduledPlay(selectedScheduleSlot)} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--accent)', borderRadius: 8, background: 'var(--accent-bg)', color: 'var(--accent)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Log Play</button>}
+          />
         </aside>
       )}
     </div>
+  )
+}
+
+function EventPlayRankingOverview({ playLogs }) {
+  const [open, setOpen] = useState(false)
+  const ranking = React.useMemo(() => {
+    const playersByName = new Map()
+    for (const log of playLogs || []) {
+      const players = (log.players || []).filter(player =>
+        player && String(player.name || '').trim() && player.score !== '' && Number.isFinite(Number(player.score))
+      )
+      if (!players.length) continue
+      const topScore = Math.max(...players.map(player => Number(player.score)))
+      for (const player of players) {
+        const name = String(player.name).trim()
+        const stats = playersByName.get(name) || { name, plays: 0, wins: 0, totalScore: 0 }
+        stats.plays += 1
+        stats.totalScore += Number(player.score)
+        if (Number(player.score) === topScore) stats.wins += 1
+        playersByName.set(name, stats)
+      }
+    }
+    return [...playersByName.values()].sort((a, b) =>
+      b.wins - a.wins || b.plays - a.plays || b.totalScore - a.totalScore
+    )
+  }, [playLogs])
+  const gameCount = new Set((playLogs || []).map(log => String(log.game_id)).filter(Boolean)).size
+
+  return (
+    <Card>
+      <button onClick={() => setOpen(value => !value)} aria-expanded={open} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 0, border: 0, background: 'none', color: 'var(--text)', textAlign: 'left', cursor: 'pointer' }}>
+        <span style={{ fontSize: 12, color: 'var(--text3)', textTransform: 'uppercase' }}>Event ranking</span>
+        <span style={{ color: 'var(--text2)', fontSize: 12 }}>{playLogs?.length || 0} logged plays · {open ? 'Hide' : 'Show'}</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 8, marginBottom: 12 }}>
+            <Stat label="Logged plays" value={playLogs?.length || 0} />
+            <Stat label="Games played" value={gameCount} />
+            <Stat label="Players ranked" value={ranking.length} />
+          </div>
+          {ranking.length === 0 ? (
+            <p style={{ padding: '8px 0', color: 'var(--text3)', fontSize: 13 }}>No scored plays have been logged for this event yet.</p>
+          ) : (
+            <div style={{ display: 'grid', gap: 6 }}>
+              {ranking.map((player, index) => (
+                <div key={player.name} style={{ display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) repeat(3, minmax(35px, auto))', alignItems: 'center', gap: 7, padding: '9px 10px', border: '1px solid var(--border)', borderRadius: 6, background: index < 3 ? 'var(--bg3)' : 'transparent' }}>
+                  <strong style={{ color: index === 0 ? 'var(--accent)' : 'var(--text2)', fontSize: 12 }}>{['1st', '2nd', '3rd'][index] || `${index + 1}th`}</strong>
+                  <span style={{ minWidth: 0, color: 'var(--text)', fontSize: 13, fontWeight: 500, overflowWrap: 'anywhere' }}>{player.name}</span>
+                  <span title="Wins" style={{ color: 'var(--text2)', fontSize: 11, textAlign: 'right' }}>{player.wins} W</span>
+                  <span title="Games played" style={{ color: 'var(--text2)', fontSize: 11, textAlign: 'right' }}>{player.plays} G</span>
+                  <span title="Total score" style={{ color: 'var(--text2)', fontSize: 11, textAlign: 'right' }}>{player.totalScore} pts</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
   )
 }
 
@@ -2111,7 +2193,7 @@ function PreferencesOverview({ eventGames, participants, prefs, me }) {
   )
 }
 
-function ScheduleGameCard({ slot, gameData, me, detailsMode, onDetails, openDetailsOnMount = false }) {
+function ScheduleGameCard({ slot, gameData, me, detailsMode, onDetails, onLogPlay, openDetailsOnMount = false }) {
   const [detailsOpen, setDetailsOpen] = useState(openDetailsOnMount)
   const [imgErr, setImgErr] = useState(false)
 
@@ -2208,6 +2290,8 @@ function ScheduleGameCard({ slot, gameData, me, detailsMode, onDetails, openDeta
             }}>{p.name}</span>
           ))}
         </div>
+
+        {onLogPlay && <button onClick={onLogPlay} style={{ alignSelf: 'flex-start', marginTop: 7, padding: '5px 9px', border: '1px solid var(--accent)', borderRadius: 6, background: 'var(--accent-bg)', color: 'var(--accent)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Log Play</button>}
 
         {/* Show details toggle */}
         <button
@@ -2318,7 +2402,7 @@ function Stat({ label, value }) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function EventPlanner({ collection, detailsMode = true }) {
+export default function EventPlanner({ collection, detailsMode = true, onLogPlay }) {
   const initialEventCode = new URLSearchParams(window.location.search).get('event')?.trim().toUpperCase() || ''
   const [view, setView] = useState(initialEventCode ? 'loading-event' : 'list')
   const [currentEvent, setCurrentEvent] = useState(null)
@@ -2370,7 +2454,7 @@ export default function EventPlanner({ collection, detailsMode = true }) {
         <button onClick={() => setView('list')} style={{ margin: '16px 0 0 16px', fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>
           ← All events
         </button>
-        <EventDashboard initialEvent={currentEvent} localCollection={collection} detailsMode={detailsMode} />
+        <EventDashboard initialEvent={currentEvent} localCollection={collection} detailsMode={detailsMode} onLogPlay={onLogPlay} />
       </div>
     )
   }
