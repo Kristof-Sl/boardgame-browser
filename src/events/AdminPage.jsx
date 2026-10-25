@@ -1666,12 +1666,25 @@ function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
     setStatus('Reading game library JSON…')
     try {
       const payload = JSON.parse(await file.text())
-      if (!Array.isArray(payload)) throw new Error('The JSON must be an array exported from the detailed game library.')
-      const rows = payload.map((row, index) => {
-        if (!row || row.game_id == null || String(row.game_id).trim() === '' || !row.game_data || typeof row.game_data !== 'object' || Array.isArray(row.game_data)) {
-          throw new Error(`Record ${index + 1} must include game_id and a game_data object.`)
+      const games = Array.isArray(payload) ? payload : payload?.games
+      if (!Array.isArray(games)) throw new Error('The JSON must be a game library export or contain a games array.')
+      const importedAt = new Date().toISOString()
+      const rows = games.map((game, index) => {
+        if (!game || typeof game !== 'object' || Array.isArray(game)) {
+          throw new Error(`Record ${index + 1} must be a game object.`)
         }
-        return { ...row, game_id: String(row.game_id) }
+        const isDatabaseRow = game.game_id != null && game.game_data && typeof game.game_data === 'object' && !Array.isArray(game.game_data)
+        const gameId = isDatabaseRow ? game.game_id : game.id
+        const gameData = isDatabaseRow ? game.game_data : game
+        if (gameId == null || String(gameId).trim() === '') {
+          throw new Error(`Record ${index + 1} must include a game_id or id.`)
+        }
+        return {
+          ...(isDatabaseRow ? game : {}),
+          game_id: String(gameId),
+          game_data: gameData,
+          updated_at: game.updated_at || importedAt,
+        }
       })
       const ids = new Set(rows.map(row => row.game_id))
       if (ids.size !== rows.length) throw new Error('The JSON contains duplicate game_id values.')
@@ -1747,11 +1760,13 @@ function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
             if (file) handleLibraryImport(file)
           }}
         />
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
           <Btn onClick={handleRefreshAll} accent disabled={busy || !inventory?.collectionIds.length} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Refresh all game details in collection</Btn>
-          <Btn onClick={handleLoadMissing} disabled={busy || !inventory?.missingGameIds.length} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Load missing game details of collection</Btn>
-          <span style={{ color: 'var(--text2)', fontSize: 12 }}>{inventory ? `${inventory.missingGameIds.length} games missing details` : 'Checking missing details…'}</span>
-          <Btn onClick={handleExportLibrary} disabled={busy}>Export detailed game library to JSON</Btn>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <Btn onClick={handleLoadMissing} disabled={busy || !inventory?.missingGameIds.length} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Load missing game details of collection</Btn>
+            <span style={{ color: 'var(--text2)', fontSize: 12 }}>{inventory ? `${inventory.missingGameIds.length} games missing details` : 'Checking missing details…'}</span>
+          </div>
+          <Btn onClick={handleExportLibrary} disabled={busy} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Export detailed game library to JSON</Btn>
           <Btn onClick={() => { setImportMode('replace'); libraryFileRef.current?.click() }} disabled={busy} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Replace detailed game library with JSON</Btn>
           <Btn onClick={() => { setImportMode('append'); libraryFileRef.current?.click() }} disabled={busy} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Append detailed game library with JSON</Btn>
         </div>
