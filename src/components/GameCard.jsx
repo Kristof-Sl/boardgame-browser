@@ -252,7 +252,7 @@ export default function GameCard({ game, isMobile, detailsMode = false, onDetail
   )
 }
 
-export function GameDetailsPanel({ game, onClose }) {
+export function GameDetailsPanel({ game, onClose, action }) {
   const detail = game.details || game
   const fileLinks = Array.isArray(game.files) ? game.files : []
   const playerStr = !detail.minPlayers && !detail.maxPlayers ? null
@@ -292,6 +292,7 @@ export function GameDetailsPanel({ game, onClose }) {
         {detail.minAge > 0 && <PopupRow label="Min. age">{detail.minAge}+</PopupRow>}
         {weight > 0 && <PopupRow label="Weight">{weight.toFixed(2)} / 5</PopupRow>}
       </div>
+      {action && <div style={{ marginTop: 12 }}>{action}</div>}
       {(categories.length > 0 || mechanics.length > 0 || designers.length > 0) && <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {categories.length > 0 && <PopupRow label="Categories">{categories.join(', ')}</PopupRow>}
         {mechanics.length > 0 && <PopupRow label="Mechanisms">{mechanics.join(', ')}</PopupRow>}

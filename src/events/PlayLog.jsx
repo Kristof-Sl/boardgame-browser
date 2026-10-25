@@ -18,10 +18,10 @@ function parseDate(value) {
   return value ? new Date(value).toISOString().slice(0, 10) : ''
 }
 
-export default function PlayLog({ allGames, showToast }) {
+export default function PlayLog({ allGames, showToast, initialDraft, onInitialDraftConsumed }) {
   const [playLogs, setPlayLogs] = useState([])
   const [events, setEvents] = useState([])
-  const [view, setView] = useState('logs')
+  const [view, setView] = useState('log')
   const [editing, setEditing] = useState(null)
   const [filterEventId, setFilterEventId] = useState('')
   const [draft, setDraft] = useState(createEmptyDraft())
@@ -100,6 +100,27 @@ export default function PlayLog({ allGames, showToast }) {
   }
 
   useEffect(() => {
+    if (!initialDraft) return
+    setView('log')
+    setEditing(null)
+    setDraft({
+      ...createEmptyDraft(),
+      game_id: String(initialDraft.gameId || ''),
+      game_name: initialDraft.gameName || '',
+      played_at: initialDraft.playedAt || formatDate(new Date()),
+      duration_minutes: initialDraft.durationMinutes || 60,
+      event_id: initialDraft.eventId || '',
+      players: (initialDraft.players || []).map(player => ({
+        name: typeof player === 'string' ? player : player.name,
+        score: '',
+      })),
+    })
+    setPlayerName('')
+    setPlayerScore('')
+    onInitialDraftConsumed?.()
+  }, [initialDraft, onInitialDraftConsumed])
+
+  useEffect(() => {
     if (!editing) return
     setDraft({
       id: editing.id,
@@ -112,13 +133,15 @@ export default function PlayLog({ allGames, showToast }) {
     })
   }, [editing])
 
-  const selectedGame = allGames.find(g => g.id === draft.game_id)
-  const gameLabel = selectedGame ? `${selectedGame.name} (${selectedGame.yearPublished || 'n/a'})` : draft.game_name
+  const selectedGame = allGames.find(game => String(game.id) === String(draft.game_id))
+  const gameOptions = selectedGame || !draft.game_id
+    ? allGames
+    : [{ id: String(draft.game_id), name: draft.game_name || `Game ${draft.game_id}` }, ...allGames]
 
   const addPlayer = () => {
     const trimmedName = playerName.trim()
     const score = Number(playerScore)
-    if (!trimmedName || Number.isNaN(score)) {
+    if (!trimmedName || playerScore.trim() === '' || !Number.isFinite(score)) {
       showToast('Enter a player name and score', 'err')
       return
     }
@@ -137,12 +160,12 @@ export default function PlayLog({ allGames, showToast }) {
   }
 
   const saveLog = async () => {
-    if (!draft.game_id || draft.players.length === 0) {
-      showToast('Select a game and add at least one player', 'err')
+    if (!draft.game_id || draft.players.length === 0 || draft.players.some(player => !player.name.trim() || player.score === '' || !Number.isFinite(Number(player.score)))) {
+      showToast('Select a game, add players, and enter a score for each player', 'err')
       return
     }
     setSaving(true)
-    const game = allGames.find(g => g.id === draft.game_id)
+    const game = selectedGame
     const players = [...draft.players].map(p => ({ name: p.name.trim(), score: Number(p.score) }))
     const topScore = Math.max(...players.map(p => p.score))
     const playersWithRank = players.map(p => ({
@@ -166,8 +189,9 @@ export default function PlayLog({ allGames, showToast }) {
     if (idx >= 0) next[idx] = savedLog
     else next.unshift(savedLog)
     setPlayLogs(next)
+    const wasEditing = Boolean(draft.id)
     resetDraft()
-    setView('logs')
+    setView(wasEditing ? 'logged' : 'log')
     showToast(editing ? 'Play log updated' : 'Play logged', 'ok')
 
     try {
@@ -180,7 +204,7 @@ export default function PlayLog({ allGames, showToast }) {
 
   const editLog = log => {
     setEditing(log)
-    setView('logs')
+    setView('logged')
   }
 
   const deleteLog = async log => {
@@ -197,11 +221,15 @@ export default function PlayLog({ allGames, showToast }) {
   }
 
   const saveDraftField = (field, value) => setDraft(prev => ({ ...prev, [field]: value }))
+  const updatePlayerScore = (index, value) => setDraft(prev => ({
+    ...prev,
+    players: prev.players.map((player, playerIndex) => playerIndex === index ? { ...player, score: value } : player),
+  }))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16, minHeight: '100vh' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {['logs', 'rankings'].map(item => (
+        {['log', 'logged', 'rankings'].map(item => (
           <button key={item}
             onClick={() => setView(item)}
             style={{
@@ -212,24 +240,24 @@ export default function PlayLog({ allGames, showToast }) {
               cursor: 'pointer', fontWeight: view === item ? 600 : 500,
             }}
           >
-            {item === 'logs' ? 'Play logs' : 'Rankings'}
+            {item === 'log' ? 'Log a play' : item === 'logged' ? 'Logged Plays' : 'Rankings'}
           </button>
         ))}
       </div>
 
-      {view === 'logs' && (
-        <>
-          <div style={{ display: 'grid', gap: 16 }}>
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18 }}>
+      {(view === 'log' || (view === 'logged' && editing)) && (
+        <div role={view === 'logged' ? 'dialog' : undefined} aria-modal={view === 'logged' ? 'true' : undefined} style={view === 'logged' ? { position: 'fixed', inset: 0, zIndex: 120, overflowY: 'auto', padding: 16, background: 'rgba(0,0,0,0.65)', display: 'grid', placeItems: 'center' } : undefined}>
+          <div style={{ display: 'grid', gap: 16, width: '100%', maxWidth: 760, margin: '0 auto' }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 18, maxHeight: view === 'logged' ? 'calc(100vh - 32px)' : undefined, overflowY: view === 'logged' ? 'auto' : undefined }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: 18 }}>Log a play</h2>
+                  <h2 style={{ margin: 0, fontSize: 18 }}>{editing ? 'Edit logged play' : 'Log a play'}</h2>
                   <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--text3)' }}>
                     Pick the game, players, score and link it to an event.
                   </p>
                 </div>
                 {editing && (
-                  <button onClick={resetDraft} style={{ border: 'none', background: 'transparent', color: 'var(--accent)', cursor: 'pointer' }}>
+                  <button onClick={() => { resetDraft(); setView('logged') }} style={{ border: 'none', background: 'transparent', color: 'var(--accent)', cursor: 'pointer' }}>
                     Cancel edit
                   </button>
                 )}
@@ -239,20 +267,21 @@ export default function PlayLog({ allGames, showToast }) {
                 <div style={{ display: 'grid', gap: 12 }}>
                   <label style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Game</label>
                   <select value={draft.game_id} onChange={e => {
-                    const selection = allGames.find(g => g.id === e.target.value)
+                    const selection = allGames.find(game => String(game.id) === e.target.value)
                     saveDraftField('game_id', e.target.value)
                     saveDraftField('game_name', selection ? selection.name : '')
                   }} style={{ width: '100%', borderRadius: 10, padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)' }}>
-                    {allGames.map(game => (
+                    {!draft.game_id && <option value="" disabled>Select a game</option>}
+                    {gameOptions.map(game => (
                       <option key={game.id} value={game.id}>{game.name}{game.yearPublished ? ` (${game.yearPublished})` : ''}</option>
                     ))}
                   </select>
                 </div>
-                <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr', minWidth: 0 }}>
+                <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', minWidth: 0 }}>
                   <Input label="Played date" type="date" value={draft.played_at} onChange={value => saveDraftField('played_at', value)} />
                   <Input label="Duration (min)" type="number" value={draft.duration_minutes} onChange={value => saveDraftField('duration_minutes', Number(value))} />
                 </div>
-                <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
+                <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))' }}>
                   <div style={{ display: 'grid', gap: 5 }}>
                     <label style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Event (optional)</label>
                     <select value={draft.event_id} onChange={e => saveDraftField('event_id', e.target.value)} style={{ borderRadius: 10, padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)' }}>
@@ -265,28 +294,13 @@ export default function PlayLog({ allGames, showToast }) {
                 </div>
 
                 <div style={{ display: 'grid', gap: 10, padding: 14, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr', alignItems: 'end' }}>
+                  <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', alignItems: 'end' }}>
                     <div style={{ display: 'grid', gap: 5 }}>
                       <label style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Player name</label>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto' }}>
-                        <select value={playerName} onChange={e => setPlayerName(e.target.value)} style={{ borderRadius: '10px 0 0 10px', padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)', fontSize: 14 }}>
-                          <option value="">— Choose a player —</option>
-                          {DEFAULT_PLAYER_NAMES.map(name => (
-                            <option key={name} value={name}>{name}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          value={playerName}
-                          onChange={e => setPlayerName(e.target.value)}
-                          placeholder="or type"
-                          style={{
-                            borderRadius: '0 10px 10px 0', padding: '10px 12px', marginLeft: -1,
-                            border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)',
-                            fontSize: 14, outline: 'none', minWidth: 0, flex: 0.6,
-                          }}
-                        />
-                      </div>
+                      <input type="text" list="play-log-player-names" value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Choose or type a name" style={{ width: '100%', minWidth: 0, borderRadius: 10, padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)', fontSize: 14 }} />
+                      <datalist id="play-log-player-names">
+                        {DEFAULT_PLAYER_NAMES.map(name => <option key={name} value={name} />)}
+                      </datalist>
                     </div>
                     <Input label="Score" type="number" value={playerScore} onChange={setPlayerScore} placeholder="0" />
                   </div>
@@ -300,13 +314,11 @@ export default function PlayLog({ allGames, showToast }) {
                 {draft.players.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <p style={{ margin: 0, fontSize: 12, color: 'var(--text3)' }}>Players</p>
-                    <div style={{ display: 'grid', gap: 10 }}>
+                    <div style={{ display: 'grid', gap: 8 }}>
                       {draft.players.map((player, index) => (
-                        <div key={`${player.name}-${index}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: 10, borderRadius: 10, background: 'var(--bg)', border: '1px solid var(--border)' }}>
-                          <div>
-                            <div style={{ fontWeight: 600 }}>{player.name}</div>
-                            <div style={{ fontSize: 12, color: 'var(--text3)' }}>Score: {player.score}</div>
-                          </div>
+                        <div key={`${player.name}-${index}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(80px, 110px) auto', alignItems: 'center', gap: 8, padding: 10, borderRadius: 10, background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                          <div style={{ minWidth: 0, fontWeight: 600, overflowWrap: 'anywhere' }}>{player.name}</div>
+                          <input type="number" value={player.score} onChange={event => updatePlayerScore(index, event.target.value)} aria-label={`${player.name} score`} placeholder="Score" style={{ width: '100%', minWidth: 0, borderRadius: 8, padding: '8px', border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)', fontSize: 14 }} />
                           <button onClick={() => removePlayer(index)} style={{ border: 'none', background: 'transparent', color: 'var(--red)', cursor: 'pointer' }}>Remove</button>
                         </div>
                       ))}
@@ -335,7 +347,28 @@ export default function PlayLog({ allGames, showToast }) {
               ))}
             </div>
           </div>
-        </>
+        </div>
+      )}
+
+      {view === 'logged' && !editing && (
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'end', flexWrap: 'wrap', padding: 14, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12 }}>
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <label style={{ display: 'block', fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 6 }}>Filter by event</label>
+              <select value={filterEventId} onChange={e => setFilterEventId(e.target.value)} style={{ width: '100%', minWidth: 0, borderRadius: 10, padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)' }}>
+                {eventOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+            <span style={{ color: 'var(--text2)', fontSize: 12 }}>{filteredLogs.length} logged plays</span>
+          </div>
+          {filteredLogs.length === 0 ? (
+            <div style={{ padding: 18, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12 }}>
+              <p style={{ margin: 0, color: 'var(--text3)' }}>No plays match this event filter.</p>
+            </div>
+          ) : filteredLogs.map(log => (
+            <LogCard key={log.id} log={log} onEdit={() => editLog(log)} onDelete={() => deleteLog(log)} events={events} />
+          ))}
+        </div>
       )}
 
       {view === 'rankings' && (

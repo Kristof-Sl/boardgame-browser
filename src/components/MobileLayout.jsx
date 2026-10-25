@@ -9,6 +9,7 @@ export default function MobileLayout({
   handleFilterChange, handleAddAccount, handleRefreshAccounts, handleReloadDefaultCollection, handleRemoveAccount,
   handleExport, handleImportFile, anyLoading, tab, setTab,
   importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, Analyzer, showToast, handleAuthChange, handleDatabaseChanged,
+  onRequestPlayLog, pendingPlayLogDraft, consumePlayLogDraft,
   theme, onThemeChange
 }) {
   const [showFilters, setShowFilters] = useState(false)
@@ -269,13 +270,13 @@ export default function MobileLayout({
 
         {tab === 'events' && (
           <div style={{ padding: '16px' }}>
-            <EventPlanner collection={sharedGames} detailsMode={false} />
+            <EventPlanner collection={sharedGames} detailsMode={false} onLogPlay={onRequestPlayLog} />
           </div>
         )}
 
         {tab === 'playlog' && (
           <div style={{ padding: '16px' }}>
-            <PlayLog allGames={allGames} showToast={showToast} />
+            <PlayLog allGames={allGames} showToast={showToast} initialDraft={pendingPlayLogDraft} onInitialDraftConsumed={consumePlayLogDraft} />
           </div>
         )}
 

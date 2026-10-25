@@ -64,6 +64,7 @@ export default function App() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
   const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).has('event') ? 'events' : 'collection')
+  const [pendingPlayLogDraft, setPendingPlayLogDraft] = useState(null)
   const [defaultLoaded, setDefaultLoaded] = useState(false)
   const [databaseLoading, setDatabaseLoading] = useState(isConfigured())
   const [toast, setToast] = useState(null)
@@ -141,6 +142,12 @@ export default function App() {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
   }
+
+  const handleRequestPlayLog = useCallback(draft => {
+    setPendingPlayLogDraft(draft)
+    setTab('playlog')
+  }, [])
+  const consumePlayLogDraft = useCallback(() => setPendingPlayLogDraft(null), [])
 
   const allGames = useMemo(() => {
     const merged = mergeCollections(collections)
@@ -415,6 +422,9 @@ export default function App() {
         importRef={importRef}
         DEFAULT_FILTERS={DEFAULT_FILTERS}
         EventPlanner={EventPlanner}
+        onRequestPlayLog={handleRequestPlayLog}
+        pendingPlayLogDraft={pendingPlayLogDraft}
+        consumePlayLogDraft={consumePlayLogDraft}
         AdminPage={AdminPage}
         PlayLog={PlayLog}
         Analyzer={Analyzer}
@@ -537,14 +547,14 @@ export default function App() {
         {/* Events tab */}
         {tab === 'events' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
-            <EventPlanner collection={sharedGames} detailsMode={detailsMode} />
+            <EventPlanner collection={sharedGames} detailsMode={detailsMode} onLogPlay={handleRequestPlayLog} />
           </div>
         )}
 
         {/* PlayLog tab */}
         {tab === 'playlog' && (
           <div style={{ flex: 1, overflowX: 'hidden' }}>
-            <PlayLog allGames={allGames} showToast={showToast} />
+            <PlayLog allGames={allGames} showToast={showToast} initialDraft={pendingPlayLogDraft} onInitialDraftConsumed={consumePlayLogDraft} />
           </div>
         )}
 
