@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { db } from './supabase'
 import { fetchCollection } from '../bggApi'
-import { importLegacyJsonToDatabase, loadEventCollection, loadEventGames, updateGameLibrary } from '../databaseCollections'
+import { loadEventCollection, loadEventGames, updateGameLibrary } from '../databaseCollections'
 import { createScheduleExport, expandSchedule, validateImportedSchedule } from './eventData'
 import { createEventSchedule } from './eventScheduleApi'
 import MeepleMapImportDialog from './MeepleMapImportDialog'
@@ -121,6 +121,16 @@ async function adminCollectionRequest(action, values = {}) {
   const result = await response.json()
   if (!response.ok) throw new Error(result.error || 'Admin collection request failed.')
   return result
+}
+
+async function selectAllRows(table, options = {}) {
+  const pageSize = 1000
+  const rows = []
+  for (let start = 0; ; start += pageSize) {
+    const page = await db.select(table, { ...options, range: `${start}-${start + pageSize - 1}` })
+    rows.push(...page)
+    if (page.length < pageSize) return rows
+  }
 }
 
 // ─── Login gate ───────────────────────────────────────────────────────────────
@@ -1564,30 +1574,47 @@ function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState({ completed: 0, total: 0 })
   const [logs, setLogs] = useState([])
+  const [inventory, setInventory] = useState(null)
+  const [inventoryError, setInventoryError] = useState('')
+  const [importMode, setImportMode] = useState('')
+  const libraryFileRef = React.useRef(null)
+
+  const reloadInventory = useCallback(async () => {
+    const [collections, libraryRows, fileRows] = await Promise.all([
+      selectAllRows('game_collection'),
+      selectAllRows('game_library'),
+      selectAllRows('game_files'),
+    ])
+    const collectionGames = collections.flatMap(account => Array.isArray(account.games) ? account.games : [])
+    const collectionIds = Array.from(new Set(collectionGames.map(game =>
+      String(typeof game === 'object' && game !== null ? game.id ?? game.game_id : game)
+    ).filter(id => id && id !== 'undefined' && id !== 'null')))
+    const libraryIds = new Set(libraryRows.map(row => String(row.game_id)))
+    const missingGameIds = collectionIds.filter(id => !libraryIds.has(id))
+    setInventory({
+      accountCount: collections.length,
+      collectionGameCount: collectionGames.length,
+      uniqueCollectionCount: collectionIds.length,
+      collectionIds,
+      libraryCount: libraryRows.length,
+      missingGameIds,
+      fileGameCount: fileRows.length,
+      fileLinkCount: fileRows.reduce((total, row) => total + (Array.isArray(row.files) ? row.files.length : 0), 0),
+    })
+    setInventoryError('')
+  }, [])
+
+  useEffect(() => {
+    reloadInventory().catch(error => setInventoryError(error.message || 'Could not load database statistics.'))
+  }, [reloadInventory])
 
   const addLog = message => {
     setLogs(current => [...current, `${new Date().toLocaleTimeString()} ${message}`].slice(-80))
   }
 
-  const handleImportLegacy = async () => {
-    setBusy(true)
-    setStatus('Importing the legacy collection and game details…')
-    try {
-      await importLegacyJsonToDatabase()
-      await onDatabaseChange?.()
-      setStatus('Legacy collection and game details imported into Supabase.')
-    } catch (error) {
-      setStatus(`Import failed: ${error.message || error}`)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const handleSyncLibrary = async () => {
-    const games = localCollection || []
-    const ids = Array.from(new Set(games.map(game => String(game.id)).filter(Boolean)))
+  const handleSyncLibrary = async (ids, label) => {
     if (!ids.length) {
-      setStatus('There are no games in the current collection.')
+      setStatus('There are no matching games in the collection.')
       return
     }
     setBusy(true)
@@ -1599,12 +1626,94 @@ function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
         setStatus(update.message)
         addLog(update.message)
       })
-      await onDatabaseChange?.()
-      setStatus(`Saved details for ${details.length} games to game_library.`)
+      await Promise.all([onDatabaseChange?.(), reloadInventory()])
+      setStatus(`Saved details for ${details.length} ${label} to game_library.`)
     } catch (error) {
       setStatus(`Library update failed: ${error.message || error}`)
     } finally {
       setBusy(false)
+    }
+  }
+
+  const handleRefreshAll = () => {
+    const ids = inventory?.collectionIds || []
+    if (!ids.length) {
+      setStatus('There are no games in the shared collection.')
+      return
+    }
+    if (!confirm(`Reload detailed BGG data for all ${ids.length} unique games in the collection? This can take several minutes.`)) return
+    handleSyncLibrary(ids, 'games')
+  }
+
+  const handleLoadMissing = () => handleSyncLibrary(inventory?.missingGameIds || [], 'missing games')
+
+  const handleExportLibrary = async () => {
+    setBusy(true)
+    setStatus('Exporting detailed game library…')
+    try {
+      const rows = await selectAllRows('game_library', { order: 'game_id.asc' })
+      downloadJson(`game-library-${new Date().toISOString().slice(0, 10)}.json`, rows)
+      setStatus(`Exported ${rows.length} game library records.`)
+    } catch (error) {
+      setStatus(`Export failed: ${error.message || error}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleLibraryImport = async file => {
+    setBusy(true)
+    setStatus('Reading game library JSON…')
+    try {
+      const payload = JSON.parse(await file.text())
+      const games = Array.isArray(payload) ? payload : payload?.games
+      if (!Array.isArray(games)) throw new Error('The JSON must be a game library export or contain a games array.')
+      const importedAt = new Date().toISOString()
+      const rows = games.map((game, index) => {
+        if (!game || typeof game !== 'object' || Array.isArray(game)) {
+          throw new Error(`Record ${index + 1} must be a game object.`)
+        }
+        const isDatabaseRow = game.game_id != null && game.game_data && typeof game.game_data === 'object' && !Array.isArray(game.game_data)
+        const gameId = isDatabaseRow ? game.game_id : game.id
+        const gameData = isDatabaseRow ? game.game_data : game
+        if (gameId == null || String(gameId).trim() === '') {
+          throw new Error(`Record ${index + 1} must include a game_id or id.`)
+        }
+        return {
+          ...(isDatabaseRow ? game : {}),
+          game_id: String(gameId),
+          game_data: gameData,
+          updated_at: game.updated_at || importedAt,
+        }
+      })
+      const ids = new Set(rows.map(row => row.game_id))
+      if (ids.size !== rows.length) throw new Error('The JSON contains duplicate game_id values.')
+
+      const existingRows = await selectAllRows('game_library')
+      if (importMode === 'replace') {
+        if (!confirm(`Replace all ${existingRows.length} detailed game library records with ${rows.length} records from this file? This cannot be undone.`)) {
+          setStatus('Library replacement canceled.')
+          return
+        }
+        await db.delete('game_library', 'game_id=not.is.null')
+        for (let start = 0; start < rows.length; start += 50) {
+          await db.upsert('game_library', rows.slice(start, start + 50), 'game_id')
+        }
+        setStatus(`Replaced the detailed game library with ${rows.length} records.`)
+      } else {
+        const existingIds = new Set(existingRows.map(row => String(row.game_id)))
+        const newRows = rows.filter(row => !existingIds.has(row.game_id))
+        for (let start = 0; start < newRows.length; start += 50) {
+          await db.upsert('game_library', newRows.slice(start, start + 50), 'game_id')
+        }
+        setStatus(`Added ${newRows.length} new records. ${rows.length - newRows.length} existing records were left unchanged.`)
+      }
+      await Promise.all([onDatabaseChange?.(), reloadInventory()])
+    } catch (error) {
+      setStatus(`Library import failed: ${error.message || error}`)
+    } finally {
+      setBusy(false)
+      setImportMode('')
     }
   }
 
@@ -1615,18 +1724,53 @@ function AdminBggDetails({ localCollection, onBack, onDatabaseChange }) {
         <div style={{ fontSize: 24 }}>📊</div>
         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, color: 'var(--text)' }}>Game library</h2>
       </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 10, marginBottom: 16 }}>
+        <Card style={{ padding: 14 }}>
+          <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 7 }}>Game collection</p>
+          <p style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)' }}>{inventory ? inventory.uniqueCollectionCount : '—'} unique games</p>
+          <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>{inventory ? `${inventory.accountCount} accounts · ${inventory.collectionGameCount} entries` : 'Loading…'}</p>
+        </Card>
+        <Card style={{ padding: 14 }}>
+          <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 7 }}>Detailed game library</p>
+          <p style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)' }}>{inventory ? inventory.libraryCount : '—'} records</p>
+          <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>{inventory ? `${inventory.missingGameIds.length} collection games missing details` : 'Loading…'}</p>
+        </Card>
+        <Card style={{ padding: 14 }}>
+          <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 7 }}>Game files</p>
+          <p style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)' }}>{inventory ? inventory.fileGameCount : '—'} games</p>
+          <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>{inventory ? `${inventory.fileLinkCount} file links` : 'Loading…'}</p>
+        </Card>
+      </div>
+      {inventoryError && <p style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12 }}>{inventoryError}</p>}
       <Card>
         <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 8 }}>
-          Maintain detailed BGG data for the {localCollection?.length || 0} games currently in the collection.
+          Maintain detailed BGG data for games in the shared collection.
         </p>
         <p style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 16 }}>
-          Import the bundled JSON once to seed Supabase, or refresh game details from BGG into game_library.
+          Refresh details from BoardGameGeek or manage a JSON backup of the detailed game library.
         </p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Btn onClick={handleImportLegacy} disabled={busy}>Import bundled JSON into database</Btn>
-          <Btn onClick={handleSyncLibrary} accent disabled={busy || !localCollection?.length}>Refresh game details</Btn>
+        <input
+          ref={libraryFileRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={event => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            if (file) handleLibraryImport(file)
+          }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+          <Btn onClick={handleRefreshAll} accent disabled={busy || !inventory?.collectionIds.length} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Refresh all game details in collection</Btn>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <Btn onClick={handleLoadMissing} disabled={busy || !inventory?.missingGameIds.length} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Load missing game details of collection</Btn>
+            <span style={{ color: 'var(--text2)', fontSize: 12 }}>{inventory ? `${inventory.missingGameIds.length} games missing details` : 'Checking missing details…'}</span>
+          </div>
+          <Btn onClick={handleExportLibrary} disabled={busy} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Export detailed game library to JSON</Btn>
+          <Btn onClick={() => { setImportMode('replace'); libraryFileRef.current?.click() }} disabled={busy} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Replace detailed game library with JSON</Btn>
+          <Btn onClick={() => { setImportMode('append'); libraryFileRef.current?.click() }} disabled={busy} style={{ whiteSpace: 'normal', textAlign: 'left' }}>Append detailed game library with JSON</Btn>
         </div>
-        {status && <p style={{ fontSize: 12, color: status.includes('failed') ? 'var(--red)' : 'var(--text3)', marginTop: 14 }}>{status}</p>}
+        {status && <p style={{ fontSize: 12, color: status.toLowerCase().includes('failed') ? 'var(--red)' : 'var(--text3)', marginTop: 14 }}>{status}</p>}
         {progress.total > 0 && (
           <div style={{ marginTop: 12 }}>
             <div
