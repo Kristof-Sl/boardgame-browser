@@ -37,6 +37,16 @@ function pdfDate(date) {
   return Number.isNaN(parsed.getTime()) ? date : parsed.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
+function scheduleDateLabel(date) {
+  if (!date) return { weekday: '', date: '' }
+  const parsed = new Date(`${date}T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) return { weekday: '', date }
+  return {
+    weekday: parsed.toLocaleDateString(undefined, { weekday: 'long' }),
+    date: parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
+  }
+}
+
 async function downloadEventSchedulePdf({ event, schedule, eventGames, participants, prefs, mergedCollection }) {
   const { jsPDF } = await import('jspdf')
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
@@ -662,9 +672,9 @@ VITE_SUPABASE_ANON_KEY=your-anon-key`}
 
 // ─── Event list / entry point ─────────────────────────────────────────────────
 
-function EventList({ onOpen, onNew }) {
+function EventList({ onOpen, onNew, initialError = '' }) {
   const [code, setCode] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(initialError)
   const [loading, setLoading] = useState(false)
   const [recentEvents, setRecentEvents] = useState(loadRecentEvents)
 
@@ -847,7 +857,7 @@ function EventDashboard({ initialEvent, localCollection, detailsMode }) {
   const [votes, setVotes] = useState([])
   const [eventGames, setEventGames] = useState([])
   const [eventSchedules, setEventSchedules] = useState([])
-  const [selectedScheduleId, setSelectedScheduleId] = useState(() => localStorage.getItem(`event-schedule-${initialEvent.id}`))
+  const [selectedScheduleId, setSelectedScheduleId] = useState(null)
   const [prefs, setPrefs] = useState([])
   const [gameFiles, setGameFiles] = useState({})
   const [me, setMe] = useState(null)
@@ -877,17 +887,6 @@ function EventDashboard({ initialEvent, localCollection, detailsMode }) {
 
   useEffect(() => { reload() }, [reload])
   useEffect(() => {
-    if (loading) return
-    if (eventSchedules.some(schedule => schedule.id === selectedScheduleId)) return
-    const preferred = eventSchedules.find(schedule => schedule.is_default)
-    setSelectedScheduleId(preferred?.id || null)
-  }, [eventSchedules, loading, selectedScheduleId])
-  useEffect(() => {
-    const key = `event-schedule-${event.id}`
-    if (selectedScheduleId) localStorage.setItem(key, selectedScheduleId)
-    else localStorage.removeItem(key)
-  }, [event.id, selectedScheduleId])
-  useEffect(() => {
     const interval = setInterval(reload, 8000)
     return () => clearInterval(interval)
   }, [reload])
@@ -906,6 +905,7 @@ function EventDashboard({ initialEvent, localCollection, detailsMode }) {
   const mergedCollection = mergeCollections(event.collection || [], localCollection)
   const selectedSchedule = eventSchedules.find(schedule => schedule.id === selectedScheduleId)
     || eventSchedules.find(schedule => schedule.is_default)
+    || eventSchedules[0]
     || null
   const commonProps = { event, participants, me, votes, eventGames, prefs, gameFiles, reload, refreshEvent, mergedCollection, eventSchedules, selectedSchedule, onSelectSchedule: setSelectedScheduleId, detailsMode }
 
@@ -921,6 +921,11 @@ function EventDashboard({ initialEvent, localCollection, detailsMode }) {
           {event.start_date} → {event.end_date} · Code: <strong style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>{event.id}</strong>
           {' · '}Logged in as <strong style={{ color: 'var(--text)' }}>{me.name}</strong>
           {' · '}<button onClick={() => setMe(null)} style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>switch</button>
+        </p>
+        <p style={{ marginTop: 6, fontSize: 12 }}>
+          <a href={`${window.location.origin}${window.location.pathname}?event=${encodeURIComponent(event.id)}`} style={{ color: 'var(--accent)' }}>
+            Participant link: {window.location.origin}{window.location.pathname}?event={event.id}
+          </a>
         </p>
       </div>
       {error && <p style={{ fontSize: 12, color: 'var(--red)', marginBottom: 16 }}>{error}</p>}
@@ -1651,6 +1656,7 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
   }
 
   const partColors = { morning: 'var(--blue)', afternoon: 'var(--accent)', evening: 'var(--green)' }
+  const scheduleParts = ['morning', 'afternoon', 'evening']
   const orderedDates = [...new Set(visibleSchedule.map(slot => slot.date))].sort()
 
   const handleScheduleGameDetails = slot => {
@@ -1927,29 +1933,44 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
         </div>
       ))}
       {scheduleView === 'compact' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 10 }}>
-          {Object.values(grouped).map(block => (
-            <section key={`${block.date}_${block.part}`} style={{ minWidth: 0, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)', padding: '10px 12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 7 }}>
-                <span style={{ fontSize: 10, fontWeight: 600, color: partColors[block.part], textTransform: 'uppercase' }}>{block.part}</span>
-                <span style={{ fontSize: 11, color: 'var(--text3)' }}>{block.date}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {block.games.map((slot, index) => (
-                  <div key={`${slot.gameId}-${index}`} style={{ display: 'grid', gridTemplateColumns: '32px minmax(0, 1fr) auto', alignItems: 'center', gap: 8 }}>
-                    {slot.thumbnail
-                      ? <img src={slot.thumbnail} alt="" style={{ width: 32, height: 32, borderRadius: 4, objectFit: 'cover' }} />
-                      : <span aria-hidden="true" style={{ width: 32, height: 32, display: 'grid', placeItems: 'center', background: 'var(--bg3)', borderRadius: 4 }}>🎲</span>}
-                    <div style={{ minWidth: 0 }}>
-                      <button onClick={() => handleScheduleGameDetails(slot)} style={{ display: 'block', maxWidth: '100%', padding: 0, border: 0, background: 'none', color: 'var(--text)', textAlign: 'left', fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>{slot.gameName}</button>
-                      <span style={{ display: 'block', color: 'var(--text3)', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{slot.players.map(player => player.name).join(', ')}</span>
-                    </div>
-                    <span style={{ color: 'var(--text3)', fontSize: 10, whiteSpace: 'nowrap' }}>{slot.gameDuration}m</span>
+        <div style={{ overflowX: 'auto' }}>
+          <div style={{ minWidth: 620, border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', background: 'var(--surface)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(130px, 0.8fr) repeat(3, minmax(150px, 1fr))', background: 'var(--bg3)' }}>
+              <div style={{ padding: '9px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text3)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Date</div>
+              {scheduleParts.map(part => (
+                <div key={part} style={{ padding: '9px 12px', borderLeft: '1px solid var(--border)', borderBottom: '1px solid var(--border)', color: partColors[part], fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>{part}</div>
+              ))}
+            </div>
+            {orderedDates.map(date => {
+              const dateLabel = scheduleDateLabel(date)
+              return (
+                <div key={date} style={{ display: 'grid', gridTemplateColumns: 'minmax(130px, 0.8fr) repeat(3, minmax(150px, 1fr))', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ padding: '10px 12px', color: 'var(--text)', fontSize: 12, fontWeight: 600 }}>
+                    <span style={{ display: 'block' }}>{dateLabel.weekday}</span>
+                    <span style={{ display: 'block', marginTop: 3, color: 'var(--text3)', fontSize: 10, fontWeight: 400 }}>{dateLabel.date}</span>
                   </div>
-                ))}
-              </div>
-            </section>
-          ))}
+                  {scheduleParts.map(part => {
+                    const slots = visibleSchedule.filter(slot => slot.date === date && slot.part === part)
+                    return (
+                      <div key={part} style={{ minWidth: 0, padding: 7, borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {slots.map((slot, index) => (
+                          <div key={`${slot.gameId}-${index}`} style={{ display: 'grid', gridTemplateColumns: '28px minmax(0, 1fr)', alignItems: 'center', gap: 7, padding: 6, border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg)' }}>
+                            {slot.thumbnail
+                              ? <img src={slot.thumbnail} alt="" style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }} />
+                              : <span aria-hidden="true" style={{ width: 28, height: 28, display: 'grid', placeItems: 'center', background: 'var(--bg3)', borderRadius: 4 }}>🎲</span>}
+                            <div style={{ minWidth: 0 }}>
+                              <button onClick={() => handleScheduleGameDetails(slot)} style={{ display: 'block', width: '100%', padding: 0, border: 0, background: 'none', color: 'var(--text)', textAlign: 'left', fontSize: 11, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>{slot.gameName}</button>
+                              <span style={{ display: 'block', color: 'var(--text3)', fontSize: 9, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{slot.players.map(player => player.name).join(', ')} · {slot.gameDuration}m</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
       {scheduleView === 'overview' && (
@@ -2296,13 +2317,35 @@ function Stat({ label, value }) {
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export default function EventPlanner({ collection, detailsMode = true }) {
-  const [view, setView] = useState('list')
+  const initialEventCode = new URLSearchParams(window.location.search).get('event')?.trim().toUpperCase() || ''
+  const [view, setView] = useState(initialEventCode ? 'loading-event' : 'list')
   const [currentEvent, setCurrentEvent] = useState(null)
+  const [initialJoinError, setInitialJoinError] = useState('')
+
+  useEffect(() => {
+    if (!initialEventCode || !isConfigured()) return
+    db.select('events', { filter: `id=eq.${encodeURIComponent(initialEventCode)}` })
+      .then(events => {
+        if (!events.length) throw new Error('Event not found. Check the event link or code.')
+        saveRecentEvent(events[0])
+        setCurrentEvent(events[0])
+        setView('event')
+      })
+      .catch(error => {
+        setInitialJoinError(error.message || 'Could not load this event.')
+        setView('list')
+      })
+  }, [])
 
   if (!isConfigured()) return <NotConfigured />
 
+  if (view === 'loading-event') {
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Opening event…</div>
+  }
+
   if (view === 'list') {
     return <EventList
+      initialError={initialJoinError}
       onOpen={ev => { setCurrentEvent(ev); setView('event') }}
       onNew={() => setView('create')}
     />
