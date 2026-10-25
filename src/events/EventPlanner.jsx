@@ -1935,33 +1935,32 @@ function SchedulePhase({ event, participants, me, eventGames, prefs, gameFiles, 
       {scheduleView === 'compact' && (
         <div style={{ overflowX: 'auto' }}>
           <div style={{ minWidth: 710, border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', background: 'var(--surface)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '48px repeat(3, minmax(0, 1fr))', background: 'var(--bg3)' }}>
-              <div style={{ padding: '9px 4px', borderBottom: '1px solid var(--border)', color: 'var(--text3)', fontSize: 10, fontWeight: 600, textAlign: 'center', textTransform: 'uppercase' }}>Date</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(3, minmax(0, 1fr))', background: 'var(--bg3)' }}>
+              <div style={{ padding: '10px 4px', borderBottom: '1px solid var(--border)', color: 'var(--text2)', fontSize: 12, fontWeight: 600, textAlign: 'center', textTransform: 'uppercase' }}>Date</div>
               {scheduleParts.map(part => (
-                <div key={part} style={{ padding: '9px 12px', borderLeft: '1px solid var(--border)', borderBottom: '1px solid var(--border)', color: partColors[part], fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>{part}</div>
+                <div key={part} style={{ padding: '10px 12px', borderLeft: '1px solid var(--border)', borderBottom: '1px solid var(--border)', color: partColors[part], fontSize: 13, fontWeight: 700, textTransform: 'uppercase' }}>{part}</div>
               ))}
             </div>
             {orderedDates.map(date => {
               const dateLabel = scheduleDateLabel(date)
               return (
-                <div key={date} style={{ display: 'grid', gridTemplateColumns: '48px repeat(3, minmax(0, 1fr))', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ position: 'relative', minHeight: 84, borderRight: '1px solid var(--border)' }}>
-                    <span title={date} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', whiteSpace: 'nowrap', color: 'var(--text)', fontSize: 10, fontWeight: 600 }}>
-                      {dateLabel.weekday} · {dateLabel.date}
-                    </span>
+                <div key={date} style={{ display: 'grid', gridTemplateColumns: '80px repeat(3, minmax(0, 1fr))', borderBottom: '1px solid var(--border)' }}>
+                  <div title={date} style={{ minHeight: 84, padding: '8px 4px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, textAlign: 'center' }}>
+                    <span style={{ color: 'var(--text)', fontSize: 12, fontWeight: 700 }}>{dateLabel.weekday}</span>
+                    <span style={{ color: 'var(--text2)', fontSize: 11, fontWeight: 500 }}>{dateLabel.date}</span>
                   </div>
                   {scheduleParts.map(part => {
                     const slots = visibleSchedule.filter(slot => slot.date === date && slot.part === part)
                     return (
                       <div key={part} style={{ minWidth: 0, padding: 9, borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {slots.map((slot, index) => (
-                          <div key={`${slot.gameId}-${index}`} style={{ display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr)', alignItems: 'center', gap: 9, padding: 9, border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg)' }}>
+                          <div key={`${slot.gameId}-${index}`} style={{ display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr)', alignItems: 'center', gap: 9, padding: 9, border: '1px solid var(--border)', borderRadius: 6, background: 'var(--surface)' }}>
                             {slot.thumbnail
                               ? <img src={slot.thumbnail} alt="" style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />
                               : <span aria-hidden="true" style={{ width: 40, height: 40, display: 'grid', placeItems: 'center', background: 'var(--bg3)', borderRadius: 4 }}>🎲</span>}
                             <div style={{ minWidth: 0 }}>
                               <button onClick={() => handleScheduleGameDetails(slot)} style={{ display: 'block', width: '100%', padding: 0, border: 0, background: 'none', color: 'var(--text)', textAlign: 'left', fontSize: 14, lineHeight: 1.25, fontWeight: 600, overflowWrap: 'anywhere', cursor: 'pointer' }}>{slot.gameName}</button>
-                              <span style={{ display: 'block', marginTop: 3, color: 'var(--text3)', fontSize: 12, lineHeight: 1.35, overflowWrap: 'anywhere' }}>{slot.players.map(player => player.name).join(', ')} · {slot.gameDuration}m</span>
+                              <span style={{ display: 'block', marginTop: 3, color: 'var(--text2)', fontSize: 13, lineHeight: 1.4, overflowWrap: 'anywhere' }}>{slot.players.map(player => player.name).join(', ')} · {slot.gameDuration}m</span>
                             </div>
                           </div>
                         ))}
