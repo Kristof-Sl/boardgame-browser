@@ -3,9 +3,10 @@ import FilterBar from './FilterBar'
 import AccountManager from './AccountManager'
 import GameCard from './GameCard'
 import SettingsPage from './SettingsPage'
+import CollectionViewSwitcher from './CollectionViewSwitcher'
 
 export default function MobileLayout({
-  accounts, collections, allGames, sharedGames, filteredGames, filters,
+  accounts, collections, allGames, sharedGames, filteredGames, collectionView, onCollectionViewChange, filters,
   handleFilterChange, handleAddAccount, handleRefreshAccounts, handleReloadDefaultCollection, handleRemoveAccount,
   handleExport, handleImportFile, anyLoading, tab, setTab,
   importRef, DEFAULT_FILTERS, EventPlanner, AdminPage, PlayLog, Analyzer, showToast, handleAuthChange, handleDatabaseChanged,
@@ -113,7 +114,8 @@ export default function MobileLayout({
             ✕
           </button>
         </div>
-        <div style={{ padding: '20px' }}>
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <CollectionViewSwitcher value={collectionView} onChange={onCollectionViewChange} />
           <FilterBar filters={filters} onChange={handleFilterChange} games={allGames} />
         </div>
       </div>
@@ -250,18 +252,9 @@ export default function MobileLayout({
               </div>
             )}
             {filteredGames.length > 0 && (
-              <div style={{
-                display: 'flex', flexDirection: 'column', gap: 12, padding: '16px',
-              }}>
+              <div className={`collection-grid collection-grid--${collectionView}`}>
                 {filteredGames.map(game => (
-                  <div key={game.id} style={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 12,
-                    overflow: 'hidden',
-                  }}>
-                    <GameCard game={game} isMobile={true} />
-                  </div>
+                  <GameCard key={game.id} game={game} view={collectionView} isMobile={true} />
                 ))}
               </div>
             )}

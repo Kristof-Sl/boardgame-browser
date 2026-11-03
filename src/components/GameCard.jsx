@@ -7,7 +7,7 @@ const STATUS_INFO = {
   prevOwned:  { label: 'Previously owned',  color: 'var(--text3)',  bg: 'rgba(255,255,255,0.06)' },
 }
 
-export default function GameCard({ game, isMobile, detailsMode = false, onDetails }) {
+export default function GameCard({ game, isMobile, view = 'standard', detailsMode = false, onDetails }) {
   const [imgErr, setImgErr] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -129,13 +129,14 @@ export default function GameCard({ game, isMobile, detailsMode = false, onDetail
   return (
     <div
       ref={cardRef}
+      className={`game-card-wrap game-card-wrap--${view}`}
       style={{ position: 'relative' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Card — no longer an <a>, so clicks on body don't navigate */}
       <div style={{
-        display: 'flex', flexDirection: 'column',
+        display: 'flex', flexDirection: view === 'rows' ? 'row' : 'column',
         background: 'var(--surface)',
         border: `1px solid ${hovered ? 'var(--border2)' : 'var(--border)'}`,
         borderRadius: 'var(--radius-lg)', overflow: 'hidden',
@@ -143,11 +144,19 @@ export default function GameCard({ game, isMobile, detailsMode = false, onDetail
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         transition: 'border-color 180ms ease, transform 180ms ease',
         height: '100%',
-      }}>
+      }} className={`game-card game-card--${view}`}>
         {/* Thumbnail — this IS the link to BGG */}
         <a
           href={game.bggUrl} target="_blank" rel="noopener noreferrer"
-          style={{ display: 'block', position: 'relative', paddingTop: '56%', background: 'var(--bg3)', flexShrink: 0, textDecoration: 'none' }}
+          className="game-card-thumbnail"
+          style={{
+            display: 'block',
+            position: 'relative',
+            paddingTop: view === 'rows' ? 0 : '56%',
+            background: 'var(--bg3)',
+            flexShrink: 0,
+            textDecoration: 'none',
+          }}
         >
           {game.thumbnail && !imgErr ? (
             <img src={game.thumbnail} alt={game.name} onError={() => setImgErr(true)}
@@ -182,18 +191,26 @@ export default function GameCard({ game, isMobile, detailsMode = false, onDetail
         </a>
 
         {/* Card body — plain div, no navigation */}
-        <div style={{ padding: '10px 12px 12px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 500, lineHeight: 1.3, color: 'var(--text)' }}>
-            {game.name}
-          </p>
-          {game.yearPublished && <p style={{ fontSize: 11, color: 'var(--text3)' }}>{game.yearPublished}</p>}
+        <div className="game-card-body" style={{
+          padding: view === 'compact' ? '7px 8px 8px' : '10px 12px 12px',
+          display: 'flex',
+          flexDirection: view === 'rows' ? 'row' : 'column',
+          gap: view === 'compact' ? 2 : 4,
+          flex: 1,
+        }}>
+          <div className="game-card-heading">
+            <p className="game-card-title" style={{ fontFamily: 'var(--font-display)', fontSize: view === 'compact' ? 12 : 14, fontWeight: 500, lineHeight: 1.3, color: 'var(--text)' }}>
+              {game.name}
+            </p>
+            {game.yearPublished && <p className="game-card-year" style={{ fontSize: 11, color: 'var(--text3)' }}>{game.yearPublished}</p>}
+          </div>
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+          <div className="game-card-stats" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
             {playerStr && <Stat icon="👤" label={playerStr} />}
             {timeStr && <Stat icon="⏱" label={timeStr} />}
           </div>
 
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+          <div className="game-card-statuses" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
             {game.owned && <Tag color="green">Owned</Tag>}
             {game.wishlist && <Tag color="blue">Wishlist</Tag>}
             {game.wantToPlay && <Tag color="amber">Want to play</Tag>}
@@ -202,6 +219,7 @@ export default function GameCard({ game, isMobile, detailsMode = false, onDetail
 
           {/* Show details button */}
           <button
+            className="game-card-details-button"
             onClick={() => detailsMode ? onDetails?.(game) : setDetailsOpen(o => !o)}
             style={{
               marginTop: 6, padding: '4px 0',
