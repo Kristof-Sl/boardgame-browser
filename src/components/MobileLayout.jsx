@@ -206,7 +206,7 @@ export default function MobileLayout({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {allGames.length > 0 && (
-            <span style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 12, color: 'var(--text2)', whiteSpace: 'nowrap' }}>
               {filteredGames.length}/{allGames.length}
             </span>
           )}
@@ -310,7 +310,7 @@ export default function MobileLayout({
               flex: 1,
               border: 'none',
               background: tab === t ? 'var(--accent-bg)' : 'transparent',
-              color: tab === t ? 'var(--accent)' : 'var(--text3)',
+              color: tab === t ? 'var(--accent)' : 'var(--text2)',
               fontSize: 12,
               fontWeight: tab === t ? 600 : 400,
               cursor: 'pointer',

@@ -474,7 +474,7 @@ export default function App() {
                 padding: '4px 12px', borderRadius: 6, fontSize: 13,
                 border: `1px solid ${tab === t ? 'var(--accent)' : 'var(--border)'}`,
                 background: tab === t ? 'var(--accent-bg)' : 'transparent',
-                color: tab === t ? 'var(--accent)' : 'var(--text3)',
+                color: tab === t ? 'var(--accent)' : 'var(--text2)',
                 cursor: 'pointer', transition: 'all 140ms',
               }}>{label}</button>
             ))}
@@ -483,7 +483,7 @@ export default function App() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {allGames.length > 0 && (
-            <span style={{ fontSize: 13, color: 'var(--text3)', marginRight: 4 }}>
+            <span style={{ fontSize: 13, color: 'var(--text2)', marginRight: 4 }}>
               {filteredGames.length} / {allGames.length} games
             </span>
           )}
