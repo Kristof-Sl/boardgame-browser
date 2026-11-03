@@ -10,6 +10,7 @@ import AdminPage from './events/AdminPage'
 import MobileLayout from './components/MobileLayout'
 import SettingsPage from './components/SettingsPage'
 import Analyzer from './components/Analyzer'
+import CollectionViewSwitcher from './components/CollectionViewSwitcher'
 import { db, isConfigured } from './events/supabase'
 import { loadDatabaseSnapshot, refreshDatabaseCollections } from './databaseCollections'
 
@@ -62,6 +63,7 @@ export default function App() {
   const [gameDetails, setGameDetails] = useState({})
   const [gameFiles, setGameFiles] = useState({})
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [collectionView, setCollectionView] = useState('standard')
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900)
   const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).has('event') ? 'events' : 'collection')
   const [pendingPlayLogDraft, setPendingPlayLogDraft] = useState(null)
@@ -408,6 +410,8 @@ export default function App() {
         allGames={allGames}
         sharedGames={sharedGames}
         filteredGames={filteredGames}
+        collectionView={collectionView}
+        onCollectionViewChange={setCollectionView}
         filters={filters}
         handleFilterChange={handleFilterChange}
         handleAddAccount={handleAddAccount}
@@ -470,7 +474,7 @@ export default function App() {
                 padding: '4px 12px', borderRadius: 6, fontSize: 13,
                 border: `1px solid ${tab === t ? 'var(--accent)' : 'var(--border)'}`,
                 background: tab === t ? 'var(--accent-bg)' : 'transparent',
-                color: tab === t ? 'var(--accent)' : 'var(--text3)',
+                color: tab === t ? 'var(--accent)' : 'var(--text2)',
                 cursor: 'pointer', transition: 'all 140ms',
               }}>{label}</button>
             ))}
@@ -479,7 +483,7 @@ export default function App() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {allGames.length > 0 && (
-            <span style={{ fontSize: 13, color: 'var(--text3)', marginRight: 4 }}>
+            <span style={{ fontSize: 13, color: 'var(--text2)', marginRight: 4 }}>
               {filteredGames.length} / {allGames.length} games
             </span>
           )}
@@ -594,11 +598,14 @@ export default function App() {
               loading={anyLoading}
             />
             {allGames.length > 0 && (
-              <FilterBar
-                filters={filters}
-                onChange={handleFilterChange}
-                games={allGames}
-              />
+              <>
+                <CollectionViewSwitcher value={collectionView} onChange={setCollectionView} />
+                <FilterBar
+                  filters={filters}
+                  onChange={handleFilterChange}
+                  games={allGames}
+                />
+              </>
             )}
           </aside>
         )}
@@ -630,13 +637,9 @@ export default function App() {
           )}
 
           {filteredGames.length > 0 && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 16,
-            }}>
+            <div className={`collection-grid collection-grid--${collectionView}`}>
                 {filteredGames.map(game => (
-                <GameCard key={game.id} game={game} detailsMode={detailsMode} onDetails={setSelectedGame} />
+                <GameCard key={game.id} game={game} view={collectionView} detailsMode={detailsMode} onDetails={setSelectedGame} />
               ))}
             </div>
           )}
