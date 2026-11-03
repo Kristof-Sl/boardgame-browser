@@ -177,7 +177,7 @@ export default function GameCard({ game, isMobile, view = 'standard', detailsMod
           )}
 
           {/* Owner badges */}
-          {ownerBadges.length > 0 && (
+          {view === 'standard' && ownerBadges.length > 0 && (
             <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: '70%' }}>
               {ownerBadges.map(o => (
                 <span key={o} style={{
@@ -198,6 +198,13 @@ export default function GameCard({ game, isMobile, view = 'standard', detailsMod
           gap: view === 'compact' ? 2 : 4,
           flex: 1,
         }}>
+          {view !== 'standard' && ownerBadges.length > 0 && (
+            <div className="game-card-owner-badges">
+              {ownerBadges.map(owner => (
+                <span key={owner} className="game-card-owner-badge">{owner}</span>
+              ))}
+            </div>
+          )}
           <div className="game-card-heading">
             <p className="game-card-title" style={{ fontFamily: 'var(--font-display)', fontSize: view === 'compact' ? 12 : 14, fontWeight: 500, lineHeight: 1.3, color: 'var(--text)' }}>
               {game.name}
