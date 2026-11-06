@@ -173,14 +173,14 @@ export default function GameCard({ game, isMobile, view = 'standard', detailsMod
               borderRadius: 6, padding: '3px 7px',
               display: 'flex', alignItems: 'center', gap: 4,
               fontSize: 12, fontWeight: 600, color: ratingColor,
-            }}>★ {game.rating.toFixed(1)}</div>
+            }} className="game-card-rating">★ {game.rating.toFixed(1)}</div>
           )}
 
           {/* Owner badges */}
           {view === 'standard' && ownerBadges.length > 0 && (
-            <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: '70%' }}>
+            <div className="game-card-owner-overlay" style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: '70%' }}>
               {ownerBadges.map(o => (
-                <span key={o} style={{
+                <span key={o} className="game-card-owner-overlay-badge" style={{
                   background: 'rgba(15,14,12,0.88)', backdropFilter: 'blur(4px)',
                   borderRadius: 4, padding: '2px 6px',
                   fontSize: 10, color: 'var(--green)', fontWeight: 500, letterSpacing: '0.02em',

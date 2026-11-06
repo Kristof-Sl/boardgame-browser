@@ -6,10 +6,10 @@ export const THEMES = [
   { id: 'blueprint', name: 'Blueprint Workshop', description: 'Drafting-paper blue, cyan lines, and brass annotations.', swatches: ['#10202a', '#193746', '#e4bf62'] },
   { id: 'verdant', name: 'Verdant Cabinet', description: 'A quiet natural palette inspired by an old game library.', swatches: ['#111914', '#1e2d21', '#d4b85c'] },
   { id: 'neon', name: 'Neon Arcade', description: 'Electric cyan, coral accents, and midnight glass.', swatches: ['#0b0d16', '#171b33', '#ffcc66'] },
-  { id: 'porcelain', name: 'Porcelain Parlor', description: 'Warm ivory, ink, and terracotta in a bookish serif style.', swatches: ['#f4f0e8', '#fffdf8', '#a34d31'] },
-  { id: 'coastal', name: 'Coastal Postcard', description: 'Sea glass, deep teal, and coral with crisp, airy typography.', swatches: ['#edf5f7', '#ffffff', '#b94f39'] },
-  { id: 'botanical', name: 'Botanical Field Notes', description: 'Soft sage, leafy green, and natural paper with a gentle feel.', swatches: ['#edf2e8', '#f9fbf4', '#496c45'] },
-  { id: 'lavender', name: 'Lavender Atelier', description: 'Pale lilac, plum, and berry accents with expressive typography.', swatches: ['#f3eff8', '#fdfaff', '#784a82'] },
+  { id: 'porcelain', name: 'Porcelain Parlor', description: 'Honeyed parchment, ink, and terracotta in a bookish serif style.', swatches: ['#efe2c8', '#f2e4c6', '#a34d31'] },
+  { id: 'coastal', name: 'Coastal Postcard', description: 'Lagoon turquoise, deep teal, and coral with crisp, airy typography.', swatches: ['#dceef2', '#c3e3e8', '#b94f39'] },
+  { id: 'botanical', name: 'Botanical Field Notes', description: 'Moss, fern, and fresh sage with a gentle, handwritten feel.', swatches: ['#e4ecd8', '#d2e1c4', '#496c45'] },
+  { id: 'lavender', name: 'Lavender Atelier', description: 'Lilac paper, aubergine, and berry accents with expressive typography.', swatches: ['#eee3f4', '#e1cce9', '#784a82'] },
 ]
 
 export default function SettingsPage({ theme, onThemeChange, onBack }) {
