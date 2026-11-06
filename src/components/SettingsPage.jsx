@@ -6,6 +6,10 @@ export const THEMES = [
   { id: 'blueprint', name: 'Blueprint Workshop', description: 'Drafting-paper blue, cyan lines, and brass annotations.', swatches: ['#10202a', '#193746', '#e4bf62'] },
   { id: 'verdant', name: 'Verdant Cabinet', description: 'A quiet natural palette inspired by an old game library.', swatches: ['#111914', '#1e2d21', '#d4b85c'] },
   { id: 'neon', name: 'Neon Arcade', description: 'Electric cyan, coral accents, and midnight glass.', swatches: ['#0b0d16', '#171b33', '#ffcc66'] },
+  { id: 'porcelain', name: 'Porcelain Parlor', description: 'Warm ivory, ink, and terracotta in a bookish serif style.', swatches: ['#f4f0e8', '#fffdf8', '#a34d31'] },
+  { id: 'coastal', name: 'Coastal Postcard', description: 'Sea glass, deep teal, and coral with crisp, airy typography.', swatches: ['#edf5f7', '#ffffff', '#b94f39'] },
+  { id: 'botanical', name: 'Botanical Field Notes', description: 'Soft sage, leafy green, and natural paper with a gentle feel.', swatches: ['#edf2e8', '#f9fbf4', '#496c45'] },
+  { id: 'lavender', name: 'Lavender Atelier', description: 'Pale lilac, plum, and berry accents with expressive typography.', swatches: ['#f3eff8', '#fdfaff', '#784a82'] },
 ]
 
 export default function SettingsPage({ theme, onThemeChange, onBack }) {
@@ -29,7 +33,7 @@ export default function SettingsPage({ theme, onThemeChange, onBack }) {
                 boxShadow: active ? '0 0 0 2px var(--accent-bg)' : 'none',
               }}>
                 <div style={{ display: 'flex', gap: 7, marginBottom: 14 }}>
-                  {option.swatches.map(color => <span key={color} style={{ width: 24, height: 24, borderRadius: 6, background: color, border: '1px solid rgba(255,255,255,0.16)' }} />)}
+                  {option.swatches.map(color => <span key={color} style={{ width: 24, height: 24, borderRadius: 6, background: color, border: '1px solid var(--border2)' }} />)}
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>{option.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5, marginTop: 5 }}>{option.description}</div>
