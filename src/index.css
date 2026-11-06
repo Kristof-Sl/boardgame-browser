@@ -427,10 +427,10 @@
 [data-theme="spirit-island"] .game-card-rating,
 [data-theme="seti"] .game-card-rating,
 [data-theme="nemesis"] .game-card-rating {
-  background: var(--image-pill-bg) !important;
-  border: 1px solid var(--image-pill-border);
-  color: var(--image-pill-text) !important;
-  backdrop-filter: none !important;
+  background: rgba(15,14,12,0.88) !important;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #f0ede6 !important;
+  backdrop-filter: blur(4px) !important;
 }
 
 [data-theme="terraforming-mars"] .game-card-owner-overlay-badge,
@@ -441,10 +441,10 @@
 [data-theme="spirit-island"] .game-card-owner-overlay-badge,
 [data-theme="seti"] .game-card-owner-overlay-badge,
 [data-theme="nemesis"] .game-card-owner-overlay-badge {
-  background: var(--image-pill-bg) !important;
-  border: 1px solid var(--image-pill-border);
-  color: var(--image-pill-text) !important;
-  backdrop-filter: none !important;
+  background: rgba(15,14,12,0.88) !important;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #a6ddb2 !important;
+  backdrop-filter: blur(4px) !important;
 }
 
 [data-theme] {
