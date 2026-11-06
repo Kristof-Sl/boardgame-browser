@@ -6,10 +6,14 @@ export const THEMES = [
   { id: 'blueprint', name: 'Blueprint Workshop', description: 'Drafting-paper blue, cyan lines, and brass annotations.', swatches: ['#10202a', '#193746', '#e4bf62'] },
   { id: 'verdant', name: 'Verdant Cabinet', description: 'A quiet natural palette inspired by an old game library.', swatches: ['#111914', '#1e2d21', '#d4b85c'] },
   { id: 'neon', name: 'Neon Arcade', description: 'Electric cyan, coral accents, and midnight glass.', swatches: ['#0b0d16', '#171b33', '#ffcc66'] },
-  { id: 'porcelain', name: 'Porcelain Parlor', description: 'Honeyed parchment, ink, and terracotta in a bookish serif style.', swatches: ['#efe2c8', '#f2e4c6', '#a34d31'] },
-  { id: 'coastal', name: 'Coastal Postcard', description: 'Lagoon turquoise, deep teal, and coral with crisp, airy typography.', swatches: ['#dceef2', '#c3e3e8', '#b94f39'] },
-  { id: 'botanical', name: 'Botanical Field Notes', description: 'Moss, fern, and fresh sage with a gentle, handwritten feel.', swatches: ['#e4ecd8', '#d2e1c4', '#496c45'] },
-  { id: 'lavender', name: 'Lavender Atelier', description: 'Lilac paper, aubergine, and berry accents with expressive typography.', swatches: ['#eee3f4', '#e1cce9', '#784a82'] },
+  { id: 'terraforming-mars', name: 'Red Frontier', description: 'Terraforming Mars-inspired ochre dust, iron oxide, and mission-console type.', swatches: ['#ead5bb', '#f0dfc8', '#b9472f'] },
+  { id: 'twilight-imperium', name: 'Galactic Imperium', description: 'Twilight Imperium-inspired starfield indigo, royal gold, and orbital geometry.', swatches: ['#e4e6f4', '#d9dbef', '#a27830'] },
+  { id: 'brass-birmingham', name: 'Canal & Brass', description: 'Brass: Birmingham-inspired coal-blue, millstone, and aged brass lettering.', swatches: ['#eadfca', '#e4d4b8', '#92712c'] },
+  { id: 'ark-nova', name: 'Conservation Park', description: 'Ark Nova-inspired foliage, animal-paper green, and warm exhibit signage.', swatches: ['#dae8ce', '#cedfbc', '#c65a35'] },
+  { id: 'dune-imperium', name: 'Spice & Sand', description: 'Dune: Imperium-inspired desert sandstone, spice red, and editorial serif type.', swatches: ['#f0d7ac', '#e7c48e', '#9d432b'] },
+  { id: 'spirit-island', name: 'Living Island', description: 'Spirit Island-inspired tidal teal, rainforest green, and spirit-violet accents.', swatches: ['#e1ece0', '#cfe2d7', '#694e80'] },
+  { id: 'seti', name: 'Deep Space Signal', description: 'SETI-inspired observatory slate, pale telemetry panels, and signal-red highlights.', swatches: ['#dde7ee', '#cfdae3', '#bd493b'] },
+  { id: 'nemesis', name: 'Containment Protocol', description: 'Nemesis-inspired ship steel, warning crimson, and condensed industrial type.', swatches: ['#e1e3e3', '#d1d6d5', '#a53237'] },
 ]
 
 export default function SettingsPage({ theme, onThemeChange, onBack }) {

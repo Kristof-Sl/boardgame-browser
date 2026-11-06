@@ -8,7 +8,7 @@ import EventPlanner from './events/EventPlanner'
 import PlayLog from './events/PlayLog'
 import AdminPage from './events/AdminPage'
 import MobileLayout from './components/MobileLayout'
-import SettingsPage from './components/SettingsPage'
+import SettingsPage, { THEMES } from './components/SettingsPage'
 import Analyzer from './components/Analyzer'
 import CollectionViewSwitcher from './components/CollectionViewSwitcher'
 import { db, isConfigured } from './events/supabase'
@@ -74,7 +74,10 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [detailsMode, setDetailsMode] = useState(true)
   const [selectedGame, setSelectedGame] = useState(null)
-  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'original')
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY)
+    return THEMES.some(option => option.id === savedTheme) ? savedTheme : 'original'
+  })
   const importRef = useRef()
   const headerRef = useRef()
   const [headerHeight, setHeaderHeight] = useState(56)
